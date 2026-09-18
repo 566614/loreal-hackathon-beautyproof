@@ -1,0 +1,15 @@
+﻿{
+  "tool": "c2pa",
+  "source_asset_id": "post.jpg",
+  "observed": "c2patool 娌¤兘璇诲嚭鍑瘉锛堢粷澶у鏁扮綉鍥鹃兘娌℃湁鍑瘉锛屽睘姝ｅ父锛?,
+  "cannot_prove": "娌℃湁鍑瘉涓嶇瓑浜庡浘鐗囨槸鍋囩殑锛涙湁鍑瘉涔熶笉绛変簬娌¤鎭舵剰缂栬緫杩?,
+  "evidence": [
+    {
+      "c2pa_status": "missing",
+      "detail": "c2patool 娌¤兘璇诲嚭鍑瘉锛堢粷澶у鏁扮綉鍥鹃兘娌℃湁鍑瘉锛屽睘姝ｅ父锛?
+    }
+  ],
+  "raw_output": "Error: asset could not be parsed: Unknown image format"
+}
+
+宸蹭繚瀛樺埌: C:\Users\Lenovo\WorkBuddy\榛戝鏉綷loreal-hackathon-beautyproof\outputs\c2pa_post.json
