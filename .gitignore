@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- 比赛项目专用 ----
+# 图片素材不进仓库：90 张美妆图几十 MB，GitHub 单文件上限 100MB，推上去会撑爆
+data/raw/
+data/fake/
+data/tampered/
+data/masks/
