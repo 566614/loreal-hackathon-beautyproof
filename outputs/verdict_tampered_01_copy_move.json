@@ -1,0 +1,15 @@
+{
+  "image_stem": "tampered_01_copy_move",
+  "risk_level": "suspicious",
+  "reasons": [
+    "AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过",
+    "ELA：最可疑区域误差 3.905（≥2.0）→ 有局部篡改痕迹"
+  ],
+  "tools_used": [
+    "aigc",
+    "c2pa",
+    "ela",
+    "hash",
+    "ocr"
+  ]
+}

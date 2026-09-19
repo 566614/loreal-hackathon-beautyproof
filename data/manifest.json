@@ -1,0 +1,47 @@
+{
+  "base": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\raw\\base.png",
+  "samples": [
+    {
+      "id": "clean_01",
+      "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\clean\\clean_01.png",
+      "ground_truth": "clean",
+      "expected_risk": "inconclusive"
+    },
+    {
+      "id": "tampered_01_copy_move",
+      "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\tampered\\tampered_01_copy_move.png",
+      "ground_truth": "copy_move",
+      "tamper_box": [
+        620,
+        694,
+        710,
+        784
+      ],
+      "expected_risk": "suspicious"
+    },
+    {
+      "id": "tampered_02_splice",
+      "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\tampered\\tampered_02_splice.png",
+      "ground_truth": "splice",
+      "tamper_box": [
+        240,
+        360,
+        364,
+        484
+      ],
+      "expected_risk": "suspicious"
+    },
+    {
+      "id": "tampered_03_text_edit",
+      "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\tampered\\tampered_03_text_edit.png",
+      "ground_truth": "text_edit",
+      "tamper_box": [
+        10,
+        595,
+        330,
+        640
+      ],
+      "expected_risk": "suspicious"
+    }
+  ]
+}

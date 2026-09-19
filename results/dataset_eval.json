@@ -1,0 +1,72 @@
+{
+  "results": [
+    {
+      "id": "clean_01",
+      "ground_truth": "clean",
+      "expected_risk": "inconclusive",
+      "actual_risk": "inconclusive",
+      "reasons": [
+        "AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过",
+        "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+      ],
+      "tools_used": [
+        "aigc",
+        "c2pa",
+        "ela",
+        "hash",
+        "ocr"
+      ]
+    },
+    {
+      "id": "tampered_01_copy_move",
+      "ground_truth": "copy_move",
+      "expected_risk": "suspicious",
+      "actual_risk": "suspicious",
+      "reasons": [
+        "AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过",
+        "ELA：最可疑区域误差 3.905（≥2.0）→ 有局部篡改痕迹"
+      ],
+      "tools_used": [
+        "aigc",
+        "c2pa",
+        "ela",
+        "hash",
+        "ocr"
+      ]
+    },
+    {
+      "id": "tampered_02_splice",
+      "ground_truth": "splice",
+      "expected_risk": "suspicious",
+      "actual_risk": "suspicious",
+      "reasons": [
+        "AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过",
+        "ELA：最可疑区域误差 4.336（≥2.0）→ 有局部篡改痕迹"
+      ],
+      "tools_used": [
+        "aigc",
+        "c2pa",
+        "ela",
+        "hash",
+        "ocr"
+      ]
+    },
+    {
+      "id": "tampered_03_text_edit",
+      "ground_truth": "text_edit",
+      "expected_risk": "suspicious",
+      "actual_risk": "suspicious",
+      "reasons": [
+        "AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过",
+        "ELA：最可疑区域误差 3.935（≥2.0）→ 有局部篡改痕迹"
+      ],
+      "tools_used": [
+        "aigc",
+        "c2pa",
+        "ela",
+        "hash",
+        "ocr"
+      ]
+    }
+  ]
+}

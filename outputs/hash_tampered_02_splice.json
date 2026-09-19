@@ -1,0 +1,12 @@
+{
+  "tool": "hash",
+  "source_asset_id": "tampered_02_splice.png",
+  "observed": "这张图的内容指纹是 sha256:6e4c52b875231d1c4c1037e35130ad45aa98a941af07ad65689fcfa6ba09128d，文件大小 610828 字节",
+  "cannot_prove": "哈希只证明文件的身份，不能证明图片真伪、不能判断是否被篡改",
+  "evidence": [
+    {
+      "asset_id": "sha256:6e4c52b875231d1c4c1037e35130ad45aa98a941af07ad65689fcfa6ba09128d",
+      "size_bytes": 610828
+    }
+  ]
+}

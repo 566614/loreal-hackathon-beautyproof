@@ -222,4 +222,9 @@ __marimo__/
 data/raw/
 data/fake/
 data/tampered/
+data/clean/
 data/masks/
+# 任何 data 下的图片都不进仓库（数据集用 make_dataset.py 现场再造）
+data/**/*.png
+data/**/*.jpg
+data/**/*.jpeg

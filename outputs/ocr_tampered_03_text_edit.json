@@ -1,0 +1,28 @@
+{
+  "tool": "ocr",
+  "source_asset_id": "tampered_03_text_edit.png",
+  "observed": "在图上一共读出 2 行文字",
+  "cannot_prove": "OCR 只是抄写员，不能证明文字内容为真，也不能证明图片被篡改",
+  "evidence": [
+    {
+      "text": "@美妆鉴定局OFFICIAL",
+      "bbox": [
+        18.0,
+        605.0,
+        343.0,
+        636.0
+      ],
+      "confidence": 1.0
+    },
+    {
+      "text": "@雨弑小红书",
+      "bbox": [
+        12.0,
+        643.0,
+        264.0,
+        687.0
+      ],
+      "confidence": 0.9333
+    }
+  ]
+}

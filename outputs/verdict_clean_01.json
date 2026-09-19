@@ -1,0 +1,15 @@
+{
+  "image_stem": "clean_01",
+  "risk_level": "inconclusive",
+  "reasons": [
+    "AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过",
+    "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+  ],
+  "tools_used": [
+    "aigc",
+    "c2pa",
+    "ela",
+    "hash",
+    "ocr"
+  ]
+}

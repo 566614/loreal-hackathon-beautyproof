@@ -1,0 +1,40 @@
+{
+  "tool": "ela",
+  "source_asset_id": "tampered_01_copy_move.png",
+  "observed": "整图平均误差水平 1.162；误差最高的区域 bbox=[651, 721, 744, 824]，该区域误差 3.905。注意：这张图的真实格式是 PNG，不是 JPEG。非 JPEG 转 JPEG 本身就会产生很大差异，本结果仅作演示、不可信。",
+  "cannot_prove": "ELA 只是压缩痕迹分析，不能证明某处一定被篡改；截图、反复保存、平台压缩都会造成同样现象",
+  "evidence": [
+    {
+      "mean_ela_score": 1.162,
+      "suspicious_regions": [
+        {
+          "bbox": [
+            651,
+            721,
+            744,
+            824
+          ],
+          "ela_score": 3.905
+        },
+        {
+          "bbox": [
+            558,
+            721,
+            651,
+            824
+          ],
+          "ela_score": 2.475
+        },
+        {
+          "bbox": [
+            558,
+            618,
+            651,
+            721
+          ],
+          "ela_score": 2.05
+        }
+      ]
+    }
+  ]
+}

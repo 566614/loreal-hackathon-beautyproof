@@ -1,0 +1,13 @@
+{
+  "tool": "c2pa",
+  "source_asset_id": "clean_01.png",
+  "observed": "c2patool 没能读出凭证（绝大多数网图都没有凭证，属正常）",
+  "cannot_prove": "没有凭证不等于图片是假的；有凭证也不等于没被恶意编辑过",
+  "evidence": [
+    {
+      "c2pa_status": "missing",
+      "detail": "c2patool 没能读出凭证（绝大多数网图都没有凭证，属正常）"
+    }
+  ],
+  "raw_output": "Error: No claim found"
+}

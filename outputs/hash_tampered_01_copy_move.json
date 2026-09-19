@@ -1,0 +1,12 @@
+{
+  "tool": "hash",
+  "source_asset_id": "tampered_01_copy_move.png",
+  "observed": "这张图的内容指纹是 sha256:904f0a7a9e0511438aaa584cfc3ec54d5c90d5bf548ebfaae1a15e13bbd5cc88，文件大小 619761 字节",
+  "cannot_prove": "哈希只证明文件的身份，不能证明图片真伪、不能判断是否被篡改",
+  "evidence": [
+    {
+      "asset_id": "sha256:904f0a7a9e0511438aaa584cfc3ec54d5c90d5bf548ebfaae1a15e13bbd5cc88",
+      "size_bytes": 619761
+    }
+  ]
+}

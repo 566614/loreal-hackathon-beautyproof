@@ -1,0 +1,13 @@
+{
+  "tool": "aigc",
+  "source_asset_id": "tampered_03_text_edit.png",
+  "observed": "AIGC 检测暂不可用（模型未下载成功 / 加载失败）",
+  "cannot_prove": "模型未就绪，无法给出 AI 生成概率；本项按「无法判断」处理，不影响其他工具结论",
+  "evidence": [
+    {
+      "aigc_score": null,
+      "label": "model_unavailable: OSError",
+      "available": false
+    }
+  ]
+}
