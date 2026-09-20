@@ -8,11 +8,11 @@
 比如：
     python tools/rule_engine.py post
 
-会去 outputs/ 读所有 post_*.json（ocr_post / hash_post / c2pa_post / ela_post / aigc_post），
+会去 outputs/ 读所有 post_*.json（ocr / hash / c2pa / ela / aigc / trufor），
 汇总判断，输出分级结果 verdict_post.json。
 
 大白话：
-    五个工具各说各话，规则引擎是「裁判」——
+    六个工具各说各话，规则引擎是「裁判」——
     它按你定好的规则，看谁说的严重，就给这张图定级。
 
 四个等级（从高到低）：
@@ -26,8 +26,11 @@ import sys
 from pathlib import Path
 
 THRESHOLDS = {
-    "aigc_ai_score": 0.7,      # AI 生成概率超过这个 → 高风险
-    "ela_region_score": 2.0,   # 最可疑区域误差超过这个 → 可疑
+    "aigc_ai_score": 0.7,        # AI 生成概率超过这个 → 高风险（当前不参与定级，见下）
+    "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑
+    # TruFor 阈值（暂定，等在本批素材上跑完再校准）
+    "trufor_high": 0.9,          # 篡改分数 ≥ 这个 → 高风险
+    "trufor_suspicious": 0.5,    # 篡改分数 ≥ 这个 → 可疑
 }
 
 # AIGC 信号是否参与自动定级 —— 默认关闭，有实测依据（2026-09-19）：
@@ -37,9 +40,16 @@ THRESHOLDS = {
 #     → 对「是否被篡改」**零区分度**，还把 100% 的真实图判成 AI 生成。
 #   提高阈值也救不了：真实图和篡改图分数几乎重合，任何阈值都会把它们分到同一边。
 # 所以：AIGC 分数照常检测、照常写进报告，但**不参与自动定级**，
-# 定级交给 ELA / C2PA 这些在本素材上被验证有效的信号。
+# 定级交给 ELA / C2PA / TruFor 这些在本素材上被验证有效的信号。
 # 若以后换了更靠谱的 AIGC 模型、或换了素材分布，把这里改成 True 即可重新启用。
 AIGC_TRIGGERS_HIGH_RISK = False
+
+# TruFor 信号是否参与自动定级 —— 默认开启。
+# 它是真正的「篡改检测」深度学习模型（CVPR 2023），判的是"有没有被人工动过"，
+# 不像 AIGC 检测那样只判"是不是 AI 画的"。
+# ⚠️ 但阈值必须先在本批素材上实测：如果它也对真实图给高分（像 AIGC 那样零区分度），
+#    就把这里改成 False，让它跟 AIGC 一样只当参考。
+TRUFOR_TRIGGERS_RISK = True
 
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
@@ -65,7 +75,7 @@ def judge(evidence):
     """汇总所有工具信号，返回一个 (risk_level, reasons) 元组"""
     reasons = []
 
-    # 信号1：AIGC 检测 —— AI 生成概率高
+    # 信号1：AIGC 检测 —— AI 生成概率高（默认不参与定级，见顶部说明）
     aigc = evidence.get("aigc")
     if aigc:
         items = aigc.get("evidence", [])
@@ -73,7 +83,6 @@ def judge(evidence):
         score = first.get("aigc_score")
         available = first.get("available", True)
         if score is None:
-            # 模型没下下来 / 推理失败：按「无法判断」处理，不误伤也不误信
             if not available:
                 reasons.append("AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过")
             else:
@@ -83,13 +92,35 @@ def judge(evidence):
                 reasons.append(
                     f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}）→ 很可能是 AI 生成的图")
                 return "high_risk", reasons
-            # 不参与定级：只记一条参考信号，继续让后面的 ELA / C2PA 规则说话
             reasons.append(
                 f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}），"
                 f"但本模型在本批素材上实测零区分度（真实图 0.9571 vs 篡改图 0.9621），"
                 f"仅作参考，不参与自动定级")
 
-    # 信号2：ELA 压缩异常 —— 局部篡改痕迹
+    # 信号2：TruFor 深度学习篡改检测 —— 真的查"有没有被人工改过"
+    trufor = evidence.get("trufor")
+    if trufor:
+        items = trufor.get("evidence", [])
+        first = items[0] if items else {}
+        score = first.get("trufor_score")
+        ratio = first.get("tampered_area_ratio")
+        available = first.get("available", True)
+        extra = f"；可疑区域约占全图 {ratio:.1%}" if ratio is not None else ""
+
+        if score is None or not available:
+            reasons.append("TruFor 检测：模型未部署/未返回分数，本项无法判断，已跳过")
+        elif not TRUFOR_TRIGGERS_RISK:
+            reasons.append(f"TruFor：篡改分数 {score}（已检测，但按开关设置不参与自动定级）")
+        elif score >= THRESHOLDS["trufor_high"]:
+            reasons.append(f"TruFor：篡改分数 {score}（≥{THRESHOLDS['trufor_high']}）→ 篡改痕迹非常明显{extra}")
+            return "high_risk", reasons
+        elif score >= THRESHOLDS["trufor_suspicious"]:
+            reasons.append(f"TruFor：篡改分数 {score}（≥{THRESHOLDS['trufor_suspicious']}）→ 有明显篡改痕迹{extra}")
+            return "suspicious", reasons
+        else:
+            reasons.append(f"TruFor：篡改分数 {score}（<{THRESHOLDS['trufor_suspicious']}）→ 未发现明显篡改痕迹")
+
+    # 信号3：ELA 压缩异常 —— 局部篡改痕迹
     ela = evidence.get("ela")
     if ela:
         regions = ela.get("evidence", [{}])[0].get("suspicious_regions", [])
@@ -98,7 +129,7 @@ def judge(evidence):
                 f"ELA：最可疑区域误差 {regions[0]['ela_score']}（≥{THRESHOLDS['ela_region_score']}）→ 有局部篡改痕迹")
             return "suspicious", reasons
 
-    # 信号3：C2PA 有凭证 —— 编辑历史可查
+    # 信号4：C2PA 有凭证 —— 编辑历史可查
     c2pa = evidence.get("c2pa")
     if c2pa:
         status = c2pa.get("evidence", [{}])[0].get("c2pa_status")

@@ -231,3 +231,7 @@ data/**/*.jpeg
 # 模型权重不进仓库：347MB，GitHub 单文件上限 100MB，推上去会失败
 # 需要用 download_aigc_model.py 现场下载（脚本已内置镜像+代理+只下必需文件）
 models/
+
+# TruFor 推理中间产物（每次跑都会自动重建，且是原图副本 + 定位图 npz，不必进仓库）
+outputs/_trufor_in/
+outputs/_trufor_out/

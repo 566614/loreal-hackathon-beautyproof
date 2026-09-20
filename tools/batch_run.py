@@ -4,16 +4,18 @@
 用法:
     python tools/batch_run.py
 
-流程（每个样本）:
-    1. hash / c2pa / ela      —— 永远跑
+流程:
+    0. trufor（深度学习篡改检测）—— 先把所有图一次性喂给它（模型只加载一次，省时间），
+       结果缓存进 outputs/trufor_cache.json
+    1. hash / c2pa / ela      —— 每个样本都跑
     2. ocr                    —— 跑，但失败不致命（PaddleOCR 较重）
-    3. aigc                   —— 模型没下下来会优雅降级（写 available=False）
+    3. aigc / trufor          —— 读上面的缓存 / 优雅降级
     4. rule_engine            —— 汇总定级
 最后把每个样本的真值 vs 实际定级写进 results/dataset_eval.json，并打印汇总表。
 
 大白话:
     我们造了几张「真图」和「P 过的图」，
-    这里让五个工具逐个扫一遍，再看「裁判」给的分级对不对 ——
+    这里让六个工具逐个扫一遍，再看「裁判」给的分级对不对 ——
     P 过的应该至少判「可疑」，原图应该是「无法判定」。
 """
 import json
@@ -43,6 +45,27 @@ def run_tool(script, img_path):
         return False
 
 
+def prewarm_trufor(image_paths):
+    """把所有图一次性交给 TruFor（模型只加载一次），结果写进缓存
+
+    这样后面逐样本跑 trufor_tool.py 时是读缓存，不会每张图都重载模型。
+    """
+    print("\n=== TruFor 预热：一次性处理全部样本（模型只加载一次）===")
+    try:
+        sys.path.insert(0, str(TOOLS))
+        import trufor_tool
+        cache, err = trufor_tool.run_trufor_batch(image_paths)
+        if err:
+            print(f"  [提示] TruFor 未跑成（会自动降级为「无法判断」）: {err[:300]}")
+            return False
+        ok = sum(1 for v in cache.values() if v.get("available"))
+        print(f"  TruFor 完成：{ok}/{len(image_paths)} 张拿到分数")
+        return True
+    except Exception as e:  # noqa: BLE001
+        print(f"  [提示] TruFor 跳过（{type(e).__name__}），其余工具照常跑")
+        return False
+
+
 def read_verdict(stem):
     vf = REPO / "outputs" / f"verdict_{stem}.json"
     if not vf.exists():
@@ -61,7 +84,10 @@ def main():
     RESULTS.mkdir(exist_ok=True)
 
     always = ["hash_tool.py", "c2pa_tool.py", "ela_tool.py"]
-    optional = ["ocr_tool.py", "aigc_tool.py"]
+    optional = ["ocr_tool.py", "aigc_tool.py", "trufor_tool.py"]
+
+    all_paths = [Path(s["path"]) for s in manifest["samples"]]
+    prewarm_trufor(all_paths)
 
     rows = []
     for s in manifest["samples"]:
@@ -95,16 +121,39 @@ def main():
     (RESULTS / "dataset_eval.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # 汇总表
-    print("\n===== 数据集评测汇总 =====")
-    ok = 0
+    # ---------------------------------------------------------------- 两套命中口径
+    # exact = 档位和清单逐字一致（严格口径）
+    # hit   = 方向抓对了没（篡改图有没有被报警 / 干净图有没有被误报）
+    #         判得比预期更重（suspicious 变 high_risk）是"偏严"，不是漏判，算 hit 不算 exact
+    RISK_ALARM = {"suspicious", "high_risk"}    # 判为"有问题"
+    RISK_CLEAN = {"credible", "inconclusive"}   # 判为"没抓到问题"
+
+    n_exact = 0
+    n_hit = 0
     for row in rows:
-        mark = "OK" if row["expected_risk"] == row["actual_risk"] else "??"
-        if row["expected_risk"] == row["actual_risk"]:
-            ok += 1
+        gt = row["ground_truth"]
+        exp, act = row["expected_risk"], row["actual_risk"]
+        is_exact = (exp == act)
+        is_hit = (act in RISK_CLEAN) if gt == "clean" else (act in RISK_ALARM)
+        row["hit"] = is_hit
+        row["exact"] = is_exact
+        n_exact += int(is_exact)
+        n_hit += int(is_hit)
+
+    # 把命中标记回写进明细，方便后面看报告
+    (RESULTS / "dataset_eval.json").write_text(
+        json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print("\n===== 数据集评测汇总 =====")
+    for row in rows:
+        mark = "OK" if row["hit"] else "!!"   # !! = 真漏判/真误报，必须处理
+        note = "" if row["exact"] else \
+            f"   ← 档位偏{'严' if row['actual_risk'] == 'high_risk' else '松'}（清单预期 {row['expected_risk']}）"
         print(f"  [{mark}] {row['id']:28s} 真值={row['ground_truth']:10s} "
-              f"预期={str(row['expected_risk']):12s} 实际={row['actual_risk']}")
-    print(f"\n  命中 {ok}/{len(rows)}  （预期=实际 即视为判对）")
+              f"预期={str(row['expected_risk']):12s} 实际={row['actual_risk']}{note}")
+
+    print(f"\n  命中 {n_hit}/{len(rows)}  （方向判对：篡改图被报警 / 干净图不误报）")
+    print(f"  档位严丝合缝 {n_exact}/{len(rows)}  （预期=实际，逐字一致）")
     print(f"  明细: {RESULTS / 'dataset_eval.json'}")
     return 0
 
