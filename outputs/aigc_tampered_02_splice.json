@@ -1,13 +1,13 @@
 {
   "tool": "aigc",
   "source_asset_id": "tampered_02_splice.png",
-  "observed": "AIGC 检测暂不可用（模型未下载成功 / 加载失败）",
-  "cannot_prove": "模型未就绪，无法给出 AI 生成概率；本项按「无法判断」处理，不影响其他工具结论",
+  "observed": "AI 生成概率 0.9618（模型给出了较高的 AI 生成概率，但该模型误判率很高（真实图也常被判高分），不能单凭此项下结论）",
+  "cannot_prove": "模型会误判：真人也常被误判为 AI，AI 生成的也可能蒙混过关；分数不是事实",
   "evidence": [
     {
-      "aigc_score": null,
-      "label": "model_unavailable: OSError",
-      "available": false
+      "aigc_score": 0.9618,
+      "label": "artificial",
+      "available": true
     }
   ]
 }

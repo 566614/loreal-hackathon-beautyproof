@@ -1,7 +1,7 @@
 {
   "tool": "aigc",
-  "source_asset_id": "clean_01.png",
-  "observed": "AI 生成概率 0.9571（模型给出了较高的 AI 生成概率，但该模型误判率很高（真实图也常被判高分），不能单凭此项下结论）",
+  "source_asset_id": "base.png",
+  "observed": "AI 生成概率 0.9571（很可能是 AI 生成的图）",
   "cannot_prove": "模型会误判：真人也常被误判为 AI，AI 生成的也可能蒙混过关；分数不是事实",
   "evidence": [
     {

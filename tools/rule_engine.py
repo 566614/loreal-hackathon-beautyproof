@@ -30,6 +30,17 @@ THRESHOLDS = {
     "ela_region_score": 2.0,   # 最可疑区域误差超过这个 → 可疑
 }
 
+# AIGC 信号是否参与自动定级 —— 默认关闭，有实测依据（2026-09-19）：
+#   sdxl-detector 在本批素材上给出 0.8506~0.9621 的恒定高分：
+#     真实图 clean_01        = 0.9571
+#     篡改图 copy_move       = 0.9621   ← 与真实图只差 0.005
+#     → 对「是否被篡改」**零区分度**，还把 100% 的真实图判成 AI 生成。
+#   提高阈值也救不了：真实图和篡改图分数几乎重合，任何阈值都会把它们分到同一边。
+# 所以：AIGC 分数照常检测、照常写进报告，但**不参与自动定级**，
+# 定级交给 ELA / C2PA 这些在本素材上被验证有效的信号。
+# 若以后换了更靠谱的 AIGC 模型、或换了素材分布，把这里改成 True 即可重新启用。
+AIGC_TRIGGERS_HIGH_RISK = False
+
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
 
@@ -68,9 +79,15 @@ def judge(evidence):
             else:
                 reasons.append("AIGC 检测：本次推理未返回分数，本项无法判断，已跳过")
         elif score >= THRESHOLDS["aigc_ai_score"]:
+            if AIGC_TRIGGERS_HIGH_RISK:
+                reasons.append(
+                    f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}）→ 很可能是 AI 生成的图")
+                return "high_risk", reasons
+            # 不参与定级：只记一条参考信号，继续让后面的 ELA / C2PA 规则说话
             reasons.append(
-                f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}）→ 很可能是 AI 生成的图")
-            return "high_risk", reasons
+                f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}），"
+                f"但本模型在本批素材上实测零区分度（真实图 0.9571 vs 篡改图 0.9621），"
+                f"仅作参考，不参与自动定级")
 
     # 信号2：ELA 压缩异常 —— 局部篡改痕迹
     ela = evidence.get("ela")

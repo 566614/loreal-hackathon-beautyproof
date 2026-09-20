@@ -1,0 +1,37 @@
+{
+  "stem": "tampered_01_copy_move",
+  "passed": 6,
+  "total": 6,
+  "checks": [
+    {
+      "check": "段落齐全",
+      "passed": true,
+      "detail": "四个必需段落都在"
+    },
+    {
+      "check": "风险等级合法",
+      "passed": true,
+      "detail": "risk_level=suspicious"
+    },
+    {
+      "check": "工具有据可查",
+      "passed": true,
+      "detail": "证据工具 5 个，报告中引用 5 个"
+    },
+    {
+      "check": "可疑结论有 ELA 支撑",
+      "passed": true,
+      "detail": "ELA 最高区域 3.905，阈值 2.0"
+    },
+    {
+      "check": "边界声明完整",
+      "passed": true,
+      "detail": "全部如实写入"
+    },
+    {
+      "check": "无越界措辞",
+      "passed": true,
+      "detail": "未发现断定式表述"
+    }
+  ]
+}

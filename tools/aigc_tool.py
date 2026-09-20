@@ -21,6 +21,19 @@ import sys
 from pathlib import Path
 
 
+def model_path():
+    """返回本地模型目录；没下好就返回 None（调用方据此优雅降级）。
+
+    注意：不要给 pipeline() 传 local_files_only=... —— transformers 5.x 会把它
+    当成 pipeline 自己的参数，报 unexpected keyword argument。传本地路径本身
+    就不会联网，所以这里直接用路径判断即可。
+    """
+    local = Path(__file__).resolve().parent.parent / "models" / "sdxl-detector"
+    if (local / "config.json").exists() and (local / "model.safetensors").exists():
+        return str(local)
+    return None
+
+
 def run_aigc(image_path):
     """调 transformers 的 image-classification pipeline，判断是不是 AI 图
 
@@ -30,22 +43,21 @@ def run_aigc(image_path):
     """
     from transformers import pipeline
 
+    local_model = model_path()
+    if local_model is None:
+        # 模型没下好：直接降级，绝不联网下载（默认网络会被掐断，重试退避会卡死整条流水线）
+        return None, "model_missing: 先跑 download_aigc_model.py", False
+
     try:
-        # local_files_only=True：模型必须已在本地缓存（由 download_aigc_model.py 下好），
-        # 不在就立刻报错降级，绝不自己联网下载（默认网络会被掐断，重试退避会卡死整条流水线）
-        detector = pipeline(
-            "image-classification",
-            model="Organika/sdxl-detector",
-            local_files_only=True,
-        )
+        detector = pipeline("image-classification", model=local_model)
     except Exception as e:  # noqa: BLE001
         # 模型没下载成功 / 网络断了 / 缺依赖 —— 优雅降级，别让整条流水线崩
-        return None, f"model_unavailable: {type(e).__name__}", False
+        return None, f"model_unavailable: {type(e).__name__}: {str(e)[:200]}", False
 
     try:
         results = detector(str(image_path))
     except Exception as e:  # noqa: BLE001
-        return None, f"inference_failed: {type(e).__name__}", False
+        return None, f"inference_failed: {type(e).__name__}: {str(e)[:200]}", False
 
     ai_score = None
     ai_label = None
@@ -75,12 +87,14 @@ def build_evidence(image_path, ai_score, ai_label, available=True):
                 {"aigc_score": None, "label": ai_label, "available": False},
             ],
         }
+    # 措辞刻意保持中性：实测本模型在本批素材上把真实图也判成 0.95+，
+    # 所以即使分数很高，也只说"模型给出的概率"，不下"就是 AI 生成"的结论。
     if ai_score >= 0.7:
-        verdict = "很可能是 AI 生成的图"
+        verdict = "模型给出了较高的 AI 生成概率，但该模型误判率很高（真实图也常被判高分），不能单凭此项下结论"
     elif ai_score >= 0.4:
         verdict = "有部分 AI 生成的痕迹，需人工复核"
     else:
-        verdict = "看起来像真实拍摄/人工制作的图"
+        verdict = "模型认为看起来像真实拍摄/人工制作的图"
     return {
         "tool": "aigc",
         "source_asset_id": Path(image_path).name,

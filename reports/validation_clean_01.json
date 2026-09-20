@@ -1,0 +1,37 @@
+{
+  "stem": "clean_01",
+  "passed": 6,
+  "total": 6,
+  "checks": [
+    {
+      "check": "段落齐全",
+      "passed": true,
+      "detail": "四个必需段落都在"
+    },
+    {
+      "check": "风险等级合法",
+      "passed": true,
+      "detail": "risk_level=inconclusive"
+    },
+    {
+      "check": "工具有据可查",
+      "passed": true,
+      "detail": "证据工具 5 个，报告中引用 5 个"
+    },
+    {
+      "check": "结论一致性",
+      "passed": true,
+      "detail": "风险等级 inconclusive，无需额外证据支撑"
+    },
+    {
+      "check": "边界声明完整",
+      "passed": true,
+      "detail": "全部如实写入"
+    },
+    {
+      "check": "无越界措辞",
+      "passed": true,
+      "detail": "未发现断定式表述"
+    }
+  ]
+}

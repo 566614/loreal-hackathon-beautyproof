@@ -2,9 +2,11 @@
   "image_stem": "post",
   "risk_level": "inconclusive",
   "reasons": [
+    "AIGC 检测：AI 生成概率 0.9571（≥0.7），但本模型在本批素材上实测零区分度（真实图 0.9571 vs 篡改图 0.9621），仅作参考，不参与自动定级",
     "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
   ],
   "tools_used": [
+    "aigc",
     "c2pa",
     "ela",
     "hash",
