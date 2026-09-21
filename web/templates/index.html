@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>美妆图取证台 · BeautyProof</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --ink:#1a2333; --ink2:#5c6675; --ink3:#8a93a2;
+  --line:rgba(15,30,50,.10); --blue:#185FA5; --blue-bg:#E6F1FB;
+  --red:#c0392b; --red-bg:#fdecea; --amber:#b26a00; --amber-bg:#fff4e0;
+  --green:#0F6E56; --green-bg:#e1f5ee; --gray:#5F5E5A; --gray-bg:#f1efe8;
+  --radius:14px; --shadow:0 1px 2px rgba(16,32,56,.05),0 8px 24px rgba(16,32,56,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);
+  font-family:"PingFang SC","Microsoft YaHei UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px 80px}
+header{padding:44px 0 8px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:11px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex:none}
+.logo svg{width:24px;height:24px}
+h1{font-size:22px;font-weight:600;letter-spacing:.5px}
+.sub{font-size:13px;color:var(--ink2);margin-top:1px}
+.hero{margin:26px 0 22px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+.hero p{font-size:15px;color:var(--ink2);max-width:640px}
+.hero p b{color:var(--ink)}
+.samples{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;
+  font-size:13px;color:var(--ink2);cursor:pointer;transition:.15s;display:flex;align-items:center;gap:7px}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.dot.high_risk{background:var(--red)} .dot.suspicious{background:#e19b13}
+.dot.credible{background:var(--green)} .dot.inconclusive{background:var(--ink3)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.drop{margin-top:6px;border:1.5px dashed rgba(15,60,110,.28);border-radius:var(--radius);
+  background:var(--card);padding:44px 24px;text-align:center;cursor:pointer;transition:.18s}
+.drop:hover,.drop.over{border-color:var(--blue);background:var(--blue-bg)}
+.drop .big{font-size:15px;font-weight:600;margin-top:12px}
+.drop .hint{font-size:13px;color:var(--ink3);margin-top:4px}
+.drop svg{width:44px;height:44px;color:var(--blue)}
+.drop.busy{pointer-events:none;opacity:.6}
+.opts{display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:13px;color:var(--ink2);flex-wrap:wrap}
+.opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+#status{display:none;margin-top:22px;padding:22px 24px}
+#status h3{font-size:14px;font-weight:600;margin-bottom:14px;color:var(--ink2)}
+.steps{display:flex;flex-direction:column;gap:9px}
+.step{display:flex;align-items:center;gap:11px;font-size:13.5px}
+.sicon{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--line);background:var(--card);font-size:11px;color:var(--ink3)}
+.step.running .sicon{border-color:var(--blue)}
+.step.running .sicon::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1s infinite}
+.step.done .sicon{background:var(--green-bg);border-color:transparent;color:var(--green)}
+.step.failed .sicon{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
+@keyframes pulse{50%{opacity:.25}}
+#result{display:none;margin-top:26px;animation:rise .4s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+.verdict{padding:26px 28px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.vbadge{min-width:132px;text-align:center;padding:16px 20px;border-radius:12px}
+.vbadge .t{font-size:26px;font-weight:700;letter-spacing:2px}
+.vbadge .e{font-size:11px;color:var(--ink2);margin-top:2px;letter-spacing:.5px}
+.vmain{flex:1;min-width:260px}
+.vmain .h{font-size:17px;font-weight:600}
+.vmain .meta{font-size:12.5px;color:var(--ink3);margin-top:5px}
+.scorebox{display:flex;align-items:center;gap:16px}
+.ringwrap{position:relative;width:104px;height:104px;flex:none}
+.ringwrap svg{transform:rotate(-90deg)}
+.ringval{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringval b{font-size:22px;font-weight:700}
+.ringval span{font-size:10.5px;color:var(--ink2)}
+.ringlbl{font-size:12.5px;color:var(--ink2);max-width:150px}
+.imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.imgcard{padding:14px}
+.imgcard h4{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.imgcard h4 i{width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block}
+.imgcard img{width:100%;border-radius:9px;display:block;cursor:zoom-in}
+.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{padding:20px 22px}
+.card h3{font-size:14.5px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h3 .bar{width:4px;height:15px;border-radius:2px;background:var(--blue);display:inline-block}
+.reasons li{list-style:none;padding:9px 0 9px 26px;position:relative;font-size:13.5px;color:var(--ink2);border-bottom:1px dashed var(--line)}
+.reasons li:last-child{border-bottom:none}
+.reasons li::before{content:"";position:absolute;left:6px;top:17px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:14px}
+.tool{padding:15px 17px;border:1px solid var(--line);border-radius:11px;background:var(--card)}
+.tool .th{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600}
+.tstate{width:9px;height:9px;border-radius:50%;flex:none}
+.tstate.on{background:var(--green)} .tstate.off{background:var(--ink3);opacity:.5}
+.tool .tdesc{font-size:12px;color:var(--ink3);margin-top:6px}
+.tool .tobs{font-size:12.5px;color:var(--ink2);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.disclaim{margin-top:22px;padding:16px 22px;border-radius:12px;background:var(--gray-bg);
+  font-size:12.5px;color:var(--ink2);line-height:1.8}
+.disclaim b{color:var(--ink)}
+footer{margin-top:30px;text-align:center;font-size:12px;color:var(--ink3)}
+button.primary{border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;
+  padding:11px 26px;border-radius:10px;cursor:pointer;transition:.15s}
+button.primary:hover{filter:brightness(1.08)}
+button.primary:disabled{opacity:.5;cursor:default}
+#zoom{position:fixed;inset:0;background:rgba(10,16,28,.72);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
+#zoom img{max-width:92vw;max-height:92vh;border-radius:10px}
+.err{margin-top:22px;padding:16px 20px;border-radius:12px;background:var(--red-bg);color:var(--red);font-size:13.5px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div>
+        <h1>美妆图取证台</h1>
+        <div class="sub">BeautyProof · 美妆图篡改与可信度鉴定 Agent</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <p>给一张美妆图，六个检测工具一起上手：<b>文件指纹、内容凭证、压缩痕迹、文字比对、AI 生成检测、深度学习篡改定位</b>，
+    最后给出「可信 / 可疑 / 高风险 / 无法判定」的结论与证据链。</p>
+    <div class="samples" id="samples"></div>
+  </div>
+
+  <div class="drop" id="drop">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-4.5-4.5L7 20"/>
+    </svg>
+    <div class="big" id="dropText">把图片拖到这里，或点击选择</div>
+    <div class="hint">支持 PNG / JPG，≤ 32MB · 全流程约 1–2 分钟（含两个深度学习模型）</div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <div class="opts">
+      <label><input type="checkbox" id="fast"> 快速预览（跳过深度学习模型，秒出，但证据不全）</label>
+    </div>
+  </div>
+
+  <div class="panel" id="status">
+    <h3>正在鉴定…</h3>
+    <div class="steps" id="steps"></div>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <div id="result">
+    <div class="panel verdict">
+      <div class="vbadge" id="vBadge"><div class="t" id="vText">—</div><div class="e" id="vEn"></div></div>
+      <div class="vmain">
+        <div class="h" id="vHead">—</div>
+        <div class="meta" id="vMeta">—</div>
+      </div>
+      <div class="scorebox" id="scoreBox">
+        <div class="ringwrap">
+          <svg width="104" height="104">
+            <circle cx="52" cy="52" r="45" fill="none" stroke="rgba(15,30,50,.08)" stroke-width="9"/>
+            <circle id="ring" cx="52" cy="52" r="45" fill="none" stroke="#185FA5" stroke-width="9"
+              stroke-linecap="round" stroke-dasharray="282.7" stroke-dashoffset="282.7"
+              style="transition:stroke-dashoffset 1s ease"/>
+          </svg>
+          <div class="ringval"><b id="ringNum">—</b><span>篡改痕迹分</span></div>
+        </div>
+        <div class="ringlbl" id="ringLbl">0 = 干净，1 = 强烈篡改痕迹<br>（TruFor，CVPR 2023）</div>
+      </div>
+    </div>
+
+    <div class="imgs" id="imgs"></div>
+
+    <div class="grid2">
+      <div class="panel card">
+        <h3><span class="bar"></span>结论是怎么得出的</h3>
+        <ul class="reasons" id="reasons"></ul>
+      </div>
+      <div class="panel card">
+        <h3><span class="bar"></span>同时也要说清楚</h3>
+        <ul class="reasons" id="limits"></ul>
+      </div>
+    </div>
+
+    <h3 style="margin:24px 0 2px;font-size:15px">六件检测工具的原始证据</h3>
+    <div class="tools" id="tools"></div>
+
+    <div class="disclaim">
+      <b>关于本报告的边界：</b>所有分数都来自模型与算法，<b>不构成法律意义上的鉴定结论</b>。分数高不代表一定有罪（压缩、滤镜也会留痕），
+      分数低也不代表绝对干净。TruFor 只擅长发现「局部被人工修改」，官方明确说明它查不出「整张完全由 AI 生成的图」——
+      所以本台把「整图 AI 生成」交给 AIGC 检测参考、「局部篡改」交给 TruFor 与 ELA、「来源与凭证」交给 C2PA 与哈希，互为补充、互不越界。
+    </div>
+    <footer>L'Oréal Brandstorm Hackathon · Trust &amp; Authenticity Track · BeautyProof Agent</footer>
+  </div>
+</div>
+
+<div id="zoom"><img id="zoomImg" alt=""></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const RISK={
+  high_risk:{zh:"高风险",en:"HIGH RISK",bg:"var(--red-bg)",fg:"var(--red)",
+    head:"检测到明确篡改痕迹，建议人工复核后处理"},
+  suspicious:{zh:"可疑",en:"SUSPICIOUS",bg:"var(--amber-bg)",fg:"var(--amber)",
+    head:"发现可疑篡改迹象，建议人工看一眼再决定"},
+  credible:{zh:"可信",en:"CREDIBLE",bg:"var(--green-bg)",fg:"var(--green)",
+    head:"编辑凭证齐全，可信度较高"},
+  inconclusive:{zh:"无法判定",en:"INCONCLUSIVE",bg:"var(--gray-bg)",fg:"var(--gray)",
+    head:"未发现明确篡改信号，但也不能证明一定真实"}
+};
+const TOOLZH={hash:"文件指纹",c2pa:"内容凭证",ela:"压缩痕迹",ocr:"文字识别",aigc:"AI 生成检测",trufor:"篡改痕迹检测"};
+let pollTimer=null;
+
+/* ---------- 拖拽与上传 ---------- */
+const drop=$("#drop"),fileInput=$("#file");
+drop.addEventListener("click",()=>fileInput.click());
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)start(f)});
+fileInput.addEventListener("change",()=>{if(fileInput.files[0])start(fileInput.files[0])});
+
+function start(file){
+  $("#err").style.display="none";
+  $("#result").style.display="none";
+  $("#status").style.display="block";
+  $("#steps").innerHTML="";
+  $("#dropText").textContent="正在送检：" + file.name;
+  drop.classList.add("busy");
+  const fd=new FormData();
+  fd.append("file",file);
+  if($("#fast").checked)fd.append("fast","1");
+  fetch("/api/analyze",{method:"POST",body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.error)throw new Error(d.error);
+      poll(d.job_id);
+    })
+    .catch(e=>showErr("上传失败："+e.message));
+}
+
+function poll(id){
+  let waited=0;
+  clearInterval(pollTimer);
+  pollTimer=setInterval(()=>{
+    waited+=1000;
+    fetch("/api/job/"+id).then(r=>r.json()).then(d=>{
+      renderSteps(d.steps);
+      if(d.status==="done"){clearInterval(pollTimer);drop.classList.remove("busy");
+        $("#dropText").textContent="把图片拖到这里，或点击选择";
+        render(d.result,true);}
+      else if(d.status==="error"){clearInterval(pollTimer);drop.classList.remove("busy");
+        $("#dropText").textContent="把图片拖到这里，或点击选择";
+        showErr("鉴定失败："+(d.error||"未知错误"));}
+      else if(waited>10*60*1000){clearInterval(pollTimer);showErr("等待超时，请重试");}
+    }).catch(()=>{});
+  },1000);
+}
+
+function renderSteps(steps){
+  const seen={},list=[];
+  steps.forEach(s=>{
+    if(!seen[s.tool]){seen[s.tool]=s;list.push(s)}
+    else{seen[s.tool].state=s.state}
+  });
+  $("#steps").innerHTML=list.map(s=>{
+    const cls=s.state==="done"?"done":s.state==="failed"?"failed":"running";
+    const mark=s.state==="done"?"✓":s.state==="failed"?"!":"";
+    const zh=TOOLZH[s.tool]||s.tool;
+    return `<div class="step ${cls}"><div class="sicon">${mark}</div><div>${zh} <span style="color:var(--ink3)">/ ${s.tool}</span>
+      ${s.state==="failed"?'<span style="color:var(--amber);font-size:12px">（本次没跑成，结论会说明这一点）</span>':""}</div></div>`;
+  }).join("");
+}
+
+/* ---------- 渲染结果 ---------- */
+function render(res,fresh){
+  const v=res.verdict,r=RISK[v.risk_level]||RISK.inconclusive;
+  $("#result").style.display="block";
+  $("#vBadge").style.background=r.bg; $("#vText").style.color=r.fg;
+  $("#vText").textContent=r.zh; $("#vEn").textContent=r.en;
+  $("#vHead").textContent=r.head;
+  $("#vMeta").textContent=`${res.image.name} · ${res.image.width||"?"}×${res.image.height||"?"} ·
+    ${(res.image.size_bytes/1024).toFixed(0)} KB · 六件工具用时 ${res.elapsed_seconds}s ·
+    ${v.tools_used.length}/6 件给出证据`;
+
+  /* TruFor 分数环 */
+  const tru=(res.evidence.trufor||{}).evidence?.[0]||{};
+  const score=tru.trufor_score;
+  if(typeof score==="number"){
+    $("#scoreBox").style.display="flex";
+    $("#ringNum").textContent=score.toFixed(2);
+    const c=282.7;
+    requestAnimationFrame(()=>{$("#ring").style.strokeDashoffset=c*(1-Math.min(1,Math.max(0,score)))});
+    $("#ringLbl").innerHTML=`0 = 干净，1 = 强烈篡改痕迹<br>可疑区域约占全图 ${((tru.tampered_area_ratio||0)*100).toFixed(1)}%`;
+  }else{
+    $("#scoreBox").style.display="none";
+  }
+
+  /* 图：原图 + 热力叠加 */
+  const im=$("#imgs");
+  im.innerHTML="";
+  if(res.image.preview)im.appendChild(imgCard("送检原图",res.image.preview));
+  if(res.visuals&&res.visuals.overlay)im.appendChild(imgCard("TruFor 篡改定位（红 = 可疑区域）",res.visuals.overlay));
+  else if(res.visuals&&res.visuals.heatmap)im.appendChild(imgCard("TruFor 篡改热力图",res.visuals.heatmap));
+
+  /* 理由与边界 */
+  $("#reasons").innerHTML=v.reasons.map(x=>`<li>${x}</li>`).join("");
+  const limits=[];
+  Object.values(res.evidence).forEach(ev=>{if(ev.cannot_prove)limits.push(ev.cannot_prove)});
+  $("#limits").innerHTML=(limits.length?limits:["本次没有工具给出「不能证明什么」的说明。"])
+    .map(x=>`<li>${x}</li>`).join("");
+
+  /* 工具卡 */
+  const meta=res.tool_meta||{};
+  $("#tools").innerHTML=Object.keys(TOOLZH).map(k=>{
+    const ev=res.evidence[k];
+    const on=!!ev;
+    const first=(ev&&ev.evidence&&ev.evidence[0])||{};
+    const ok=ev?(first.available!==false):false;
+    const desc=meta[k]?meta[k].job:"";
+    const obs=ev&&ev.observed?ev.observed:"本次未启用（证据缺失，不影响其他工具结论）";
+    return `<div class="tool">
+      <div class="th"><span class="tstate ${on?(ok?"on":"off"):"off"}"></span>${TOOLZH[k]}
+        <span style="color:var(--ink3);font-weight:400;font-size:11.5px">/ ${k}</span></div>
+      <div class="tdesc">${desc}</div>
+      <div class="tobs">${obs}</div>
+    </div>`;
+  }).join("");
+
+  $("#result").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function imgCard(title,dataUri){
+  const d=document.createElement("div");
+  d.className="panel imgcard";
+  d.innerHTML=`<h4><i></i>${title}</h4>`;
+  const img=new Image();
+  img.src=dataUri; img.alt=title;
+  img.addEventListener("click",()=>{$("#zoomImg").src=dataUri;$("#zoom").style.display="flex"});
+  d.appendChild(img);
+  return d;
+}
+
+$("#zoom").addEventListener("click",()=>{$("#zoom").style.display="none"});
+
+function showErr(msg){
+  const e=$("#err");
+  e.textContent=msg; e.style.display="block";
+  $("#status").style.display="none";
+}
+
+/* ---------- 示例 ---------- */
+function renderSamples(list, loadOne){
+  const box=$("#samples");
+  (list||[]).forEach(s=>{
+    const b=document.createElement("button");
+    b.className="chip";
+    b.innerHTML=`<span class="dot ${s.risk_level}"></span>${s.stem} · ${s.risk_zh}`;
+    b.addEventListener("click",()=>{
+      $("#status").style.display="none";
+      loadOne(s);
+    });
+    box.appendChild(b);
+  });
+  if(!list||!list.length){
+    const t=document.createElement("span");
+    t.style.cssText="font-size:12px;color:var(--ink3)";
+    t.textContent="首次运行还没有示例，上传一张即可";
+    box.appendChild(t);
+  }
+}
+
+if(window.__DEMO_DATA__){
+  /* 静态演示模式（tools/build_demo.py 注入数据）：离线可看，不需要后端 */
+  const map={};
+  window.__DEMO_DATA__.samples.forEach(s=>map[s.stem]=s.analysis);
+  renderSamples(window.__DEMO_DATA__.samples, s=>{
+    if(map[s.stem])render(map[s.stem],false); else showErr("示例数据缺失");
+  });
+}else{
+  fetch("/api/samples").then(r=>r.json()).then(d=>{
+    renderSamples(d.samples, s=>{
+      fetch("/api/sample/"+s.stem).then(r=>r.json()).then(res=>render(res,false))
+        .catch(()=>showErr("示例读取失败"));
+    });
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>

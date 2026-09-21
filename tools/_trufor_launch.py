@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 """TruFor 官方 test.py 的启动包装器（内部用，不用手动跑它）
 
-为什么需要它（两件事）：
+为什么需要它（三件事）：
 
 1) 新版 torch（2.14）默认 torch.load(weights_only=True)，只放行"安全"对象。
    TruFor 是 2023 年的官方权重，含 numpy.core.multiarray.scalar 这类旧类型，
    会被拦下报错：Unsupported global: GLOBAL numpy.core.multiarray.scalar
    → 这里把 torch.load 的默认参数放宽成 weights_only=False（权重来自官方可信站点）。
 
-2) 官方 test.py 拼输出路径时只处理了 Linux 的前导斜杠 '/'，
+2) 官方 lib/utils.py 一上来就 import matplotlib（要加载一堆 DLL，受限环境常被
+   系统策略拦下：DLL load failed / 应用程序控制策略已阻止此文件），但推理这条路径
+   一次都不碰它 → 这里用替身模块顶上，避免被无关依赖拖挂。
+
+3) 官方 test.py 拼输出路径时只处理了 Linux 的前导斜杠 '/'，
    Windows 下会拼出 'C:\\xxx.png.npz'（C 盘根目录）→ PermissionError，
    推理正常跑完但结果一个都存不下来。
    → 这里拦下 np.savez，把结果强制重定向回 -out 指定的目录，并把
@@ -39,7 +43,33 @@ def _patched_load(*args, **kwargs):
 torch.load = _patched_load
 
 
-# ---------------------------------------------------------------- 2) 重定向输出路径
+# ---------------------------------------------------------------- 2) 顶掉 matplotlib
+# TruFor 官方 lib/utils.py 一上来就 import matplotlib，但它只在 visualize.py 那类
+# 画图函数里用得到，推理这条路径一次都不碰。而 matplotlib 要加载一堆 DLL，
+# 在受限环境里会被系统策略拦下（DLL load failed: 应用程序控制策略已阻止此文件），
+# 白白让整条流水线挂掉。所以这里用一个"什么都不干"的替身顶上。
+class _Stub:
+    def __init__(self, name="matplotlib"):
+        self.__name__ = name
+
+    def __getattr__(self, key):
+        if key == "use":                 # matplotlib.use('agg') —— 直接吃掉
+            return lambda *a, **kw: None
+        if key == "__version__":
+            return "0.0"
+        if key == "__path__":
+            return []
+        return _Stub(key)
+
+    def __call__(self, *a, **kw):
+        return _Stub()
+
+
+sys.modules.setdefault("matplotlib", _Stub("matplotlib"))
+sys.modules.setdefault("matplotlib.pyplot", _Stub("matplotlib.pyplot"))
+
+
+# ---------------------------------------------------------------- 3) 重定向输出路径 重定向输出路径
 def _parse_out_dir(argv):
     """从 test.py 的参数里读出 -out 指定的输出目录"""
     for i, a in enumerate(argv):
@@ -75,7 +105,7 @@ def _patched_savez(file, *args, **kwargs):
 
 np.savez = _patched_savez
 
-# ---------------------------------------------------------------- 执行官方 test.py
+# ---------------------------------------------------------------- 4) 执行官方 test.py
 if len(sys.argv) < 2:
     print("用法: python _trufor_launch.py <test.py 路径> [参数...]")
     sys.exit(1)

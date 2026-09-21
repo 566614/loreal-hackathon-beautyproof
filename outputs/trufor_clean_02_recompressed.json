@@ -1,15 +1,15 @@
 {
   "tool": "trufor",
-  "source_asset_id": "tampered_02_splice.png",
-  "observed": "TruFor 篡改分数 1.0（篡改痕迹非常明显）；可疑区域约占全图 2.5%",
+  "source_asset_id": "clean_02_recompressed.png",
+  "observed": "TruFor 篡改分数 0.4113（有轻微篡改痕迹）；可疑区域约占全图 1.0%",
   "cannot_prove": "模型也会误判：分数高不代表一定有罪（压缩/滤镜也会留痕），分数低也不代表绝对干净；且 TruFor 只擅长查「局部被人动过手脚」，官方明确说明它查不出「整张完全由 AI 生成的图」",
   "evidence": [
     {
-      "trufor_score": 1.0,
-      "tampered_area_ratio": 0.0247,
+      "trufor_score": 0.4113,
+      "tampered_area_ratio": 0.0103,
       "available": true,
-      "heatmap": "tampered_02_splice_trufor_heat.png",
-      "overlay": "tampered_02_splice_trufor_overlay.png"
+      "heatmap": "clean_02_recompressed_trufor_heat.png",
+      "overlay": "clean_02_recompressed_trufor_overlay.png"
     }
   ]
 }

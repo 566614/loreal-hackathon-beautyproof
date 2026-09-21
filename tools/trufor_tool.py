@@ -28,6 +28,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
@@ -104,6 +105,62 @@ def estimate_tampered_ratio(m):
     return float((m > thr).mean())
 
 
+def _imread_unicode(path):
+    """读图（兼容中文路径：cv2.imread 对中文路径会静默返回 None）"""
+    data = np.fromfile(str(path), dtype=np.uint8)
+    return cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+
+def _imwrite_unicode(path, img):
+    """写图（兼容中文路径：cv2.imwrite 对中文路径会静默失败）"""
+    ok, buf = cv2.imencode(".png", img)
+    if not ok:
+        return False
+    Path(path).write_bytes(buf.tobytes())
+    return True
+
+
+def save_localization_map(npz_path, image_path):
+    """把 TruFor 的定位图（npz 里的 map）画成两张能直接看的图
+
+    产出（放在 outputs/ 下）：
+        <stem>_trufor_heat.png     纯热力图：越红越可疑
+        <stem>_trufor_overlay.png  原图 + 半透明热力叠加：一眼看出可疑在哪块
+
+    返回 (heat 文件名, overlay 文件名)；失败返回 (None, None)。
+    """
+    try:
+        data = np.load(npz_path, allow_pickle=True)
+        if "map" not in data:
+            return None, None
+        m = np.asarray(data["map"], dtype=np.float32)
+        img = _imread_unicode(image_path)
+        if img is None:
+            return None, None
+
+        h, w = img.shape[:2]
+        if m.shape != (h, w):
+            m = cv2.resize(m, (w, h), interpolation=cv2.INTER_LINEAR)
+
+        # 归一化到 0~1（map 的值域官方不保证，所以按本图自己的最小最大值拉平）
+        mn, mx = float(m.min()), float(m.max())
+        norm = (m - mn) / (mx - mn + 1e-8)
+
+        heat = cv2.applyColorMap((norm * 255).astype(np.uint8), cv2.COLORMAP_JET)
+        # 只在"真的可疑"的地方上色：低于均值的地方淡出，避免满屏红色吓人
+        mask = np.clip((norm - float(norm.mean())) / 0.35, 0, 1)[:, :, None]
+        overlay = (img * (1 - 0.55 * mask) + heat * (0.55 * mask)).astype(np.uint8)
+
+        stem = Path(image_path).stem
+        heat_name = f"{stem}_trufor_heat.png"
+        ovl_name = f"{stem}_trufor_overlay.png"
+        _imwrite_unicode(CACHE_FILE.parent / heat_name, heat)
+        _imwrite_unicode(CACHE_FILE.parent / ovl_name, overlay)
+        return heat_name, ovl_name
+    except Exception:  # noqa: BLE001
+        return None, None
+
+
 def run_trufor_batch(image_paths, force=False):
     """一次跑多张图（官方 test.py 支持传目录，这样模型只加载一次，快很多）
 
@@ -178,10 +235,13 @@ def run_trufor_batch(image_paths, force=False):
             data = np.load(f, allow_pickle=True)
             score = float(np.asarray(data["score"]).reshape(-1)[0])
             ratio = estimate_tampered_ratio(np.asarray(data["map"]))
+            heat, ovl = save_localization_map(f, p)
             cache[str(p)] = {
                 "available": True,
                 "trufor_score": round(score, 4),
                 "tampered_area_ratio": round(ratio, 4),
+                "heatmap": heat,      # outputs/ 下的定位热力图文件名（画不出就是 None）
+                "overlay": ovl,       # 原图 + 热力叠加
             }
             n_done += 1
         except Exception as e:  # noqa: BLE001
@@ -248,6 +308,8 @@ def build_evidence(image_path, res):
             "trufor_score": score,
             "tampered_area_ratio": ratio,
             "available": True,
+            "heatmap": res.get("heatmap"),    # 定位热力图（outputs/ 下）
+            "overlay": res.get("overlay"),    # 原图加热力叠加
         }],
     }
 
@@ -267,7 +329,9 @@ def main():
     out_dir.mkdir(exist_ok=True)
 
     if args[0] == "--batch":
-        paths = [Path(a) for a in args[1:]]
+        # resolve 成绝对路径：与 run_trufor_batch 内部的缓存 key 口径保持一致，
+        # 否则你传相对路径时，推理跑完了却对不上缓存 key，看起来像"没结果"
+        paths = [Path(a).resolve() for a in args[1:]]
         cache, err = run_trufor_batch(paths, force=force)
         if err:
             print(f"[警告] {err}")

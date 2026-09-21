@@ -235,3 +235,6 @@ models/
 # TruFor 推理中间产物（每次跑都会自动重建，且是原图副本 + 定位图 npz，不必进仓库）
 outputs/_trufor_in/
 outputs/_trufor_out/
+# Web 演示的上传暂存与本地调试残留
+uploads/
+outputs/_api_*.json

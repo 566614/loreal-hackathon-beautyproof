@@ -1,0 +1,12 @@
+{
+  "tool": "hash",
+  "source_asset_id": "clean_02_recompressed.png",
+  "observed": "这张图的内容指纹是 sha256:4143141121f9f5a5c524a427d394a448777301db90d27cc0b9956c548cb51e69，文件大小 439869 字节",
+  "cannot_prove": "哈希只证明文件的身份，不能证明图片真伪、不能判断是否被篡改",
+  "evidence": [
+    {
+      "asset_id": "sha256:4143141121f9f5a5c524a427d394a448777301db90d27cc0b9956c548cb51e69",
+      "size_bytes": 439869
+    }
+  ]
+}

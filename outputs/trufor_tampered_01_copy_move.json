@@ -7,7 +7,9 @@
     {
       "trufor_score": 0.9946,
       "tampered_area_ratio": 0.0145,
-      "available": true
+      "available": true,
+      "heatmap": "tampered_01_copy_move_trufor_heat.png",
+      "overlay": "tampered_01_copy_move_trufor_overlay.png"
     }
   ]
 }

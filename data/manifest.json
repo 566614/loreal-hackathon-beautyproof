@@ -42,6 +42,13 @@
         640
       ],
       "expected_risk": "suspicious"
+    },
+    {
+      "id": "clean_02_recompressed",
+      "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\clean\\clean_02_recompressed.png",
+      "ground_truth": "clean",
+      "expected_risk": "inconclusive",
+      "note": "真实图经 JPEG q30 重压缩（模拟多次转发），真值仍是 clean，用于验证不误报"
     }
   ]
 }

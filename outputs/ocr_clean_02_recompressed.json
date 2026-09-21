@@ -1,0 +1,28 @@
+{
+  "tool": "ocr",
+  "source_asset_id": "clean_02_recompressed.png",
+  "observed": "在图上一共读出 2 行文字",
+  "cannot_prove": "OCR 只是抄写员，不能证明文字内容为真，也不能证明图片被篡改",
+  "evidence": [
+    {
+      "text": "@雨弒",
+      "bbox": [
+        5.0,
+        639.0,
+        126.0,
+        695.0
+      ],
+      "confidence": 0.8322
+    },
+    {
+      "text": "小红",
+      "bbox": [
+        174.0,
+        642.0,
+        252.0,
+        688.0
+      ],
+      "confidence": 1.0
+    }
+  ]
+}
