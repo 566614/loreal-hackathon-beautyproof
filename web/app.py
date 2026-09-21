@@ -18,6 +18,7 @@
     POST /api/analyze      上传图片开跑（multipart: file / fast=0|1）
     GET  /api/job/<id>     轮询任务进度与结果
 """
+import json
 import sys
 import threading
 import traceback
@@ -81,7 +82,7 @@ def samples():
     items = []
     for f in sorted((REPO / "outputs").glob("analysis_*.json")):
         try:
-            data = __import__("json").loads(f.read_text(encoding="utf-8"))
+            data = json.loads(f.read_text(encoding="utf-8"))
             items.append({
                 "stem": data["image"]["stem"],
                 "name": data["image"]["name"],
@@ -98,7 +99,12 @@ def sample(stem):
     f = REPO / "outputs" / f"analysis_{stem}.json"
     if not f.exists():
         return jsonify({"error": "sample not found"}), 404
-    return app.response_class(f.read_text(encoding="utf-8"), mimetype="application/json")
+    data = json.loads(f.read_text(encoding="utf-8"))
+    # 兜底：老结果里没有工具说明和中文档位，这里补上，免得页面上卡片描述空白
+    data.setdefault("tool_meta", pipeline.TOOL_META)
+    lvl = data.get("verdict", {}).get("risk_level", "")
+    data["verdict"]["risk_zh"] = RISK_ZH.get(lvl, lvl)
+    return jsonify(data)
 
 
 @app.post("/api/analyze")
@@ -111,6 +117,15 @@ def analyze():
     safe = uuid.uuid4().hex[:8] + "_" + Path(f.filename).name
     path = UPLOADS / safe
     f.save(path)
+
+    # 先确认它真的是张图：否则六个工具会各自以奇怪的方式失败，前端只看到"鉴定失败"
+    try:
+        from PIL import Image
+        with Image.open(path) as im:
+            im.verify()
+    except Exception:  # noqa: BLE001
+        path.unlink(missing_ok=True)
+        return jsonify({"error": f"「{Path(f.filename).name}」不是一张能被识别的图片，请换一张 PNG / JPG"}), 400
 
     job_id = uuid.uuid4().hex[:12]
     with JOBS_LOCK:

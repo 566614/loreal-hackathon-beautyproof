@@ -121,6 +121,16 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progr
     image_path = Path(image_path).resolve()
     if not image_path.exists():
         raise FileNotFoundError(f"找不到这张图: {image_path}")
+
+    # 先确认它真的是一张能被读出来的图：否则后面六个工具会各自以奇怪的方式失败，
+    # 报错信息没法看。这里一次性说清楚。
+    try:
+        from PIL import Image
+        with Image.open(image_path) as im:
+            im.verify()
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"这不是一张能被识别的图片：{image_path.name}（{type(e).__name__}）")
+
     stem = image_path.stem
 
     todo = [t for t in TOOL_LIST
@@ -179,6 +189,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progr
         },
         "evidence": evidence,
         "visuals": visuals,
+        "tool_meta": TOOL_META,   # 每个工具的人话说明，网页/离线 Demo 直接读它
     }
 
     out = REPO / "outputs" / f"analysis_{stem}.json"

@@ -16,6 +16,9 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO / "tools"))
+
+import pipeline  # noqa: E402  —— 只为拿到 TOOL_META（每个工具的人话说明）
 OUT_DIR = REPO / "outputs"
 TEMPLATE = REPO / "web" / "templates" / "index.html"
 DEST = REPO / "demo" / "index.html"
@@ -35,6 +38,8 @@ def main():
         except Exception:  # noqa: BLE001
             continue
         v = data["verdict"]
+        # 兜底：早期生成的分析结果里没有工具说明，补上，免得页面上六张卡片描述空白
+        data.setdefault("tool_meta", pipeline.TOOL_META)
         samples.append({
             "stem": data["image"]["stem"],
             "name": data["image"]["name"],
