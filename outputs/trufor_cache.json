@@ -27,13 +27,6 @@
     "heatmap": "tampered_03_text_edit_trufor_heat.png",
     "overlay": "tampered_03_text_edit_trufor_overlay.png"
   },
-  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\uploads\\c01fffa8_base.png": {
-    "available": true,
-    "trufor_score": 0.3503,
-    "tampered_area_ratio": 0.053,
-    "heatmap": "c01fffa8_base_trufor_heat.png",
-    "overlay": "c01fffa8_base_trufor_overlay.png"
-  },
   "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\clean\\clean_02_recompressed.png": {
     "available": true,
     "trufor_score": 0.4113,

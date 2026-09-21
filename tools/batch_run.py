@@ -58,7 +58,10 @@ def prewarm_trufor(image_paths):
         if err:
             print(f"  [提示] TruFor 未跑成（会自动降级为「无法判断」）: {err[:300]}")
             return False
-        ok = sum(1 for v in cache.values() if v.get("available"))
+        # 只数本次这批图：缓存里还可能留着以前单张试跑的条目，
+        # 按整个 cache 计数会数出「6/5」这种比总数还大的怪数字
+        ok = sum(1 for p in image_paths
+                 if cache.get(str(Path(p).resolve()), {}).get("available"))
         print(f"  TruFor 完成：{ok}/{len(image_paths)} 张拿到分数")
         return True
     except Exception as e:  # noqa: BLE001
