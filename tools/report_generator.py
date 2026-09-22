@@ -27,9 +27,10 @@ TOOL_NAMES = {
     "ela": "压缩痕迹分析（ELA）",
     "ocr": "图上文字识别（OCR）",
     "aigc": "AI 生成检测（AIGC）",
+    "trufor": "篡改痕迹检测（TruFor）",
 }
 
-TOOL_ORDER = ["hash", "c2pa", "ela", "ocr", "aigc"]
+TOOL_ORDER = ["hash", "c2pa", "ela", "ocr", "aigc", "trufor"]
 
 RISK_TEXT = {
     "high_risk": ("高风险", "检测结果显示该图很可能有问题，**不建议直接采信**，必须人工复核。"),
@@ -116,6 +117,18 @@ def key_facts(tool, ev_list):
             facts.append(f"AI 生成概率：**{score}**（触发阈值 0.7）")
         if "label" in e:
             facts.append(f"模型标签：{e['label']}")
+    elif tool == "trufor":
+        score = e.get("trufor_score")
+        if score is None:
+            facts.append("整图篡改分数：**未获取**（模型未部署，本项跳过）")
+        else:
+            facts.append(f"整图篡改分数：**{score}**（阈值：≥0.9 高风险，≥0.5 可疑）")
+        ratio = e.get("tampered_area_ratio")
+        if ratio is not None:
+            facts.append(f"可疑区域占比：约 {ratio:.1%}")
+        for k, zh in (("heatmap", "定位热力图"), ("overlay", "原图叠加图")):
+            if e.get(k):
+                facts.append(f"{zh}：`outputs/{e[k]}`")
     return facts
 
 
@@ -146,6 +159,21 @@ def build_report(stem, evidence, verdict):
 
     lines.append("## 一、结论")
     lines.append("")
+    try:
+        sys.path.insert(0, str(REPO / "tools"))
+        import rule_engine  # noqa: E402
+        ex = rule_engine.explain(risk, evidence)
+    except Exception:  # noqa: BLE001
+        ex = {}
+    if ex:
+        lines.append(f"> **{ex['headline']}**")
+        lines.append(">")
+        lines.append(f"> {ex['summary']}")
+        lines.append(">")
+        lines.append(f"> **建议下一步**：{ex['what_to_do']}")
+        lines.append(">")
+        lines.append(f"> **提醒**：{ex['caveat']}")
+        lines.append("")
     lines.append(zh_desc)
     if reasons:
         lines.append("")

@@ -165,6 +165,18 @@ button.primary:disabled{opacity:.5;cursor:default}
       </div>
     </div>
 
+    <div class="panel" id="explainPanel" style="display:none;padding:22px 26px">
+      <h3 style="margin-bottom:12px"><span class="bar"></span>这段话是给非技术同事看的</h3>
+      <div id="exHead" style="font-size:16.5px;font-weight:700;color:var(--ink);margin-bottom:8px">—</div>
+      <div id="exSum" style="font-size:13.5px;color:var(--ink2);line-height:1.75">—</div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink2)">
+        <b style="color:var(--ink)">建议下一步：</b><span id="exDo">—</span>
+      </div>
+      <div style="margin-top:6px;font-size:12.5px;color:var(--ink3)">
+        <b>提醒：</b><span id="exCav">—</span>
+      </div>
+    </div>
+
     <div class="imgs" id="imgs"></div>
 
     <div class="grid2">
@@ -289,6 +301,18 @@ function render(res,fresh){
     $("#ringLbl").innerHTML=`0 = 干净，1 = 强烈篡改痕迹<br>可疑区域约占全图 ${((tru.tampered_area_ratio||0)*100).toFixed(1)}%`;
   }else{
     $("#scoreBox").style.display="none";
+  }
+
+  /* 人话结论：给品牌方 / 法务 / 平台审核看的那一段 */
+  const ex=v.explain;
+  if(ex&&ex.headline){
+    $("#explainPanel").style.display="block";
+    $("#exHead").textContent=ex.headline;
+    $("#exSum").textContent=ex.summary;
+    $("#exDo").textContent=ex.what_to_do;
+    $("#exCav").textContent=ex.caveat;
+  }else{
+    $("#explainPanel").style.display="none";
   }
 
   /* 图：原图 + 热力叠加 */

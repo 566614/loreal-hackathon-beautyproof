@@ -142,6 +142,83 @@ def judge(evidence):
     return "inconclusive", reasons
 
 
+def explain(risk_level, evidence):
+    """把分级结果翻译成品牌方 / 法务也能看懂的大白话
+
+    为什么要这一层：分数环和热力图只有技术同学看得懂，
+    但真正要拿这张图去做决策的是品牌方、法务、平台审核——他们需要的是
+    「这张图能不能用、我下一步该干嘛」，而不是一个 0~1 的数字。
+
+    返回 dict：
+        headline    一句话结论（给人看的第一行）
+        summary     为什么这么判（引用具体数字，不空谈）
+        what_to_do  建议下一步做什么
+        caveat      必须提醒的边界（算法不是法律结论）
+    """
+    def _first(tool):
+        items = evidence.get(tool, {}).get("evidence", [{}])
+        return items[0] if items else {}
+
+    tru = _first("trufor")
+    score = tru.get("trufor_score")
+    ratio = tru.get("tampered_area_ratio")
+    tru_ready = bool(tru.get("available", True)) and score is not None
+
+    c2pa_status = _first("c2pa").get("c2pa_status")
+
+    caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
+              "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
+
+    if risk_level == "high_risk":
+        headline = "发现明显篡改痕迹，建议人工复核"
+        if tru_ready:
+            summary = f"取证模型给出的整图篡改分为 {score}（越接近 1.0 越可疑）"
+            if ratio is not None:
+                summary += f"，可疑区域约占全图 {ratio:.1%}"
+            summary += "。说明图上很可能有区域被复制、拼接或改写过，配合定位热力图的红色区域可以大致看出是哪里。"
+        else:
+            summary = "多个取证信号同时指向这张图被人工改动过。"
+        what_to_do = ("先不要用这张图对外投放或作为证据；"
+                      "找品牌方要原始原图核对，或交给专业鉴定机构复核后再定。")
+
+    elif risk_level == "suspicious":
+        headline = "有可疑迹象，建议人工看一眼"
+        if tru_ready:
+            summary = f"取证模型给出的整图篡改分为 {score}，已超过可疑线"
+            if ratio is not None:
+                summary += f"，可疑区域约占全图 {ratio:.1%}"
+            summary += "。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
+        else:
+            summary = "有取证信号提示这张图可能被动过，但强度不足以直接定性。"
+        what_to_do = "暂缓对外投放，人工对照原图确认后再用。"
+
+    elif risk_level == "credible":
+        headline = "带有官方内容凭证，可信度较高"
+        if c2pa_status == "present":
+            summary = "这张图带有 C2PA 内容凭证（相当于图片的「出生证」），拍摄来源和编辑历史可查。"
+        else:
+            summary = "现有信号显示这张图的来源和编辑历史比较清晰。"
+        what_to_do = "可以正常使用，建议把凭证一并留存备查。"
+
+    else:  # inconclusive
+        headline = "没查出篡改信号，但也无法证明一定真实"
+        if not tru_ready:
+            summary = ("取证模型本次没有参与判断（未部署或未返回分数），"
+                       "结论主要来自文件指纹、压缩痕迹等较基础的检查。")
+        else:
+            summary = (f"取证模型给出的整图篡改分为 {score}，未达到可疑线；"
+                       "其余工具也没有发现明确篡改痕迹。")
+        summary += "注意：多数网络图片本来就没有可查凭证，「没查出问题」不等于「证明没问题」。"
+        what_to_do = "如需要确证，建议向品牌方索取带 C2PA 凭证的原始原图。"
+
+    return {
+        "headline": headline,
+        "summary": summary,
+        "what_to_do": what_to_do,
+        "caveat": caveat,
+    }
+
+
 def main():
     if len(sys.argv) < 2:
         print("用法: python tools/rule_engine.py <图片名不带后缀>")

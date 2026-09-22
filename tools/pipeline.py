@@ -112,6 +112,13 @@ def judge(evidence):
     return rule_engine.judge(evidence)
 
 
+def explain_verdict(risk_level, evidence):
+    """把分级结果翻译成品牌方 / 法务也看得懂的大白话"""
+    sys.path.insert(0, str(TOOLS))
+    import rule_engine  # noqa: E402
+    return rule_engine.explain(risk_level, evidence)
+
+
 # ---------------------------------------------------------------- 主流程
 def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progress=None):
     """对一张图跑完整流水线，返回结构化结果
@@ -163,6 +170,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progr
 
     evidence = collect_evidence(stem)
     risk_level, reasons = judge(evidence)
+    plain = explain_verdict(risk_level, evidence)
 
     # TruFor 的定位图（如果画出来了就一起带上）
     tru = evidence.get("trufor", {}).get("evidence", [{}])
@@ -182,6 +190,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progr
         "image": image_info(image_path),
         "verdict": {
             "risk_level": risk_level,
+            "explain": plain,
             "reasons": reasons,
             "tools_used": sorted(evidence.keys()),
             "tools_ran": ran,
