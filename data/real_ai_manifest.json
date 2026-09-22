@@ -1,0 +1,182 @@
+[
+  {
+    "id": "real_01",
+    "file": "data\\real\\real_01.jpg",
+    "orig_name": "训练集/134f155ed30fc187b4d60dd6396c912a.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_02",
+    "file": "data\\real\\real_02.png",
+    "orig_name": "训练集/1d0d18aae704fa8ece9a283bb9ea8098.png",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_03",
+    "file": "data\\real\\real_03.png",
+    "orig_name": "训练集/1f3d358d00628dc63d072d9c9067d79c.png",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_04",
+    "file": "data\\real\\real_04.png",
+    "orig_name": "训练集/7ebeaa72095a78b27c631bfb3717e570.png",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_05",
+    "file": "data\\real\\real_05.jpg",
+    "orig_name": "训练集/83df7b47bec3f422c2b37b064926b68e.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_06",
+    "file": "data\\real\\real_06.jpg",
+    "orig_name": "训练集/aa2ea040fe8046d78d72988f582408af.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_07",
+    "file": "data\\real\\real_07.jpg",
+    "orig_name": "训练集/b51c2c88cd5aeba99423f1f357601089.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_08",
+    "file": "data\\real\\real_08.jpg",
+    "orig_name": "训练集/d764c1afd0d3553198f3a883b03d145d.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_09",
+    "file": "data\\real\\real_09.jpg",
+    "orig_name": "训练集/f2150f63ec2bd8ae47c49b641851ccca.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "real_10",
+    "file": "data\\real\\real_10.jpg",
+    "orig_name": "训练集/f8979024b4e097ae533ba1873b63cbad.jpg",
+    "ground_truth": "real_photo"
+  },
+  {
+    "id": "ai_01",
+    "file": "data\\ai\\ai_01.png",
+    "orig_name": "ai训练集/jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_02",
+    "file": "data\\ai\\ai_02.png",
+    "orig_name": "ai训练集/jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_03",
+    "file": "data\\ai\\ai_03.png",
+    "orig_name": "ai训练集/jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_04",
+    "file": "data\\ai\\ai_04.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_05",
+    "file": "data\\ai\\ai_05.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_06",
+    "file": "data\\ai\\ai_06.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_07",
+    "file": "data\\ai\\ai_07.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_08",
+    "file": "data\\ai\\ai_08.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_09",
+    "file": "data\\ai\\ai_09.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_10",
+    "file": "data\\ai\\ai_10.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_11",
+    "file": "data\\ai\\ai_11.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_12",
+    "file": "data\\ai\\ai_12.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_13",
+    "file": "data\\ai\\ai_13.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_14",
+    "file": "data\\ai\\ai_14.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-6980-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_15",
+    "file": "data\\ai\\ai_15.png",
+    "orig_name": "ai训练集/jimeng-2026-09-16-8015-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清 ....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_16",
+    "file": "data\\ai\\ai_16.png",
+    "orig_name": "ai训练集/jimeng-2026-09-17-3104-              美妆编辑级动态人像，东亚年轻漂亮女性，身体微转向侧面....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_17",
+    "file": "data\\ai\\ai_17.png",
+    "orig_name": "ai训练集/jimeng-2026-09-17-5657-美妆编辑级特写人像，东亚年轻漂亮女性，面部微侧约 3_4 朝向镜头，下巴微微扬起....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_18",
+    "file": "data\\ai\\ai_18.png",
+    "orig_name": "ai训练集/jimeng-2026-09-17-7202-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，头部微低，眼神从下往上看向镜....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_19",
+    "file": "data\\ai\\ai_19.png",
+    "orig_name": "ai训练集/jimeng-2026-09-17-9496-美妆编辑级特写人像，东亚年轻男性，短发黑发，面部正对镜头、略带 3_4 侧，表情....png",
+    "ground_truth": "ai_generated"
+  },
+  {
+    "id": "ai_20",
+    "file": "data\\ai\\ai_20.png",
+    "orig_name": "ai训练集/微信图片_20260915133821_36_192.png",
+    "ground_truth": "ai_generated"
+  }
+]

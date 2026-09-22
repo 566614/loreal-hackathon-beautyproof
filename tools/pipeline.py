@@ -6,6 +6,7 @@
     python tools/pipeline.py <图片路径>              # 单张，跑全套 6 个工具
     python tools/pipeline.py <图片路径> --fast       # 跳过慢的深度学习模型，秒出结论
     python tools/pipeline.py <图1> <图2> --json-only # 只写 JSON，不打印详细过程
+    python tools/pipeline.py <图片路径> --pdf        # 额外导出一份 PDF（给法务/品牌方存档）
 
 大白话：
     以前要手动挨个敲六个工具、再敲规则引擎，容易漏、也容易弄错顺序。
@@ -14,6 +15,7 @@
 产出：
     outputs/analysis_<图片名>.json   完整结果（Web 界面和报告都读它）
     reports/report_<图片名>.md       人能读的 Markdown 鉴定报告
+    reports/report_<图片名>.pdf      （加 --pdf 时）可直接存档/转发的 PDF 版
 """
 import base64
 import datetime as dt
@@ -218,6 +220,20 @@ def write_markdown(result):
         return f"（Markdown 报告生成失败：{type(e).__name__}：{e}）"
 
 
+def write_pdf(stem):
+    """把 Markdown 报告转成 PDF（复用 tools/export_pdf.py）
+
+    为什么要这一步：法务和品牌方要的是一份能存档、能转发、带页脚边界声明的文件，
+    Markdown 对他们不方便。导出失败不影响主流程，所以这里吞掉异常只返回 None。
+    """
+    try:
+        run_tool("export_pdf.py", stem, timeout=180)
+        f = REPO / "reports" / f"report_{stem}.pdf"
+        return str(f) if f.exists() else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main():
     args = [a for a in sys.argv[1:]]
     if not args:
@@ -225,6 +241,7 @@ def main():
         return 1
     fast = "--fast" in args
     json_only = "--json-only" in args
+    want_pdf = "--pdf" in args
     paths = [a for a in args if not a.startswith("--")]
 
     for p in paths:
@@ -243,6 +260,9 @@ def main():
             md = write_markdown(res)
             if md:
                 print(f"  文字报告：{md}")
+            if want_pdf:
+                pf = write_pdf(stem)
+                print(f"  PDF 报告：{pf}" if pf else "  PDF 报告：导出失败（可手动跑 tools/export_pdf.py）")
     return 0
 
 

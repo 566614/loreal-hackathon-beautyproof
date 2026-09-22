@@ -105,6 +105,54 @@ def estimate_tampered_ratio(m):
     return float((m > thr).mean())
 
 
+def estimate_tampered_position(m):
+    """估算可疑区域集中在图的哪个方位，供「人话结论」直接说人话用。
+
+    与 estimate_tampered_ratio 用**同一套相对阈值**（均值+2σ），保证「占比」和「方位」
+    说的是同一批像素，不会互相打架。
+
+    返回如「画面右下角」「画面中部」「画面左侧」；可疑像素太少时返回 None
+    （宁可不说，也不瞎指一个位置）。
+    """
+    m = np.asarray(m, dtype=np.float64)
+    if m.size == 0:
+        return None
+    thr = m.mean() + 2 * m.std()
+    if not np.isfinite(thr):
+        return None
+    ys, xs = np.where(m > thr)
+    if ys.size == 0:
+        return None
+    h, w = m.shape[:2]
+    # 用中位数而非均值：抗离群点，零星噪点不会把方位带偏
+    cy = float(np.median(ys)) / max(h - 1, 1)
+    cx = float(np.median(xs)) / max(w - 1, 1)
+
+    def band(v):
+        if v < 0.34:
+            return -1
+        if v > 0.66:
+            return 1
+        return 0
+
+    vy, vx = band(cy), band(cx)
+    if vy == 0 and vx == 0:
+        return "画面中部"
+    # 中文习惯「左右在前、上下在后」：右下角 / 左上角，不是「下右角」
+    parts = []
+    if vx == -1:
+        parts.append("左")
+    elif vx == 1:
+        parts.append("右")
+    if vy == -1:
+        parts.append("上")
+    elif vy == 1:
+        parts.append("下")
+    if len(parts) == 2:
+        return f"画面{parts[0]}{parts[1]}角"
+    return f"画面{parts[0]}{'部' if parts[0] in ('上', '下') else '侧'}"
+
+
 def _imread_unicode(path):
     """读图（兼容中文路径：cv2.imread 对中文路径会静默返回 None）"""
     data = np.fromfile(str(path), dtype=np.uint8)
@@ -234,12 +282,15 @@ def run_trufor_batch(image_paths, force=False):
         try:
             data = np.load(f, allow_pickle=True)
             score = float(np.asarray(data["score"]).reshape(-1)[0])
-            ratio = estimate_tampered_ratio(np.asarray(data["map"]))
+            _map = np.asarray(data["map"])
+            ratio = estimate_tampered_ratio(_map)
+            pos = estimate_tampered_position(_map)
             heat, ovl = save_localization_map(f, p)
             cache[str(p)] = {
                 "available": True,
                 "trufor_score": round(score, 4),
                 "tampered_area_ratio": round(ratio, 4),
+                "tampered_position": pos,
                 "heatmap": heat,      # outputs/ 下的定位热力图文件名（画不出就是 None）
                 "overlay": ovl,       # 原图 + 热力叠加
             }
@@ -295,6 +346,8 @@ def build_evidence(image_path, res):
     observed = f"TruFor 篡改分数 {score}（{verdict}）"
     if ratio is not None:
         observed += f"；可疑区域约占全图 {ratio:.1%}"
+    if res.get("tampered_position"):
+        observed += f"，主要集中在{res['tampered_position']}"
 
     return {
         "tool": "trufor",
@@ -307,6 +360,7 @@ def build_evidence(image_path, res):
         "evidence": [{
             "trufor_score": score,
             "tampered_area_ratio": ratio,
+            "tampered_position": res.get("tampered_position"),
             "available": True,
             "heatmap": res.get("heatmap"),    # 定位热力图（outputs/ 下）
             "overlay": res.get("overlay"),    # 原图加热力叠加

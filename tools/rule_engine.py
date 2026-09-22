@@ -175,7 +175,11 @@ def explain(risk_level, evidence):
             summary = f"取证模型给出的整图篡改分为 {score}（越接近 1.0 越可疑）"
             if ratio is not None:
                 summary += f"，可疑区域约占全图 {ratio:.1%}"
-            summary += "。说明图上很可能有区域被复制、拼接或改写过，配合定位热力图的红色区域可以大致看出是哪里。"
+            pos = tru.get("tampered_position")
+            if pos:
+                summary += f"。可疑痕迹主要集中在{pos}，很可能是这块区域被复制、拼接或改写过，对照定位热力图的红色区域即可确认。"
+            else:
+                summary += "。说明图上很可能有区域被复制、拼接或改写过，配合定位热力图的红色区域可以大致看出是哪里。"
         else:
             summary = "多个取证信号同时指向这张图被人工改动过。"
         what_to_do = ("先不要用这张图对外投放或作为证据；"
@@ -187,7 +191,11 @@ def explain(risk_level, evidence):
             summary = f"取证模型给出的整图篡改分为 {score}，已超过可疑线"
             if ratio is not None:
                 summary += f"，可疑区域约占全图 {ratio:.1%}"
-            summary += "。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
+            pos = tru.get("tampered_position")
+            if pos:
+                summary += f"，且主要集中在{pos}。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
+            else:
+                summary += "。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
         else:
             summary = "有取证信号提示这张图可能被动过，但强度不足以直接定性。"
         what_to_do = "暂缓对外投放，人工对照原图确认后再用。"

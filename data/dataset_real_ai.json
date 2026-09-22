@@ -1,0 +1,323 @@
+{
+  "name": "BeautyProof 真实 vs AI 生成美妆图评测集",
+  "created_at": "2026-09-23",
+  "source_note": "真实图来自品牌/公开素材（训练集目录，10 张）；AI 图由即梦(jimeng)生成（20 张），部分文件名中保留原始生成 prompt。本表只做登记与评测，不改动任何原始素材。",
+  "classes": {
+    "real_photo": "真实拍摄",
+    "ai_generated": "AI 生成"
+  },
+  "expected_risk_note": "所有样本 expected_risk 均为 inconclusive（无法判定）。依据：1) 真实图——没被人工改过，但网图本就无可查凭证，规则引擎的语义是「没查出篡改 ≠ 证明真实」；2) AI 图——本项目 TruFor 官方明确不覆盖「整张纯 AI 生成」这一类（它查的是局部篡改痕迹），因此在这批图上不会报警，属于已知边界；AIGC 信号虽会给出高分，但已实测在本批素材上零区分度，按 tools/rule_engine.py 的 AIGC_TRIGGERS_HIGH_RISK=False 不参与自动定级。故按当前系统能力如实登记为 inconclusive，而不是 high_risk。",
+  "risk_levels": [
+    "high_risk",
+    "suspicious",
+    "credible",
+    "inconclusive"
+  ],
+  "count": {
+    "total": 30,
+    "real_photo": 10,
+    "ai_generated": 20
+  },
+  "samples": [
+    {
+      "id": "real_01",
+      "path": "data/real/real_01.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/134f155ed30fc187b4d60dd6396c912a.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_02",
+      "path": "data/real/real_02.png",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/1d0d18aae704fa8ece9a283bb9ea8098.png",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_03",
+      "path": "data/real/real_03.png",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/1f3d358d00628dc63d072d9c9067d79c.png",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_04",
+      "path": "data/real/real_04.png",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/7ebeaa72095a78b27c631bfb3717e570.png",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_05",
+      "path": "data/real/real_05.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/83df7b47bec3f422c2b37b064926b68e.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_06",
+      "path": "data/real/real_06.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/aa2ea040fe8046d78d72988f582408af.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_07",
+      "path": "data/real/real_07.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/b51c2c88cd5aeba99423f1f357601089.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_08",
+      "path": "data/real/real_08.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/d764c1afd0d3553198f3a883b03d145d.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_09",
+      "path": "data/real/real_09.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/f2150f63ec2bd8ae47c49b641851ccca.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "real_10",
+      "path": "data/real/real_10.jpg",
+      "ground_truth": "real_photo",
+      "expected_risk": "inconclusive",
+      "orig_name": "训练集/f8979024b4e097ae533ba1873b63cbad.jpg",
+      "note": "真实拍摄原图，全流程无人工篡改",
+      "source": "真实拍摄素材（公开/品牌素材，未做人工篡改）"
+    },
+    {
+      "id": "ai_01",
+      "path": "data/ai/ai_01.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节"
+    },
+    {
+      "id": "ai_02",
+      "path": "data/ai/ai_02.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节"
+    },
+    {
+      "id": "ai_03",
+      "path": "data/ai/ai_03.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节"
+    },
+    {
+      "id": "ai_04",
+      "path": "data/ai/ai_04.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_05",
+      "path": "data/ai/ai_05.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_06",
+      "path": "data/ai/ai_06.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清"
+    },
+    {
+      "id": "ai_07",
+      "path": "data/ai/ai_07.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_08",
+      "path": "data/ai/ai_08.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_09",
+      "path": "data/ai/ai_09.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清"
+    },
+    {
+      "id": "ai_10",
+      "path": "data/ai/ai_10.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感"
+    },
+    {
+      "id": "ai_11",
+      "path": "data/ai/ai_11.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清"
+    },
+    {
+      "id": "ai_12",
+      "path": "data/ai/ai_12.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_13",
+      "path": "data/ai/ai_13.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清"
+    },
+    {
+      "id": "ai_14",
+      "path": "data/ai/ai_14.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-6980-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png",
+      "note": "即梦生成，文件名含完整生成 prompt",
+      "generator": "jimeng",
+      "prompt": "一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清"
+    },
+    {
+      "id": "ai_15",
+      "path": "data/ai/ai_15.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-16-8015-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清 ....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清 ...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_16",
+      "path": "data/ai/ai_16.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-17-3104-              美妆编辑级动态人像，东亚年轻漂亮女性，身体微转向侧面....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级动态人像，东亚年轻漂亮女性，身体微转向侧面...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_17",
+      "path": "data/ai/ai_17.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-17-5657-美妆编辑级特写人像，东亚年轻漂亮女性，面部微侧约 3_4 朝向镜头，下巴微微扬起....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻漂亮女性，面部微侧约 3_4 朝向镜头，下巴微微扬起...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_18",
+      "path": "data/ai/ai_18.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-17-7202-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，头部微低，眼神从下往上看向镜....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，头部微低，眼神从下往上看向镜...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_19",
+      "path": "data/ai/ai_19.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/jimeng-2026-09-17-9496-美妆编辑级特写人像，东亚年轻男性，短发黑发，面部正对镜头、略带 3_4 侧，表情....png",
+      "note": "文件名中生成 prompt 被截断",
+      "generator": "jimeng",
+      "prompt": "美妆编辑级特写人像，东亚年轻男性，短发黑发，面部正对镜头、略带 3_4 侧，表情...",
+      "prompt_truncated": true
+    },
+    {
+      "id": "ai_20",
+      "path": "data/ai/ai_20.png",
+      "ground_truth": "ai_generated",
+      "expected_risk": "inconclusive",
+      "orig_name": "ai训练集/微信图片_20260915133821_36_192.png",
+      "note": "即梦导出后经微信传输，原文件名未保留生成 prompt",
+      "generator": "jimeng",
+      "prompt": null
+    }
+  ]
+}
