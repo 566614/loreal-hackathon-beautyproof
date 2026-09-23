@@ -114,7 +114,7 @@ def key_facts(tool, ev_list):
         if score is None:
             facts.append("AI 生成概率：**未获取**（模型未就绪，本项跳过）")
         else:
-            facts.append(f"AI 生成概率：**{score}**（触发阈值 0.7）")
+            facts.append(f"AI 生成概率：**{score}**（≥0.9 高风险，≥0.8 可疑）")
         if "label" in e:
             facts.append(f"模型标签：{e['label']}")
     elif tool == "trufor":

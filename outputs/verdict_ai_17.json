@@ -1,0 +1,15 @@
+{
+  "image_stem": "ai_17",
+  "risk_level": "high_risk",
+  "reasons": [
+    "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+  ],
+  "tools_used": [
+    "aigc",
+    "c2pa",
+    "ela",
+    "hash",
+    "ocr",
+    "trufor"
+  ]
+}

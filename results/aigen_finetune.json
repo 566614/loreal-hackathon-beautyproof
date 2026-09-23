@@ -1,0 +1,345 @@
+{
+  "model": "beautyproof_aigen",
+  "arch": "mobilenetv3_large_100",
+  "split": {
+    "train": {
+      "ai": 16,
+      "real": 12,
+      "total": 28
+    },
+    "val": {
+      "ai": 4,
+      "real": 3,
+      "total": 7
+    }
+  },
+  "best_epoch": 5,
+  "best_val_loss": 0.0004,
+  "val_confusion": {
+    "tp": 4,
+    "fn": 0,
+    "fp": 0,
+    "tn": 3
+  },
+  "val_accuracy": 1.0,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.6065,
+      "train_acc": 0.5,
+      "val_loss": 2.6914,
+      "val_acc": 0.7143
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.9608,
+      "train_acc": 0.8571,
+      "val_loss": 0.2881,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 3,
+      "train_loss": 1.4102,
+      "train_acc": 0.8214,
+      "val_loss": 0.0039,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.4403,
+      "train_acc": 0.8571,
+      "val_loss": 0.0039,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.4483,
+      "train_acc": 0.9286,
+      "val_loss": 0.0004,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.1337,
+      "train_acc": 0.9643,
+      "val_loss": 0.0102,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.2436,
+      "train_acc": 0.9643,
+      "val_loss": 0.1315,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 0.246,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.0063,
+      "train_acc": 1.0,
+      "val_loss": 0.3984,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.001,
+      "train_acc": 1.0,
+      "val_loss": 0.4614,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.0328,
+      "train_acc": 1.0,
+      "val_loss": 0.3835,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.0135,
+      "train_acc": 1.0,
+      "val_loss": 0.9912,
+      "val_acc": 0.7143
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.0004,
+      "train_acc": 1.0,
+      "val_loss": 1.0126,
+      "val_acc": 0.7143
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.0005,
+      "train_acc": 1.0,
+      "val_loss": 0.8968,
+      "val_acc": 0.7143
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.0556,
+      "train_acc": 0.9643,
+      "val_loss": 0.3755,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 0.2372,
+      "val_acc": 0.8571
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 0.0998,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.0064,
+      "train_acc": 1.0,
+      "val_loss": 0.0713,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 0.0998,
+      "val_acc": 1.0
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.0672,
+      "train_acc": 0.9643,
+      "val_loss": 0.03,
+      "val_acc": 1.0
+    }
+  ],
+  "per_image_ai_prob": [
+    {
+      "file": "ai_01.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_02.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_03.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_04.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_05.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_06.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_07.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_08.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_09.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_10.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_11.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_12.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_13.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_14.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_15.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_16.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_17.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_18.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_20.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_19.png",
+      "label": "ai",
+      "ai_prob": 0.9975
+    },
+    {
+      "file": "real_10.jpg",
+      "label": "real",
+      "ai_prob": 0.0196
+    },
+    {
+      "file": "real_08.jpg",
+      "label": "real",
+      "ai_prob": 0.0014
+    },
+    {
+      "file": "real_07.jpg",
+      "label": "real",
+      "ai_prob": 0.0008
+    },
+    {
+      "file": "real_01.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_02.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_03.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_04.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_05.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_06.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_09.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "clean_01.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "clean_02_recompressed.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_01_copy_move.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_02_splice.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_03_text_edit.png",
+      "label": "real",
+      "ai_prob": 0.0
+    }
+  ],
+  "elapsed_sec": 90.1
+}

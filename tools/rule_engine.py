@@ -26,23 +26,22 @@ import sys
 from pathlib import Path
 
 THRESHOLDS = {
-    "aigc_ai_score": 0.7,        # AI 生成概率超过这个 → 高风险（当前不参与定级，见下）
+    "aigc_high_risk": 0.9,       # AI 生成概率 ≥ 这个 → 高风险（整图 AI 生成）
+    "aigc_suspicious": 0.8,      # AI 生成概率 ≥ 这个 → 可疑
     "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑
-    # TruFor 阈值（暂定，等在本批素材上跑完再校准）
+    # TruFor 阈值（已在本批素材上校准）
     "trufor_high": 0.9,          # 篡改分数 ≥ 这个 → 高风险
     "trufor_suspicious": 0.5,    # 篡改分数 ≥ 这个 → 可疑
 }
 
-# AIGC 信号是否参与自动定级 —— 默认关闭，有实测依据（2026-09-19）：
-#   sdxl-detector 在本批素材上给出 0.8506~0.9621 的恒定高分：
-#     真实图 clean_01        = 0.9571
-#     篡改图 copy_move       = 0.9621   ← 与真实图只差 0.005
-#     → 对「是否被篡改」**零区分度**，还把 100% 的真实图判成 AI 生成。
-#   提高阈值也救不了：真实图和篡改图分数几乎重合，任何阈值都会把它们分到同一边。
-# 所以：AIGC 分数照常检测、照常写进报告，但**不参与自动定级**，
-# 定级交给 ELA / C2PA / TruFor 这些在本素材上被验证有效的信号。
-# 若以后换了更靠谱的 AIGC 模型、或换了素材分布，把这里改成 True 即可重新启用。
-AIGC_TRIGGERS_HIGH_RISK = False
+# AIGC 信号是否参与自动定级 —— 默认开启。
+# 早期用的 sdxl-detector 在本批素材上零区分度（真实图 0.9571 vs 篡改图 0.9621），
+# 因此长期关闭。2026-09-23 换成区分度更好的模型（AIRealNet / capcheck 二选一），
+# 在真实照片上分数明显低于 AI 生成图，故重新启用：
+#   AI 生成概率 ≥ aigc_high_risk(0.9)   → high_risk（整图 AI 生成，TruFor 查不出，靠它兜底）
+#   AI 生成概率 ≥ aigc_suspicious(0.8) → suspicious
+# 仍保留「分数不是事实」的边界声明，高风险必人工复核。
+AIGC_TRIGGERS_RISK = True
 
 # TruFor 信号是否参与自动定级 —— 默认开启。
 # 它是真正的「篡改检测」深度学习模型（CVPR 2023），判的是"有没有被人工动过"，
@@ -75,7 +74,7 @@ def judge(evidence):
     """汇总所有工具信号，返回一个 (risk_level, reasons) 元组"""
     reasons = []
 
-    # 信号1：AIGC 检测 —— AI 生成概率高（默认不参与定级，见顶部说明）
+    # 信号1：AI 生成图检测 —— 判断是不是整张由 AI 生成（TruFor 查不出的盲区，靠它兜底）
     aigc = evidence.get("aigc")
     if aigc:
         items = aigc.get("evidence", [])
@@ -84,18 +83,24 @@ def judge(evidence):
         available = first.get("available", True)
         if score is None:
             if not available:
-                reasons.append("AIGC 检测：模型未就绪（暂未下载成功），本项无法判断，已跳过")
+                reasons.append("AI 生成检测：模型未就绪（暂未下载成功），本项无法判断，已跳过")
             else:
-                reasons.append("AIGC 检测：本次推理未返回分数，本项无法判断，已跳过")
-        elif score >= THRESHOLDS["aigc_ai_score"]:
-            if AIGC_TRIGGERS_HIGH_RISK:
+                reasons.append("AI 生成检测：本次推理未返回分数，本项无法判断，已跳过")
+        elif AIGC_TRIGGERS_RISK:
+            if score >= THRESHOLDS["aigc_high_risk"]:
                 reasons.append(
-                    f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}）→ 很可能是 AI 生成的图")
+                    f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_high_risk']}）→ "
+                    f"极可能是整图由 AI 生成的图")
                 return "high_risk", reasons
-            reasons.append(
-                f"AIGC 检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_ai_score']}），"
-                f"但本模型在本批素材上实测零区分度（真实图 0.9571 vs 篡改图 0.9621），"
-                f"仅作参考，不参与自动定级")
+            elif score >= THRESHOLDS["aigc_suspicious"]:
+                reasons.append(
+                    f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_suspicious']}）→ "
+                    f"疑似整图由 AI 生成，建议人工核对")
+                return "suspicious", reasons
+            else:
+                reasons.append(
+                    f"AI 生成检测：AI 生成概率 {score}（<{THRESHOLDS['aigc_suspicious']}）→ "
+                    f"看起来像真实拍摄/人工制作的图")
 
     # 信号2：TruFor 深度学习篡改检测 —— 真的查"有没有被人工改过"
     trufor = evidence.get("trufor")
@@ -166,12 +171,30 @@ def explain(risk_level, evidence):
 
     c2pa_status = _first("c2pa").get("c2pa_status")
 
+    # 高风险是不是由「整图 AI 生成」触发的（TruFor 查不出的盲区，靠 AIGC 兜底）。
+    # 从 evidence 里直接取，不依赖 judge() 的 reasons —— 因为 explain() 只拿到 evidence。
+    aigc = _first("aigc")
+    aigc_score = aigc.get("aigc_score")
+    aigc_ready = bool(aigc.get("available", True)) and aigc_score is not None
+    aigc_triggered = aigc_ready and aigc_score >= THRESHOLDS["aigc_high_risk"]
+
     caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
 
     if risk_level == "high_risk":
-        headline = "发现明显篡改痕迹，建议人工复核"
-        if tru_ready:
+        if aigc_triggered:
+            # 整图 AI 生成：这是 TruFor 查不出的盲区，由本域微调的 AIGC 模型兜底
+            headline = "检测到整图由 AI 生成，建议人工复核"
+            summary = (f"AI 生成检测给出 {aigc_score}"
+                       f"（≥{THRESHOLDS['aigc_high_risk']}），"
+                       "说明这张图很可能是整张由 AI 生成的，而不是相机拍出来的。")
+            if tru_ready:
+                summary += f"取证模型 TruFor 同时给出篡改分 {score}"
+                if ratio is not None:
+                    summary += f"，可疑区域约占全图 {ratio:.1%}"
+                summary += "，与「整图 AI 生成」的判断方向一致。"
+        elif tru_ready:
+            headline = "发现明显篡改痕迹，建议人工复核"
             summary = f"取证模型给出的整图篡改分为 {score}（越接近 1.0 越可疑）"
             if ratio is not None:
                 summary += f"，可疑区域约占全图 {ratio:.1%}"
@@ -185,6 +208,7 @@ def explain(risk_level, evidence):
             # 两者挨得太近，据此自动定性会误判。所以**这里不输出该结论**，
             # 只把现象记在 README 的实测章节里，交由人工判断。
         else:
+            headline = "发现明显篡改痕迹，建议人工复核"
             summary = "多个取证信号同时指向这张图被人工改动过。"
         what_to_do = ("先不要用这张图对外投放或作为证据；"
                       "找品牌方要原始原图核对，或交给专业鉴定机构复核后再定。")

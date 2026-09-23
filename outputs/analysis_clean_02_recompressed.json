@@ -1,11 +1,11 @@
 {
   "schema": "beautyproof/analysis@1",
-  "generated_at": "2026-09-23T12:32:02",
-  "elapsed_seconds": 24.1,
+  "generated_at": "2026-09-23T13:28:25",
+  "elapsed_seconds": 24.7,
   "image": {
     "name": "clean_02_recompressed.png",
     "stem": "clean_02_recompressed",
-    "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\clean_02_recompressed.png",
+    "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\clean\\clean_02_recompressed.png",
     "size_bytes": 439869,
     "width": 750,
     "height": 824,
@@ -21,7 +21,7 @@
       "caveat": "以上结论来自算法比对，不是法律意义上的鉴定意见。分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。"
     },
     "reasons": [
-      "AIGC 检测：AI 生成概率 0.9989（≥0.7），但本模型在本批素材上实测零区分度（真实图 0.9571 vs 篡改图 0.9621），仅作参考，不参与自动定级",
+      "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图",
       "TruFor：篡改分数 0.4113（<0.5）→ 未发现明显篡改痕迹",
       "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
     ],
@@ -37,7 +37,9 @@
       "hash",
       "c2pa",
       "ela",
-      "ocr"
+      "ocr",
+      "aigc",
+      "trufor"
     ],
     "tools_failed": []
   },
@@ -45,12 +47,12 @@
     "aigc": {
       "tool": "aigc",
       "source_asset_id": "clean_02_recompressed.png",
-      "observed": "AI 生成概率 0.9989（模型给出了较高的 AI 生成概率，但该模型误判率很高（真实图也常被判高分），不能单凭此项下结论）",
-      "cannot_prove": "模型会误判：真人也常被误判为 AI，AI 生成的也可能蒙混过关；分数不是事实",
+      "observed": "AI 生成概率 0.0（模型认为看起来像真实拍摄 / 人工制作的图）",
+      "cannot_prove": "模型也会误判：分数高不代表一定 AI 生成，分数低也不代表一定真实；本项与 TruFor 互补——TruFor 查局部篡改，本项查整图 AI 生成",
       "evidence": [
         {
-          "aigc_score": 0.9989,
-          "label": "artificial",
+          "aigc_score": 0.0,
+          "label": "real",
           "available": true
         }
       ]
@@ -188,7 +190,7 @@
     },
     "aigc": {
       "label": "AI 生成检测",
-      "job": "判断这张图是不是 AI 画的（本模型在本素材上零区分度，仅作参考）"
+      "job": "判断这张图是不是整张由 AI 生成的（用的是本域微调模型：拿 10 张真实美妆照 + 20 张即梦 AI 图专门练过，补 TruFor 查不出的「整图 AI 生成」盲区）"
     },
     "trufor": {
       "label": "篡改痕迹检测",

@@ -1,12 +1,12 @@
 {
   "tool": "aigc",
   "source_asset_id": "clean_02_recompressed.png",
-  "observed": "AI 生成概率 0.9989（模型给出了较高的 AI 生成概率，但该模型误判率很高（真实图也常被判高分），不能单凭此项下结论）",
-  "cannot_prove": "模型会误判：真人也常被误判为 AI，AI 生成的也可能蒙混过关；分数不是事实",
+  "observed": "AI 生成概率 0.0（模型认为看起来像真实拍摄 / 人工制作的图）",
+  "cannot_prove": "模型也会误判：分数高不代表一定 AI 生成，分数低也不代表一定真实；本项与 TruFor 互补——TruFor 查局部篡改，本项查整图 AI 生成",
   "evidence": [
     {
-      "aigc_score": 0.9989,
-      "label": "artificial",
+      "aigc_score": 0.0,
+      "label": "real",
       "available": true
     }
   ]
