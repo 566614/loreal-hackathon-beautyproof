@@ -1,0 +1,242 @@
+[
+  {
+    "id": "real_01",
+    "truth": "real_photo",
+    "trufor_score": 0.2289,
+    "trufor_area": 0.0566,
+    "aigc_score": 0.9368,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_02",
+    "truth": "real_photo",
+    "trufor_score": 0.7139,
+    "trufor_area": 0.0963,
+    "aigc_score": 0.0621,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_03",
+    "truth": "real_photo",
+    "trufor_score": 0.373,
+    "trufor_area": 0.0309,
+    "aigc_score": 0.9987,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_04",
+    "truth": "real_photo",
+    "trufor_score": 0.1262,
+    "trufor_area": 0.0244,
+    "aigc_score": 0.0,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_05",
+    "truth": "real_photo",
+    "trufor_score": 0.7583,
+    "trufor_area": 0.0,
+    "aigc_score": 0.0004,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_06",
+    "truth": "real_photo",
+    "trufor_score": 0.3411,
+    "trufor_area": 0.0216,
+    "aigc_score": 0.0138,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_07",
+    "truth": "real_photo",
+    "trufor_score": 0.2987,
+    "trufor_area": 0.0422,
+    "aigc_score": 0.3538,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_08",
+    "truth": "real_photo",
+    "trufor_score": 0.3335,
+    "trufor_area": 0.0,
+    "aigc_score": 0.5685,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_09",
+    "truth": "real_photo",
+    "trufor_score": 0.201,
+    "trufor_area": 0.0015,
+    "aigc_score": 0.9992,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "real_10",
+    "truth": "real_photo",
+    "trufor_score": 0.4128,
+    "trufor_area": 0.04,
+    "aigc_score": 0.1461,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_01",
+    "truth": "ai_generated",
+    "trufor_score": 0.8221,
+    "trufor_area": 0.0046,
+    "aigc_score": 0.9994,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_02",
+    "truth": "ai_generated",
+    "trufor_score": 0.7809,
+    "trufor_area": 0.005,
+    "aigc_score": 0.9756,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_03",
+    "truth": "ai_generated",
+    "trufor_score": 0.9785,
+    "trufor_area": 0.0046,
+    "aigc_score": 0.9751,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_04",
+    "truth": "ai_generated",
+    "trufor_score": 0.9695,
+    "trufor_area": 0.0089,
+    "aigc_score": 0.0001,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_05",
+    "truth": "ai_generated",
+    "trufor_score": 0.9752,
+    "trufor_area": 0.0071,
+    "aigc_score": 0.9969,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_06",
+    "truth": "ai_generated",
+    "trufor_score": 0.9824,
+    "trufor_area": 0.0043,
+    "aigc_score": 0.9998,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_07",
+    "truth": "ai_generated",
+    "trufor_score": 0.9885,
+    "trufor_area": 0.0086,
+    "aigc_score": 0.0001,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_08",
+    "truth": "ai_generated",
+    "trufor_score": 0.9681,
+    "trufor_area": 0.0093,
+    "aigc_score": 0.0001,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_09",
+    "truth": "ai_generated",
+    "trufor_score": 0.9972,
+    "trufor_area": 0.008,
+    "aigc_score": 0.0104,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_10",
+    "truth": "ai_generated",
+    "trufor_score": 0.9962,
+    "trufor_area": 0.0046,
+    "aigc_score": 0.9963,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_11",
+    "truth": "ai_generated",
+    "trufor_score": 0.9984,
+    "trufor_area": 0.0076,
+    "aigc_score": 0.0085,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_12",
+    "truth": "ai_generated",
+    "trufor_score": 0.9873,
+    "trufor_area": 0.009,
+    "aigc_score": 0.002,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_13",
+    "truth": "ai_generated",
+    "trufor_score": 0.9933,
+    "trufor_area": 0.0083,
+    "aigc_score": 0.0016,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_14",
+    "truth": "ai_generated",
+    "trufor_score": 0.9858,
+    "trufor_area": 0.0084,
+    "aigc_score": 0.0481,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_15",
+    "truth": "ai_generated",
+    "trufor_score": 0.9943,
+    "trufor_area": 0.0042,
+    "aigc_score": 0.983,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_16",
+    "truth": "ai_generated",
+    "trufor_score": 0.99,
+    "trufor_area": 0.0083,
+    "aigc_score": 0.002,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_17",
+    "truth": "ai_generated",
+    "trufor_score": 0.9962,
+    "trufor_area": 0.0084,
+    "aigc_score": 0.0,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_18",
+    "truth": "ai_generated",
+    "trufor_score": 0.8723,
+    "trufor_area": 0.009,
+    "aigc_score": 0.0908,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_19",
+    "truth": "ai_generated",
+    "trufor_score": 0.9547,
+    "trufor_area": 0.0085,
+    "aigc_score": 0.0002,
+    "aigc_label": "artificial"
+  },
+  {
+    "id": "ai_20",
+    "truth": "ai_generated",
+    "trufor_score": 0.9465,
+    "trufor_area": 0.0048,
+    "aigc_score": 0.9983,
+    "aigc_label": "artificial"
+  }
+]

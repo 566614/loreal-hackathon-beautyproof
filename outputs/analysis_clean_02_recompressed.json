@@ -1,11 +1,11 @@
 {
   "schema": "beautyproof/analysis@1",
-  "generated_at": "2026-09-23T00:02:04",
-  "elapsed_seconds": 40.4,
+  "generated_at": "2026-09-23T12:32:02",
+  "elapsed_seconds": 24.1,
   "image": {
     "name": "clean_02_recompressed.png",
     "stem": "clean_02_recompressed",
-    "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\clean\\clean_02_recompressed.png",
+    "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\clean_02_recompressed.png",
     "size_bytes": 439869,
     "width": 750,
     "height": 824,
@@ -37,9 +37,7 @@
       "hash",
       "c2pa",
       "ela",
-      "ocr",
-      "aigc",
-      "trufor"
+      "ocr"
     ],
     "tools_failed": []
   },
@@ -153,12 +151,13 @@
     "trufor": {
       "tool": "trufor",
       "source_asset_id": "clean_02_recompressed.png",
-      "observed": "TruFor 篡改分数 0.4113（有轻微篡改痕迹）；可疑区域约占全图 1.0%",
+      "observed": "TruFor 篡改分数 0.4113（有轻微篡改痕迹）；可疑区域约占全图 1.0%，主要集中在画面上部",
       "cannot_prove": "模型也会误判：分数高不代表一定有罪（压缩/滤镜也会留痕），分数低也不代表绝对干净；且 TruFor 只擅长查「局部被人动过手脚」，官方明确说明它查不出「整张完全由 AI 生成的图」",
       "evidence": [
         {
           "trufor_score": 0.4113,
           "tampered_area_ratio": 0.0103,
+          "tampered_position": "画面上部",
           "available": true,
           "heatmap": "clean_02_recompressed_trufor_heat.png",
           "overlay": "clean_02_recompressed_trufor_overlay.png"

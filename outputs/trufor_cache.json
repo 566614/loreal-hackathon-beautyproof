@@ -3,6 +3,7 @@
     "available": true,
     "trufor_score": 0.3503,
     "tampered_area_ratio": 0.053,
+    "tampered_position": "画面中部",
     "heatmap": "clean_01_trufor_heat.png",
     "overlay": "clean_01_trufor_overlay.png"
   },
@@ -10,6 +11,7 @@
     "available": true,
     "trufor_score": 0.9946,
     "tampered_area_ratio": 0.0145,
+    "tampered_position": "画面右下角",
     "heatmap": "tampered_01_copy_move_trufor_heat.png",
     "overlay": "tampered_01_copy_move_trufor_overlay.png"
   },
@@ -17,6 +19,7 @@
     "available": true,
     "trufor_score": 1.0,
     "tampered_area_ratio": 0.0247,
+    "tampered_position": "画面中部",
     "heatmap": "tampered_02_splice_trufor_heat.png",
     "overlay": "tampered_02_splice_trufor_overlay.png"
   },
@@ -24,6 +27,7 @@
     "available": true,
     "trufor_score": 0.595,
     "tampered_area_ratio": 0.0644,
+    "tampered_position": "画面左下角",
     "heatmap": "tampered_03_text_edit_trufor_heat.png",
     "overlay": "tampered_03_text_edit_trufor_overlay.png"
   },
@@ -31,7 +35,642 @@
     "available": true,
     "trufor_score": 0.4113,
     "tampered_area_ratio": 0.0103,
+    "tampered_position": "画面上部",
     "heatmap": "clean_02_recompressed_trufor_heat.png",
     "overlay": "clean_02_recompressed_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_01.jpg": {
+    "available": true,
+    "trufor_score": 0.2289,
+    "tampered_area_ratio": 0.0566,
+    "heatmap": "real_01_trufor_heat.png",
+    "overlay": "real_01_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_02.png": {
+    "available": true,
+    "trufor_score": 0.7139,
+    "tampered_area_ratio": 0.0963,
+    "heatmap": "real_02_trufor_heat.png",
+    "overlay": "real_02_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_03.png": {
+    "available": true,
+    "trufor_score": 0.373,
+    "tampered_area_ratio": 0.0309,
+    "heatmap": "real_03_trufor_heat.png",
+    "overlay": "real_03_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_04.png": {
+    "available": true,
+    "trufor_score": 0.1262,
+    "tampered_area_ratio": 0.0244,
+    "heatmap": "real_04_trufor_heat.png",
+    "overlay": "real_04_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_05.jpg": {
+    "available": true,
+    "trufor_score": 0.7583,
+    "tampered_area_ratio": 0.0,
+    "heatmap": "real_05_trufor_heat.png",
+    "overlay": "real_05_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_06.jpg": {
+    "available": true,
+    "trufor_score": 0.3411,
+    "tampered_area_ratio": 0.0216,
+    "heatmap": "real_06_trufor_heat.png",
+    "overlay": "real_06_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_07.jpg": {
+    "available": true,
+    "trufor_score": 0.2987,
+    "tampered_area_ratio": 0.0422,
+    "heatmap": "real_07_trufor_heat.png",
+    "overlay": "real_07_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_08.jpg": {
+    "available": true,
+    "trufor_score": 0.3335,
+    "tampered_area_ratio": 0.0,
+    "heatmap": "real_08_trufor_heat.png",
+    "overlay": "real_08_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_09.jpg": {
+    "available": true,
+    "trufor_score": 0.201,
+    "tampered_area_ratio": 0.0015,
+    "heatmap": "real_09_trufor_heat.png",
+    "overlay": "real_09_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real\\real_10.jpg": {
+    "available": true,
+    "trufor_score": 0.4128,
+    "tampered_area_ratio": 0.04,
+    "heatmap": "real_10_trufor_heat.png",
+    "overlay": "real_10_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_01.png": {
+    "available": true,
+    "trufor_score": 0.8221,
+    "tampered_area_ratio": 0.0046,
+    "heatmap": "ai_01_trufor_heat.png",
+    "overlay": "ai_01_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_02.png": {
+    "available": true,
+    "trufor_score": 0.7809,
+    "tampered_area_ratio": 0.005,
+    "heatmap": "ai_02_trufor_heat.png",
+    "overlay": "ai_02_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_03.png": {
+    "available": true,
+    "trufor_score": 0.9785,
+    "tampered_area_ratio": 0.0046,
+    "heatmap": "ai_03_trufor_heat.png",
+    "overlay": "ai_03_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_04.png": {
+    "available": true,
+    "trufor_score": 0.9695,
+    "tampered_area_ratio": 0.0089,
+    "heatmap": "ai_04_trufor_heat.png",
+    "overlay": "ai_04_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_05.png": {
+    "available": true,
+    "trufor_score": 0.9752,
+    "tampered_area_ratio": 0.0071,
+    "heatmap": "ai_05_trufor_heat.png",
+    "overlay": "ai_05_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_06.png": {
+    "available": true,
+    "trufor_score": 0.9824,
+    "tampered_area_ratio": 0.0043,
+    "heatmap": "ai_06_trufor_heat.png",
+    "overlay": "ai_06_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_07.png": {
+    "available": true,
+    "trufor_score": 0.9885,
+    "tampered_area_ratio": 0.0086,
+    "heatmap": "ai_07_trufor_heat.png",
+    "overlay": "ai_07_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_08.png": {
+    "available": true,
+    "trufor_score": 0.9681,
+    "tampered_area_ratio": 0.0093,
+    "heatmap": "ai_08_trufor_heat.png",
+    "overlay": "ai_08_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_09.png": {
+    "available": true,
+    "trufor_score": 0.9972,
+    "tampered_area_ratio": 0.008,
+    "heatmap": "ai_09_trufor_heat.png",
+    "overlay": "ai_09_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_10.png": {
+    "available": true,
+    "trufor_score": 0.9962,
+    "tampered_area_ratio": 0.0046,
+    "heatmap": "ai_10_trufor_heat.png",
+    "overlay": "ai_10_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_11.png": {
+    "available": true,
+    "trufor_score": 0.9984,
+    "tampered_area_ratio": 0.0076,
+    "heatmap": "ai_11_trufor_heat.png",
+    "overlay": "ai_11_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_12.png": {
+    "available": true,
+    "trufor_score": 0.9873,
+    "tampered_area_ratio": 0.009,
+    "heatmap": "ai_12_trufor_heat.png",
+    "overlay": "ai_12_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_13.png": {
+    "available": true,
+    "trufor_score": 0.9933,
+    "tampered_area_ratio": 0.0083,
+    "heatmap": "ai_13_trufor_heat.png",
+    "overlay": "ai_13_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_14.png": {
+    "available": true,
+    "trufor_score": 0.9858,
+    "tampered_area_ratio": 0.0084,
+    "heatmap": "ai_14_trufor_heat.png",
+    "overlay": "ai_14_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_15.png": {
+    "available": true,
+    "trufor_score": 0.9943,
+    "tampered_area_ratio": 0.0042,
+    "heatmap": "ai_15_trufor_heat.png",
+    "overlay": "ai_15_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_16.png": {
+    "available": true,
+    "trufor_score": 0.99,
+    "tampered_area_ratio": 0.0083,
+    "heatmap": "ai_16_trufor_heat.png",
+    "overlay": "ai_16_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_17.png": {
+    "available": true,
+    "trufor_score": 0.9962,
+    "tampered_area_ratio": 0.0084,
+    "heatmap": "ai_17_trufor_heat.png",
+    "overlay": "ai_17_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_18.png": {
+    "available": true,
+    "trufor_score": 0.8723,
+    "tampered_area_ratio": 0.009,
+    "heatmap": "ai_18_trufor_heat.png",
+    "overlay": "ai_18_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_19.png": {
+    "available": true,
+    "trufor_score": 0.9547,
+    "tampered_area_ratio": 0.0085,
+    "heatmap": "ai_19_trufor_heat.png",
+    "overlay": "ai_19_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai\\ai_20.png": {
+    "available": true,
+    "trufor_score": 0.9465,
+    "tampered_area_ratio": 0.0048,
+    "heatmap": "ai_20_trufor_heat.png",
+    "overlay": "ai_20_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__jpg90.jpg": {
+    "available": true,
+    "trufor_score": 0.9998,
+    "tampered_area_ratio": 0.0141,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__jpg90_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__jpg90_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__jpg70.jpg": {
+    "available": true,
+    "trufor_score": 0.9998,
+    "tampered_area_ratio": 0.0143,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__jpg70_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__jpg70_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__jpg50.jpg": {
+    "available": true,
+    "trufor_score": 0.999,
+    "tampered_area_ratio": 0.0186,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__jpg50_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__jpg50_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__jpg30.jpg": {
+    "available": true,
+    "trufor_score": 0.9968,
+    "tampered_area_ratio": 0.015,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__jpg30_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__jpg30_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__scale075.png": {
+    "available": true,
+    "trufor_score": 0.9966,
+    "tampered_area_ratio": 0.0139,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__scale075_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__scale075_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__scale050.png": {
+    "available": true,
+    "trufor_score": 0.9959,
+    "tampered_area_ratio": 0.0141,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__scale050_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__scale050_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__noise05.png": {
+    "available": true,
+    "trufor_score": 0.9743,
+    "tampered_area_ratio": 0.014,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__noise05_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__noise05_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__noise15.png": {
+    "available": true,
+    "trufor_score": 0.1487,
+    "tampered_area_ratio": 0.0201,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__noise15_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__noise15_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__bright_p10.png": {
+    "available": true,
+    "trufor_score": 0.9898,
+    "tampered_area_ratio": 0.0186,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__bright_p10_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__bright_p10_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__bright_m10.png": {
+    "available": true,
+    "trufor_score": 0.9913,
+    "tampered_area_ratio": 0.0145,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__bright_m10_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__bright_m10_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__contrast_p10.png": {
+    "available": true,
+    "trufor_score": 0.9941,
+    "tampered_area_ratio": 0.014,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__contrast_p10_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__contrast_p10_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_01_copy_move__contrast_m10.png": {
+    "available": true,
+    "trufor_score": 0.993,
+    "tampered_area_ratio": 0.0145,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move__contrast_m10_trufor_heat.png",
+    "overlay": "tampered_01_copy_move__contrast_m10_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__jpg90.jpg": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.025,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__jpg70.jpg": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0252,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__jpg50.jpg": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0254,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__jpg30.jpg": {
+    "available": true,
+    "trufor_score": 0.9998,
+    "tampered_area_ratio": 0.0255,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__scale075.png": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0248,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__scale050.png": {
+    "available": true,
+    "trufor_score": 0.9998,
+    "tampered_area_ratio": 0.0248,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__noise05.png": {
+    "available": true,
+    "trufor_score": 0.9997,
+    "tampered_area_ratio": 0.0247,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__noise15.png": {
+    "available": true,
+    "trufor_score": 0.9818,
+    "tampered_area_ratio": 0.0257,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__bright_p10.png": {
+    "available": true,
+    "trufor_score": 0.9998,
+    "tampered_area_ratio": 0.0247,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__bright_m10.png": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0247,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__contrast_p10.png": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0247,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_02_splice__contrast_m10.png": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0248,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__jpg90.jpg": {
+    "available": true,
+    "trufor_score": 0.9378,
+    "tampered_area_ratio": 0.0292,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__jpg70.jpg": {
+    "available": true,
+    "trufor_score": 0.9549,
+    "tampered_area_ratio": 0.0288,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__jpg50.jpg": {
+    "available": true,
+    "trufor_score": 0.9336,
+    "tampered_area_ratio": 0.0278,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__jpg30.jpg": {
+    "available": true,
+    "trufor_score": 0.8903,
+    "tampered_area_ratio": 0.0339,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__scale075.png": {
+    "available": true,
+    "trufor_score": 0.4318,
+    "tampered_area_ratio": 0.054,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__scale050.png": {
+    "available": true,
+    "trufor_score": 0.4137,
+    "tampered_area_ratio": 0.0516,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__noise05.png": {
+    "available": true,
+    "trufor_score": 0.5039,
+    "tampered_area_ratio": 0.0288,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__noise15.png": {
+    "available": true,
+    "trufor_score": 0.2487,
+    "tampered_area_ratio": 0.0281,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__bright_p10.png": {
+    "available": true,
+    "trufor_score": 0.4806,
+    "tampered_area_ratio": 0.0657,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__bright_m10.png": {
+    "available": true,
+    "trufor_score": 0.5532,
+    "tampered_area_ratio": 0.0624,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__contrast_p10.png": {
+    "available": true,
+    "trufor_score": 0.5444,
+    "tampered_area_ratio": 0.0663,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\tampered_03_text_edit__contrast_m10.png": {
+    "available": true,
+    "trufor_score": 0.5286,
+    "tampered_area_ratio": 0.0576,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__jpg90.jpg": {
+    "available": true,
+    "trufor_score": 0.1748,
+    "tampered_area_ratio": 0.0165,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__jpg70.jpg": {
+    "available": true,
+    "trufor_score": 0.4025,
+    "tampered_area_ratio": 0.0171,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__jpg50.jpg": {
+    "available": true,
+    "trufor_score": 0.7687,
+    "tampered_area_ratio": 0.0133,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__jpg30.jpg": {
+    "available": true,
+    "trufor_score": 0.4113,
+    "tampered_area_ratio": 0.0103,
+    "tampered_position": "画面上部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__scale075.png": {
+    "available": true,
+    "trufor_score": 0.0908,
+    "tampered_area_ratio": 0.0417,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__scale050.png": {
+    "available": true,
+    "trufor_score": 0.0952,
+    "tampered_area_ratio": 0.0524,
+    "tampered_position": "画面中部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__noise05.png": {
+    "available": true,
+    "trufor_score": 0.0302,
+    "tampered_area_ratio": 0.0096,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__noise15.png": {
+    "available": true,
+    "trufor_score": 0.1262,
+    "tampered_area_ratio": 0.0057,
+    "tampered_position": "画面左下角",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__bright_p10.png": {
+    "available": true,
+    "trufor_score": 0.284,
+    "tampered_area_ratio": 0.0459,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__bright_m10.png": {
+    "available": true,
+    "trufor_score": 0.341,
+    "tampered_area_ratio": 0.0438,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__contrast_p10.png": {
+    "available": true,
+    "trufor_score": 0.2908,
+    "tampered_area_ratio": 0.0497,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_robust\\clean_01__contrast_m10.png": {
+    "available": true,
+    "trufor_score": 0.3187,
+    "tampered_area_ratio": 0.0387,
+    "tampered_position": "画面下部",
+    "heatmap": null,
+    "overlay": null
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\clean_01.png": {
+    "available": true,
+    "trufor_score": 0.3503,
+    "tampered_area_ratio": 0.053,
+    "tampered_position": "画面中部",
+    "heatmap": "clean_01_trufor_heat.png",
+    "overlay": "clean_01_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\clean_02_recompressed.png": {
+    "available": true,
+    "trufor_score": 0.4113,
+    "tampered_area_ratio": 0.0103,
+    "tampered_position": "画面上部",
+    "heatmap": "clean_02_recompressed_trufor_heat.png",
+    "overlay": "clean_02_recompressed_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\tampered_01_copy_move.png": {
+    "available": true,
+    "trufor_score": 0.9946,
+    "tampered_area_ratio": 0.0145,
+    "tampered_position": "画面右下角",
+    "heatmap": "tampered_01_copy_move_trufor_heat.png",
+    "overlay": "tampered_01_copy_move_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\tampered_02_splice.png": {
+    "available": true,
+    "trufor_score": 1.0,
+    "tampered_area_ratio": 0.0247,
+    "tampered_position": "画面中部",
+    "heatmap": "tampered_02_splice_trufor_heat.png",
+    "overlay": "tampered_02_splice_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\tampered_03_text_edit.png": {
+    "available": true,
+    "trufor_score": 0.595,
+    "tampered_area_ratio": 0.0644,
+    "tampered_position": "画面左下角",
+    "heatmap": "tampered_03_text_edit_trufor_heat.png",
+    "overlay": "tampered_03_text_edit_trufor_overlay.png"
   }
 }

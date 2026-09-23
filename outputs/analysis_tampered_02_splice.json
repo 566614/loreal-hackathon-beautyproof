@@ -1,11 +1,11 @@
 {
   "schema": "beautyproof/analysis@1",
-  "generated_at": "2026-09-23T00:03:25",
-  "elapsed_seconds": 39.4,
+  "generated_at": "2026-09-23T12:32:50",
+  "elapsed_seconds": 23.9,
   "image": {
     "name": "tampered_02_splice.png",
     "stem": "tampered_02_splice",
-    "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\tampered\\tampered_02_splice.png",
+    "path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\outputs\\_verify_batch\\tampered_02_splice.png",
     "size_bytes": 610828,
     "width": 750,
     "height": 824,
@@ -16,7 +16,7 @@
     "risk_level": "high_risk",
     "explain": {
       "headline": "发现明显篡改痕迹，建议人工复核",
-      "summary": "取证模型给出的整图篡改分为 1.0（越接近 1.0 越可疑），可疑区域约占全图 2.5%。说明图上很可能有区域被复制、拼接或改写过，配合定位热力图的红色区域可以大致看出是哪里。",
+      "summary": "取证模型给出的整图篡改分为 1.0（越接近 1.0 越可疑），可疑区域约占全图 2.5%。可疑痕迹主要集中在画面中部，很可能是这块区域被复制、拼接或改写过，对照定位热力图的红色区域即可确认。",
       "what_to_do": "先不要用这张图对外投放或作为证据；找品牌方要原始原图核对，或交给专业鉴定机构复核后再定。",
       "caveat": "以上结论来自算法比对，不是法律意义上的鉴定意见。分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。"
     },
@@ -36,9 +36,7 @@
       "hash",
       "c2pa",
       "ela",
-      "ocr",
-      "aigc",
-      "trufor"
+      "ocr"
     ],
     "tools_failed": []
   },
@@ -152,12 +150,13 @@
     "trufor": {
       "tool": "trufor",
       "source_asset_id": "tampered_02_splice.png",
-      "observed": "TruFor 篡改分数 1.0（篡改痕迹非常明显）；可疑区域约占全图 2.5%",
+      "observed": "TruFor 篡改分数 1.0（篡改痕迹非常明显）；可疑区域约占全图 2.5%，主要集中在画面中部",
       "cannot_prove": "模型也会误判：分数高不代表一定有罪（压缩/滤镜也会留痕），分数低也不代表绝对干净；且 TruFor 只擅长查「局部被人动过手脚」，官方明确说明它查不出「整张完全由 AI 生成的图」",
       "evidence": [
         {
           "trufor_score": 1.0,
           "tampered_area_ratio": 0.0247,
+          "tampered_position": "画面中部",
           "available": true,
           "heatmap": "tampered_02_splice_trufor_heat.png",
           "overlay": "tampered_02_splice_trufor_overlay.png"
