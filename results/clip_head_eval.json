@@ -1,0 +1,252 @@
+{
+  "n_ai": 20,
+  "n_nonai": 15,
+  "protocols": {
+    "raw": {
+      "1-NN（零训练）": {
+        "acc": 0.9143,
+        "auc": 0.9933
+      },
+      "5-NN（零训练）": {
+        "acc": 0.8857,
+        "auc": 0.9867
+      },
+      "类原型（零训练）": {
+        "acc": 0.8571,
+        "auc": 0.9667
+      },
+      "PCA16+逻辑回归（对照）": {
+        "acc": 0.9143,
+        "auc": 0.98
+      }
+    },
+    "normalized": {
+      "1-NN（零训练）": {
+        "acc": 0.9429,
+        "auc": 1.0
+      },
+      "5-NN（零训练）": {
+        "acc": 0.9429,
+        "auc": 1.0
+      },
+      "类原型（零训练）": {
+        "acc": 0.8286,
+        "auc": 0.9867
+      },
+      "PCA16+逻辑回归（对照）": {
+        "acc": 1.0,
+        "auc": 1.0
+      }
+    }
+  },
+  "prototype_margin_raw": {
+    "ai_min": -0.0042,
+    "real_max": 0.0855,
+    "separated": false
+  },
+  "per_image_raw": [
+    {
+      "file": "ai_01.png",
+      "label": "ai",
+      "proto_margin": 0.1068
+    },
+    {
+      "file": "ai_02.png",
+      "label": "ai",
+      "proto_margin": 0.0933
+    },
+    {
+      "file": "ai_03.png",
+      "label": "ai",
+      "proto_margin": 0.1035
+    },
+    {
+      "file": "ai_04.png",
+      "label": "ai",
+      "proto_margin": 0.1381
+    },
+    {
+      "file": "ai_05.png",
+      "label": "ai",
+      "proto_margin": 0.0722
+    },
+    {
+      "file": "ai_06.png",
+      "label": "ai",
+      "proto_margin": 0.0881
+    },
+    {
+      "file": "ai_07.png",
+      "label": "ai",
+      "proto_margin": 0.1474
+    },
+    {
+      "file": "ai_08.png",
+      "label": "ai",
+      "proto_margin": 0.1662
+    },
+    {
+      "file": "ai_09.png",
+      "label": "ai",
+      "proto_margin": 0.1567
+    },
+    {
+      "file": "ai_10.png",
+      "label": "ai",
+      "proto_margin": 0.0123
+    },
+    {
+      "file": "ai_11.png",
+      "label": "ai",
+      "proto_margin": 0.1438
+    },
+    {
+      "file": "ai_12.png",
+      "label": "ai",
+      "proto_margin": 0.138
+    },
+    {
+      "file": "ai_13.png",
+      "label": "ai",
+      "proto_margin": 0.1179
+    },
+    {
+      "file": "ai_14.png",
+      "label": "ai",
+      "proto_margin": 0.1443
+    },
+    {
+      "file": "ai_15.png",
+      "label": "ai",
+      "proto_margin": 0.0968
+    },
+    {
+      "file": "ai_16.png",
+      "label": "ai",
+      "proto_margin": 0.0597
+    },
+    {
+      "file": "ai_17.png",
+      "label": "ai",
+      "proto_margin": 0.1296
+    },
+    {
+      "file": "ai_18.png",
+      "label": "ai",
+      "proto_margin": 0.1108
+    },
+    {
+      "file": "ai_19.png",
+      "label": "ai",
+      "proto_margin": -0.0042
+    },
+    {
+      "file": "ai_20.png",
+      "label": "ai",
+      "proto_margin": 0.089
+    },
+    {
+      "file": "real_01.jpg",
+      "label": "real",
+      "proto_margin": 0.038
+    },
+    {
+      "file": "real_02.png",
+      "label": "real",
+      "proto_margin": 0.0855
+    },
+    {
+      "file": "real_03.png",
+      "label": "real",
+      "proto_margin": 0.0358
+    },
+    {
+      "file": "real_04.png",
+      "label": "real",
+      "proto_margin": -0.0193
+    },
+    {
+      "file": "real_05.jpg",
+      "label": "real",
+      "proto_margin": -0.0542
+    },
+    {
+      "file": "real_06.jpg",
+      "label": "real",
+      "proto_margin": -0.061
+    },
+    {
+      "file": "real_07.jpg",
+      "label": "real",
+      "proto_margin": -0.0035
+    },
+    {
+      "file": "real_08.jpg",
+      "label": "real",
+      "proto_margin": -0.0048
+    },
+    {
+      "file": "real_09.jpg",
+      "label": "real",
+      "proto_margin": 0.0039
+    },
+    {
+      "file": "real_10.jpg",
+      "label": "real",
+      "proto_margin": -0.0198
+    },
+    {
+      "file": "clean_01.png",
+      "label": "real",
+      "proto_margin": -0.2485
+    },
+    {
+      "file": "clean_02_recompressed.png",
+      "label": "real",
+      "proto_margin": -0.2337
+    },
+    {
+      "file": "tampered_01_copy_move.png",
+      "label": "real",
+      "proto_margin": -0.2442
+    },
+    {
+      "file": "tampered_02_splice.png",
+      "label": "real",
+      "proto_margin": -0.2418
+    },
+    {
+      "file": "tampered_03_text_edit.png",
+      "label": "real",
+      "proto_margin": -0.2341
+    }
+  ],
+  "prototype_margin_normalized": {
+    "ai_min": 0.014,
+    "real_max": 0.0433,
+    "separated": false
+  },
+  "holdout7": {
+    "1-NN（零训练）": {
+      "acc": 0.8571,
+      "n": 7
+    },
+    "5-NN（零训练）": {
+      "acc": 0.8571,
+      "n": 7
+    },
+    "类原型（零训练）": {
+      "acc": 0.8571,
+      "n": 7
+    },
+    "PCA16+逻辑回归（对照）": {
+      "acc": 0.8571,
+      "n": 7
+    }
+  },
+  "mobilenetv3_baseline": {
+    "val_accuracy": 1.0,
+    "val_n": 7,
+    "note": "MobileNetV3 训练 28 / 验证同一批 7 张；CLIP 是零训练 + 该 7 张不参与参照"
+  }
+}

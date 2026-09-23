@@ -250,6 +250,8 @@ outputs/trufor_*.json
 !outputs/trufor_cache.json
 # 鲁棒性测试的扰动图（48 张，重跑脚本会重建）
 outputs/_robust/
+# CLIP 特征缓存（.npy，重跑 eval_clip_head.py 会重建）
+outputs/_clip_cache/
 # Web 演示的上传暂存与本地调试残留
 uploads/
 outputs/_api_*.json
