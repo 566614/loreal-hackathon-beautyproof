@@ -672,5 +672,109 @@
     "tampered_position": "画面左下角",
     "heatmap": "tampered_03_text_edit_trufor_heat.png",
     "overlay": "tampered_03_text_edit_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png": {
+    "available": true,
+    "trufor_score": 0.8221,
+    "tampered_area_ratio": 0.0046,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0_trufor_heat.png",
+    "overlay": "jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png": {
+    "available": true,
+    "trufor_score": 0.7809,
+    "tampered_area_ratio": 0.005,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0_trufor_heat.png",
+    "overlay": "jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png": {
+    "available": true,
+    "trufor_score": 0.9785,
+    "tampered_area_ratio": 0.0046,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0_trufor_heat.png",
+    "overlay": "jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png": {
+    "available": true,
+    "trufor_score": 0.9695,
+    "tampered_area_ratio": 0.0089,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然....png": {
+    "available": true,
+    "trufor_score": 0.9752,
+    "tampered_area_ratio": 0.0071,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然..._trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然..._trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清.png": {
+    "available": true,
+    "trufor_score": 0.9824,
+    "tampered_area_ratio": 0.0043,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清_trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png": {
+    "available": true,
+    "trufor_score": 0.9885,
+    "tampered_area_ratio": 0.0086,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png": {
+    "available": true,
+    "trufor_score": 0.9681,
+    "tampered_area_ratio": 0.0093,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png": {
+    "available": true,
+    "trufor_score": 0.9972,
+    "tampered_area_ratio": 0.008,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感.png": {
+    "available": true,
+    "trufor_score": 0.9962,
+    "tampered_area_ratio": 0.0046,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感_trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png": {
+    "available": true,
+    "trufor_score": 0.9984,
+    "tampered_area_ratio": 0.0076,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png": {
+    "available": true,
+    "trufor_score": 0.9873,
+    "tampered_area_ratio": 0.009,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光..._trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\incoming_ai\\jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png": {
+    "available": true,
+    "trufor_score": 0.9933,
+    "tampered_area_ratio": 0.0083,
+    "tampered_position": "画面右下角",
+    "heatmap": "jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_heat.png",
+    "overlay": "jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_overlay.png"
   }
 }
