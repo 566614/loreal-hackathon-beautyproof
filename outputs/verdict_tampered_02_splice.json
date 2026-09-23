@@ -2,15 +2,16 @@
   "image_stem": "tampered_02_splice",
   "risk_level": "high_risk",
   "reasons": [
-    "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图",
-    "TruFor：篡改分数 1.0（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 2.5%"
+    "图文交叉验证：发现硬矛盾 —— 文案称「原图直出」（上下文 …这瓶是原图直出，没有任何后期，实物…）；而 篡改检测给出 1.0（≥0.9），有明显篡改痕迹。两者只能有一边是真的"
   ],
   "tools_used": [
     "aigc",
     "c2pa",
+    "crossmodal",
     "ela",
     "hash",
     "ocr",
+    "text",
     "trufor"
   ]
 }

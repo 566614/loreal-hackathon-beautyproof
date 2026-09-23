@@ -11,9 +11,13 @@
 
 能证明什么：
     这两份文件是不是「一模一样」——可以用来查这张图是不是网上已有的原图。
+    如果它的指纹能在「品牌方已知原图库」（data/known_originals/）里对上，
+    说明这张图一个字节都没被改过，就是品牌方给的原图本身。
 
 不能证明什么（铁律）：
     不能证明图片真伪，不能证明有没有被 P 过。改过和没改过，指纹都长那样。
+    ⚠️ 特别提醒：没在原图库里对上，也不代表这张图是假的 ——
+       很可能只是品牌方还没把这张原图交给我们。库里没有 ≠ 图有问题。
 """
 import hashlib
 import json
@@ -28,15 +32,60 @@ def compute_asset_id(image_path):
     return "sha256:" + hashlib.sha256(data).hexdigest(), len(data)
 
 
+KNOWN_DIR = Path(__file__).resolve().parent.parent / "data" / "known_originals"
+
+
+def match_known_original(image_path, asset_id):
+    """拿指纹去「品牌方已知原图库」比对
+
+    命中意味着：这张图和品牌方给的原图一个字节都不差 —— 这是最强的一种清白证据，
+    Agent 可以据此跳过压缩痕迹 / 篡改检测（都没被改过，查了也是白查）。
+
+    没命中什么都不说明，可能只是库里还没这张，绝不能反过来当成可疑信号。
+    """
+    if not KNOWN_DIR.is_dir():
+        return None
+    try:
+        for p in sorted(KNOWN_DIR.iterdir()):
+            if not p.is_file() or p.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+                continue
+            if p.resolve() == Path(image_path).resolve():
+                # 传进来的就是库里那张本身，不算「比对命中」，避免自证
+                continue
+            try:
+                if "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest() == asset_id:
+                    return p.name
+            except Exception:  # noqa: BLE001
+                continue
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
 def build_evidence(image_path, asset_id, size_bytes):
     """打包成统一证据格式（和 OCR 工具一模一样的结构）"""
+    hit = match_known_original(image_path, asset_id)
+    if hit:
+        observed = (f"这张图的内容指纹是 {asset_id}，文件大小 {size_bytes} 字节。"
+                    f"该指纹在品牌方已知原图库里命中「{hit}」——"
+                    f"说明这张图与品牌方提供的原图一个字节都不差。")
+    else:
+        observed = (f"这张图的内容指纹是 {asset_id}，文件大小 {size_bytes} 字节。"
+                    f"该指纹未在品牌方已知原图库中命中"
+                    f"（库里没有 ≠ 图有问题，很可能只是还没收录这张原图）。")
+
     return {
         "tool": "hash",
         "source_asset_id": Path(image_path).name,
-        "observed": f"这张图的内容指纹是 {asset_id}，文件大小 {size_bytes} 字节",
+        "observed": observed,
         "cannot_prove": "哈希只证明文件的身份，不能证明图片真伪、不能判断是否被篡改",
         "evidence": [
-            {"asset_id": asset_id, "size_bytes": size_bytes},
+            {
+                "asset_id": asset_id,
+                "size_bytes": size_bytes,
+                "known_original_hit": hit,
+                "known_originals_dir": str(KNOWN_DIR.name) if KNOWN_DIR.is_dir() else None,
+            },
         ],
     }
 

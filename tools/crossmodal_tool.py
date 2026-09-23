@@ -65,6 +65,12 @@ DIM_PATTERNS = {
     "容量": re.compile(r"(\d+(?:\.\d+)?)\s*(ml|毫升|g|克)", re.I),
 }
 
+# 量纲 → 展示用的单位（不然会说出「文案写 299价格」这种怪话）
+DIM_UNITS = {
+    "天数": "天", "周数": "周", "月数": "个月",
+    "百分比": "%", "价格": "元", "容量": "ml",
+}
+
 # 阈值（与 rule_engine 保持一致，改一处要改两处）
 AIGC_AI_THRESHOLD = 0.9       # ≥ 这个认为「整图由 AI 生成」
 TRUFOR_TAMPER_THRESHOLD = 0.9  # ≥ 这个认为「有明显篡改痕迹」
@@ -157,7 +163,10 @@ def check(text, image_evidence):
 
     aigc = (image_evidence.get("aigc", {}).get("evidence") or [{}])[0]
     trufor = (image_evidence.get("trufor", {}).get("evidence") or [{}])[0]
-    ocr = (image_evidence.get("ocr", {}).get("evidence") or [{}])[0]
+    # ⚠️ OCR 的证据结构是「一行一个元素」，每行形如 {"text","bbox","confidence"}。
+    #    早期版本误写成取 evidence[0] 再找 text_lines（该 key 根本不存在），
+    #    导致下面的数字比对永远拿不到文本、形同虚设 —— 是评测集之外的盲区暴露出来的。
+    ocr_items = image_evidence.get("ocr", {}).get("evidence") or []
 
     aigc_score = aigc.get("aigc_score")
     aigc_ready = bool(aigc.get("available", True)) and aigc_score is not None
@@ -201,9 +210,8 @@ def check(text, image_evidence):
             })
 
     # ---- 检查 3：带量纲的数字对不上（中矛盾）
-    ocr_lines = ocr.get("text_lines") or ocr.get("lines") or []
     ocr_text = " ".join(
-        l.get("text", "") if isinstance(l, dict) else str(l) for l in ocr_lines
+        (l.get("text", "") if isinstance(l, dict) else str(l)) for l in ocr_items
     )
     if ocr_text.strip():
         t_nums = extract_dim_numbers(text)
@@ -211,11 +219,13 @@ def check(text, image_evidence):
         for dim in set(t_nums) & set(i_nums):
             for tv in t_nums[dim]:
                 if tv not in i_nums[dim]:
+                    unit = DIM_UNITS.get(dim, "")
+                    on_image = "、".join(f"{v:g}{unit}" for v in i_nums[dim])
                     contradictions.append({
                         "type": f"图文{dim}数字不一致",
                         "severity": "medium",
-                        "text_side": f"文案写「{tv:g}{dim}」" if dim != "百分比" else f"文案写「{tv:g}%」",
-                        "image_side": f"图上文字是 {[f'{v:g}' for v in i_nums[dim]]}",
+                        "text_side": f"文案写「{tv:g}{unit}」",
+                        "image_side": f"图上文字是「{on_image}」",
                         "why": f"同一件事（{dim}）文案与图上标注对不上，需人工核对哪边是最终口径；也可能是改文案时手滑",
                     })
                     break

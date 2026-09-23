@@ -11,14 +11,11 @@
       "conflict_level": "none",
       "text_preview": "这支口红颜色很正，我个人觉得是这个价位里最好的选择，显白。",
       "image_tools_present": [
-        "aigc",
         "c2pa",
         "crossmodal",
-        "ela",
         "hash",
         "ocr",
-        "text",
-        "trufor"
+        "text"
       ],
       "negated_markers": [],
       "calibrated": false

@@ -207,46 +207,111 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         raise ValueError(f"这不是一张能被识别的图片：{image_path.name}（{type(e).__name__}）")
 
     stem = image_path.stem
+    info = image_info(image_path)  # 提前拿到格式/尺寸，Agent 要用它做判断
 
-    todo = [t for t in TOOL_LIST
-            if t[0] not in skip and t[2] and not (fast and t[0] in SLOW_TOOLS)]
+    # 清掉这张图上一轮留下的证据文件。
+    # 否则两件事会出错：① Agent 以为某工具已经跑过，跳过规则失效；
+    # ② 某个工具本次失败了，judge 却拿上次的旧证据凑数，输出看起来正常。
+    # 失败就该表现为「没有这项证据」，而不是拿旧的冒充。
+    for _tool in [t for t, _, _ in TOOL_LIST] + ["text", "crossmodal"]:
+        _f = REPO / "outputs" / f"{_tool}_{stem}.json"
+        if _f.exists():
+            try:
+                _f.unlink()
+            except Exception:  # noqa: BLE001
+                pass
 
+    # ---------------------------------------------------------------- Agent 调度
+    # 不再是「六个工具按固定顺序跑完」，而是分三波：每跑完一波，
+    # 先问 Agent「根据已查到的东西，下一波哪些值得跑」，再决定跑不跑。
+    sys.path.insert(0, str(TOOLS))
+    import planner  # noqa: E402
+
+    ctx = {
+        "has_text": bool(text and text.strip()),
+        "image_format": info.get("format"),
+        "image_pixels": (info.get("width") or 0) * (info.get("height") or 0),
+    }
+
+    script_of = {tool: script for tool, script, _ in TOOL_LIST}
+    enabled = {tool for tool, _, on in TOOL_LIST if on and tool not in skip}
+
+    total = len([x for x in enabled]) + (2 if ctx["has_text"] else 0)
     t0 = time.time()
     ran, failed = [], []
-    for idx, (tool, script, _) in enumerate(todo, 1):
-        if verbose:
-            print(f"  · {tool:7s} ...", end="", flush=True)
+    skipped, decisions = set(), []
+    idx = 0
+
+    def _note(tool, state, spent=None):
         if on_progress:
-            on_progress(tool, idx, len(todo), "running")
-        t = time.time()
-        try:
-            proc = run_tool(script, image_path, timeout=timeout)
-            ok = proc.returncode == 0
-        except subprocess.TimeoutExpired:
-            ok = False
-            proc = None
-        if ok:
-            ran.append(tool)
+            on_progress(tool, idx, total, state)
+
+    for wave_name, wave_tools in planner.WAVES:
+        ev_now = collect_evidence(stem)
+        wave_skip, dec = planner.decide_next(ev_now, ctx, done=set(ran))
+        decisions.extend(dec)
+        skipped |= wave_skip
+
+        for tool in wave_tools:
+            if tool not in enabled:
+                continue
+            idx += 1
+            # 快速预览模式：跳过两个深度学习模型（这条也记进决策，理由要写清楚）
+            if fast and tool in SLOW_TOOLS:
+                skipped.add(tool)
+                decisions.append({
+                    "tool": tool, "action": "skip", "rule": "F1",
+                    "reason": "快速预览模式：跳过深度学习模型换取秒出结果，代价是证据不全",
+                })
+                if verbose:
+                    print(f"  · {tool:7s} ... 跳过（快速预览）")
+                _note(tool, "skipped")
+                continue
+            if tool in wave_skip:
+                if verbose:
+                    print(f"  · {tool:7s} ... 跳过（Agent 判断：查了没意义）")
+                _note(tool, "skipped")
+                continue
+
             if verbose:
-                print(f" 完成 ({time.time() - t:.1f}s)")
-        else:
-            failed.append(tool)
-            if verbose:
-                print(f" 跳过（{'超时' if proc is None else '工具报错'}）")
-        if on_progress:
-            on_progress(tool, idx, len(todo), "done" if ok else "failed")
+                print(f"  · {tool:7s} ...", end="", flush=True)
+            _note(tool, "running")
+            ts = time.time()
+            try:
+                proc = run_tool(script_of[tool], image_path, timeout=timeout)
+                ok = proc.returncode == 0
+            except subprocess.TimeoutExpired:
+                ok = False
+            if ok:
+                ran.append(tool)
+                if verbose:
+                    print(f" 完成 ({time.time() - ts:.1f}s)")
+            else:
+                failed.append(tool)
+                if verbose:
+                    print(" 跳过（工具报错或超时）")
+            _note(tool, "done" if ok else "failed")
 
     # 文案侧（可选）：只有传了 text 才跑，写完 outputs/ 后下面的 collect_evidence 会一起收上来
     text_tools_ran = []
     if text and text.strip():
+        idx += 1
         text_tools_ran = run_text_tools(
             stem, text.strip(), verbose=verbose, on_progress=on_progress,
-            base_idx=len(todo), total=len(todo) + 2,
+            base_idx=idx - 1, total=total,
         )
+        idx += 1
+    else:
+        for _t in planner.TEXT_TOOLS:
+            skipped.add(_t)
 
     evidence = collect_evidence(stem)
     risk_level, reasons = judge(evidence)
     plain = explain_verdict(risk_level, evidence)
+
+    # Agent 的后半段：判完级之后该干什么（进复核队列 / 核改文案 / 核实来源）
+    actions = planner.decide_actions(risk_level, evidence)
+    agent_log = planner.build_log(decisions, actions, ran + text_tools_ran, skipped)
 
     # TruFor 的定位图（如果画出来了就一起带上）
     tru = evidence.get("trufor", {}).get("evidence", [{}])
@@ -263,7 +328,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         "schema": "beautyproof/analysis@1",
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "elapsed_seconds": round(time.time() - t0, 1),
-        "image": image_info(image_path),
+        "image": info,
         "verdict": {
             "risk_level": risk_level,
             "explain": plain,
@@ -273,6 +338,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
             "tools_failed": failed,
         },
         "text_input": (text or "").strip() or None,
+        "agent": agent_log,   # 决策过程：跑了什么、跳了什么、为什么
         "evidence": evidence,
         "visuals": visuals,
         "tool_meta": TOOL_META,   # 每个工具的人话说明，网页/离线 Demo 直接读它
@@ -353,6 +419,14 @@ def main():
             print(f"\n  结论：{v['risk_level']}")
             for r in v["reasons"]:
                 print(f"    - {r}")
+            ag = res.get("agent") or {}
+            if ag.get("summary"):
+                print(f"  Agent：{ag['summary']}")
+            for d in (ag.get("decisions") or []):
+                if d["action"] == "skip":
+                    print(f"    跳过 {d['tool']}（{d['rule']}）：{d['reason'][:70]}…")
+            for a in (ag.get("actions") or []):
+                print(f"    动作：{a['action']}（{a['rule']}）")
             print(f"  用时 {res['elapsed_seconds']}s")
             print(f"  完整结果：{res['_output_file']}")
             md = write_markdown(res)

@@ -195,6 +195,13 @@ button.primary:disabled{opacity:.5;cursor:default}
 
     <div class="imgs" id="imgs"></div>
 
+    <div class="panel card" id="agentCard" style="display:none">
+      <h3><span class="bar"></span>Agent 决策过程
+        <span style="font-weight:400;font-size:12.5px;color:var(--ink3);margin-left:4px" id="agentSum"></span>
+      </h3>
+      <div id="agentBody"></div>
+    </div>
+
     <div class="grid2">
       <div class="panel card">
         <h3><span class="bar"></span>结论是怎么得出的</h3>
@@ -206,7 +213,7 @@ button.primary:disabled{opacity:.5;cursor:default}
       </div>
     </div>
 
-    <h3 style="margin:24px 0 2px;font-size:15px">六件检测工具的原始证据</h3>
+    <h3 style="margin:24px 0 2px;font-size:15px">各检测工具的原始证据</h3>
     <div class="tools" id="tools"></div>
 
     <div class="disclaim">
@@ -305,8 +312,35 @@ function render(res,fresh){
   $("#vText").textContent=r.zh; $("#vEn").textContent=r.en;
   $("#vHead").textContent=r.head;
   $("#vMeta").textContent=`${res.image.name} · ${res.image.width||"?"}×${res.image.height||"?"} ·
-    ${(res.image.size_bytes/1024).toFixed(0)} KB · 六件工具用时 ${res.elapsed_seconds}s ·
-    ${v.tools_used.length}/6 件给出证据`;
+    ${(res.image.size_bytes/1024).toFixed(0)} KB · 用时 ${res.elapsed_seconds}s ·
+    ${v.tools_used.length} 件给出证据`;
+
+  /* Agent 决策过程 —— 评委最想看的一段：它为什么跳过、判完之后要干什么 */
+  const ag=res.agent;
+  if(ag && ((ag.decisions&&ag.decisions.length)||(ag.actions&&ag.actions.length))){
+    $("#agentCard").style.display="block";
+    $("#agentSum").textContent=ag.summary||"";
+    let ah="";
+    (ag.decisions||[]).forEach(d=>{
+      const skip=d.action==="skip";
+      const col=skip?"var(--gray)":"var(--blue)";
+      ah+=`<div style="padding:9px 0 9px 26px;position:relative;font-size:13.5px;color:var(--ink2);border-bottom:1px dashed var(--line)">`
+        +`<span style="position:absolute;left:6px;top:12px;width:7px;height:7px;border-radius:50%;background:${col}"></span>`
+        +`<b style="color:var(--ink)">${skip?"跳过":"处理"} ${d.tool}</b>`
+        +`<span style="color:var(--ink3);font-size:12px"> · 规则 ${d.rule}</span>`
+        +`<div style="margin-top:3px">${d.reason}</div></div>`;
+    });
+    (ag.actions||[]).forEach(a=>{
+      ah+=`<div style="padding:9px 0 9px 26px;position:relative;font-size:13.5px;color:var(--ink2);border-bottom:1px dashed var(--line)">`
+        +`<span style="position:absolute;left:6px;top:12px;width:7px;height:7px;border-radius:50%;background:var(--amber)"></span>`
+        +`<b style="color:var(--ink)">${a.action}</b>`
+        +`<span style="color:var(--ink3);font-size:12px"> · 规则 ${a.rule}</span>`
+        +`<div style="margin-top:3px">${a.reason}</div></div>`;
+    });
+    $("#agentBody").innerHTML=ah;
+  }else{
+    $("#agentCard").style.display="none";
+  }
 
   /* TruFor 分数环 */
   const tru=(res.evidence.trufor||{}).evidence?.[0]||{};

@@ -6,16 +6,20 @@
       "expected_risk": "inconclusive",
       "actual_risk": "inconclusive",
       "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
         "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 0.3503（<0.5）→ 未发现明显篡改痕迹",
+        "文案体检：命中 1 处敏感表述（未达定级线），仅提示",
         "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
       ],
       "tools_used": [
         "aigc",
         "c2pa",
+        "crossmodal",
         "ela",
         "hash",
         "ocr",
+        "text",
         "trufor"
       ],
       "hit": true,
@@ -27,15 +31,18 @@
       "expected_risk": "suspicious",
       "actual_risk": "high_risk",
       "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
         "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 0.9946（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 1.5%"
       ],
       "tools_used": [
         "aigc",
         "c2pa",
+        "crossmodal",
         "ela",
         "hash",
         "ocr",
+        "text",
         "trufor"
       ],
       "hit": true,
@@ -47,15 +54,16 @@
       "expected_risk": "suspicious",
       "actual_risk": "high_risk",
       "reasons": [
-        "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图",
-        "TruFor：篡改分数 1.0（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 2.5%"
+        "图文交叉验证：发现硬矛盾 —— 文案称「原图直出」（上下文 …这瓶是原图直出，没有任何后期，实物…）；而 篡改检测给出 1.0（≥0.9），有明显篡改痕迹。两者只能有一边是真的"
       ],
       "tools_used": [
         "aigc",
         "c2pa",
+        "crossmodal",
         "ela",
         "hash",
         "ocr",
+        "text",
         "trufor"
       ],
       "hit": true,
