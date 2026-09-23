@@ -49,7 +49,7 @@ RISK_ZH = {
 }
 
 
-def _run_job(job_id, image_path, fast):
+def _run_job(job_id, image_path, fast, text=None):
     job = JOBS[job_id]
 
     def cb(tool, idx, total, state):
@@ -57,7 +57,8 @@ def _run_job(job_id, image_path, fast):
             job["steps"].append({"tool": tool, "state": state, "index": idx, "total": total})
 
     try:
-        res = pipeline.analyze(image_path, fast=fast, on_progress=cb, verbose=False)
+        res = pipeline.analyze(image_path, fast=fast, on_progress=cb,
+                               verbose=False, text=text)
         res["verdict"]["risk_zh"] = RISK_ZH.get(res["verdict"]["risk_level"],
                                                 res["verdict"]["risk_level"])
         res["tool_meta"] = pipeline.TOOL_META
@@ -113,6 +114,8 @@ def analyze():
     if not f or not f.filename:
         return jsonify({"error": "没收到图片，请重试"}), 400
     fast = request.form.get("fast") == "1"
+    # 配套文案（选填）：填了才会跑文案体检 + 图文交叉验证
+    text = (request.form.get("text") or "").strip() or None
 
     safe = uuid.uuid4().hex[:8] + "_" + Path(f.filename).name
     path = UPLOADS / safe
@@ -130,7 +133,7 @@ def analyze():
     job_id = uuid.uuid4().hex[:12]
     with JOBS_LOCK:
         JOBS[job_id] = {"status": "running", "steps": [], "result": None, "error": None}
-    threading.Thread(target=_run_job, args=(job_id, str(path), fast), daemon=True).start()
+    threading.Thread(target=_run_job, args=(job_id, str(path), fast, text), daemon=True).start()
     return jsonify({"job_id": job_id})
 
 
@@ -147,5 +150,5 @@ def job(job_id):
 
 
 if __name__ == "__main__":
-    print("美妆图取证台已启动 → http://127.0.0.1:5000")
+    print("内容取证台已启动 → http://127.0.0.1:5000")
     app.run(host="127.0.0.1", port=5000, debug=False, threaded=True)

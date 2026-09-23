@@ -6,7 +6,11 @@
     python tools/pipeline.py <图片路径>              # 单张，跑全套 6 个工具
     python tools/pipeline.py <图片路径> --fast       # 跳过慢的深度学习模型，秒出结论
     python tools/pipeline.py <图1> <图2> --json-only # 只写 JSON，不打印详细过程
-    python tools/pipeline.py <图片路径> --pdf        # 额外导出一份 PDF（给法务/品牌方存档）
+    python tools/pipeline.py <图片路径> --pdf    # 额外导出一份 PDF（法务 / 品牌方存档）
+
+    # 带上配套文案一起鉴定 —— 这才是赛题要的「文案 + 图片」双模态
+    python tools/pipeline.py <图片路径> --text "原相机实拍，无滤镜，七天美白亲测有效"
+    python tools/pipeline.py <图片路径> --text-file 种草文.txt
 
 大白话：
     以前要手动挨个敲六个工具、再敲规则引擎，容易漏、也容易弄错顺序。
@@ -49,6 +53,9 @@ TOOL_META = {
     "ocr": {"label": "文字识别", "job": "把图上所有字抄下来，跟品牌方给的标准文案逐字比对"},
     "aigc": {"label": "AI 生成检测", "job": "判断这张图是不是整张由 AI 生成的（用的是本域微调模型：拿 10 张真实美妆照 + 20 张即梦 AI 图专门练过，补 TruFor 查不出的「整图 AI 生成」盲区）"},
     "trufor": {"label": "篡改痕迹检测", "job": "用 CVPR 2023 的取证模型查整图有没有被人工动过，并定位可疑区域"},
+    # 文案侧（只有传了 --text 才会跑，不影响原来只鉴定图片的用法）
+    "text": {"label": "文案体检", "job": "查文案里有没有《广告法》《化妆品监督管理条例》点名的敏感宣称，逐条给出法律出处、命中位置和上下文"},
+    "crossmodal": {"label": "图文交叉验证", "job": "拿文案说的去跟图像侧结论对质 —— 文案声称原相机实拍、图却被判成 AI 生成的，这种自相矛盾比任何单侧分数都硬"},
 }
 
 
@@ -121,11 +128,70 @@ def explain_verdict(risk_level, evidence):
     return rule_engine.explain(risk_level, evidence)
 
 
+def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total=8):
+    """跑文案侧两个工具，结果写进 outputs/ —— 规则引擎随后就能和图像侧证据一起读到
+
+    text_tool       只看文字本身：违禁宣称（硬规则，有法律出处）+ 写作特征（弱提示）
+    crossmodal_tool 拿文案去跟图像侧的结论对质：说实拍却是 AI 图 → 硬矛盾
+
+    写文件而不是直接返回，是为了和图像侧共用同一套 outputs/<tool>_<stem>.json 约定，
+    规则引擎不用为文案侧开特例。
+    """
+    sys.path.insert(0, str(TOOLS))
+    import text_tool  # noqa: E402
+    import crossmodal_tool  # noqa: E402
+
+    written = []
+
+    # 1) 文案体检
+    if verbose:
+        print("  · text    ...", end="", flush=True)
+    if on_progress:
+        on_progress("text", base_idx + 1, total, "running")
+    try:
+        rep = text_tool.build_evidence(text, source_id=stem, mode="single")
+        (REPO / "outputs" / f"text_{stem}.json").write_text(
+            json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+        written.append("text")
+        if verbose:
+            print(" 完成")
+    except Exception as e:  # noqa: BLE001
+        if verbose:
+            print(f" 跳过（{type(e).__name__}）")
+    if on_progress:
+        on_progress("text", base_idx + 1, total, "done" if "text" in written else "failed")
+
+    # 2) 图文交叉验证（要读图像侧已跑完的证据，所以必须排在图像工具之后）
+    if verbose:
+        print("  · crossmodal ...", end="", flush=True)
+    if on_progress:
+        on_progress("crossmodal", base_idx + 2, total, "running")
+    try:
+        img_ev = collect_evidence(stem)
+        cons, negated = crossmodal_tool.check(text, img_ev)
+        rep = crossmodal_tool.build_evidence(text, cons, img_ev, stem, negated=negated)
+        (REPO / "outputs" / f"crossmodal_{stem}.json").write_text(
+            json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+        written.append("crossmodal")
+        if verbose:
+            print(" 完成")
+    except Exception as e:  # noqa: BLE001
+        if verbose:
+            print(f" 跳过（{type(e).__name__}）")
+    if on_progress:
+        on_progress("crossmodal", base_idx + 2, total, "done" if "crossmodal" in written else "failed")
+
+    return written
+
+
 # ---------------------------------------------------------------- 主流程
-def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progress=None):
+def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
+            on_progress=None, text=None):
     """对一张图跑完整流水线，返回结构化结果
 
     on_progress: 可选回调 fn(tool, 第几个, 共几个, 状态) —— Web 界面靠它显示实时进度
+    text:        可选的配套文案（种草文 / 评论）。传了才跑文案侧两个工具；
+                 不传时行为与以前完全一致，仍是纯图片鉴定。
     """
     image_path = Path(image_path).resolve()
     if not image_path.exists():
@@ -170,6 +236,14 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progr
         if on_progress:
             on_progress(tool, idx, len(todo), "done" if ok else "failed")
 
+    # 文案侧（可选）：只有传了 text 才跑，写完 outputs/ 后下面的 collect_evidence 会一起收上来
+    text_tools_ran = []
+    if text and text.strip():
+        text_tools_ran = run_text_tools(
+            stem, text.strip(), verbose=verbose, on_progress=on_progress,
+            base_idx=len(todo), total=len(todo) + 2,
+        )
+
     evidence = collect_evidence(stem)
     risk_level, reasons = judge(evidence)
     plain = explain_verdict(risk_level, evidence)
@@ -195,9 +269,10 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900, on_progr
             "explain": plain,
             "reasons": reasons,
             "tools_used": sorted(evidence.keys()),
-            "tools_ran": ran,
+            "tools_ran": ran + text_tools_ran,
             "tools_failed": failed,
         },
+        "text_input": (text or "").strip() or None,
         "evidence": evidence,
         "visuals": visuals,
         "tool_meta": TOOL_META,   # 每个工具的人话说明，网页/离线 Demo 直接读它
@@ -242,11 +317,34 @@ def main():
     fast = "--fast" in args
     json_only = "--json-only" in args
     want_pdf = "--pdf" in args
-    paths = [a for a in args if not a.startswith("--")]
+
+    # 配套文案：--text "..." 直接给，或 --text-file 文件.txt（一整段）
+    text = None
+    if "--text" in args:
+        i = args.index("--text")
+        if i + 1 < len(args):
+            text = args[i + 1]
+    if "--text-file" in args:
+        i = args.index("--text-file")
+        if i + 1 < len(args):
+            text = Path(args[i + 1]).read_text(encoding="utf-8")
+
+    # 参数解析：--text / --text-file 后面跟的那个值不能被当成图片路径
+    known = {"--fast", "--json-only", "--pdf"}
+    paths, skip_next = [], False
+    for a in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if a in ("--text", "--text-file"):
+            skip_next = True
+            continue
+        if not a.startswith("--"):
+            paths.append(a)
 
     for p in paths:
         print(f"\n=== 鉴定：{Path(p).name} ===")
-        res = analyze(p, fast=fast, verbose=not json_only)
+        res = analyze(p, fast=fast, verbose=not json_only, text=text)
         v = res["verdict"]
         if json_only:
             print(json.dumps({"image": res["image"]["name"], "risk_level": v["risk_level"]},
@@ -261,7 +359,7 @@ def main():
             if md:
                 print(f"  文字报告：{md}")
             if want_pdf:
-                pf = write_pdf(stem)
+                pf = write_pdf(Path(p).stem)
                 print(f"  PDF 报告：{pf}" if pf else "  PDF 报告：导出失败（可手动跑 tools/export_pdf.py）")
     return 0
 

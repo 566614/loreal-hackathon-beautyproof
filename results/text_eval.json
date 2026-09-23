@@ -1,0 +1,245 @@
+{
+  "generated_at": "2026-09-23T22:46:35",
+  "summary": {
+    "total_cases": 8,
+    "risk_direction_hit": 8,
+    "risk_direction_rate": 1.0,
+    "claim_high_rate": 1.0,
+    "claim_medium_rate": 1.0,
+    "conflict_rate": 1.0,
+    "fully_passed": 8,
+    "false_alarm_cases": []
+  },
+  "cases": [
+    {
+      "id": "tc_01_normal_real",
+      "tests": "防误报：一条正常的真人分享，不应该被判任何风险",
+      "image_stem": "clean_01",
+      "text_preview": "我是混油皮，这支粉底液色号选的02号，早上八点上脸，到下午三点鼻翼有点出油但不斑…",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 0,
+        "conflict_level": "none",
+        "risk_level": "inconclusive"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 0,
+        "conflict_level": "none",
+        "risk_level": "inconclusive"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+        "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图"
+      ]
+    },
+    {
+      "id": "tc_02_claim_medical",
+      "tests": "高风险违禁宣称：明示医疗作用，图本身没问题，定级应来自合规维度而非真伪维度",
+      "image_stem": "clean_01",
+      "text_preview": "这款精华我用了两周，能治疗痘痘肌，还能消炎抗菌，皮肤科医生都推荐。",
+      "observed": {
+        "claim_high": 3,
+        "claim_medium": 0,
+        "conflict_level": "none",
+        "risk_level": "suspicious"
+      },
+      "expected": {
+        "claim_high_min": 2,
+        "claim_medium_min": 0,
+        "conflict_level": "none",
+        "risk_level": "suspicious"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+        "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图"
+      ]
+    },
+    {
+      "id": "tc_03_claim_absolute",
+      "tests": "中风险敏感表述：绝对化用语堆到 3 处以上才升级，避免一句话就误伤",
+      "image_stem": "clean_01",
+      "text_preview": "全网第一的口碑，100%有效，永久去皱，绝不反弹，姐妹们闭眼入！",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 5,
+        "conflict_level": "none",
+        "risk_level": "suspicious"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 3,
+        "conflict_level": "none",
+        "risk_level": "suspicious"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+        "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图"
+      ]
+    },
+    {
+      "id": "tc_04_mild_claim",
+      "tests": "防误报：只命中 1 处中风险词（「最好的」），不该因此定级",
+      "image_stem": "clean_01",
+      "text_preview": "这支口红颜色很正，我个人觉得是这个价位里最好的选择，显白。",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 1,
+        "conflict_level": "none",
+        "risk_level": "inconclusive"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 1,
+        "conflict_level": "none",
+        "risk_level": "inconclusive"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+        "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图"
+      ]
+    },
+    {
+      "id": "tc_05_aigc_lie",
+      "tests": "核心场景：文案声称原相机实拍，图却被判整图 AI 生成 —— 硬矛盾",
+      "image_stem": "ai_01",
+      "text_preview": "原相机实拍，无滤镜直出，亲测这款面霜，质地看图就知道了。",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 0,
+        "conflict_level": "hard",
+        "risk_level": "high_risk"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 0,
+        "conflict_level": "hard",
+        "risk_level": "high_risk"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：发现硬矛盾 —— 文案称「原相机」「实拍」（上下文 …原相机实拍，无滤镜直出，亲…）；而 AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成。两者只能有一边是真的"
+      ]
+    },
+    {
+      "id": "tc_06_aigc_honest",
+      "tests": "防误报：图确实是 AI 生成的，但文案没撒谎 —— 不能记到图文矛盾的账上，风险应由 AIGC 工具单独给出",
+      "image_stem": "ai_01",
+      "text_preview": "这张是品牌官方提供的产品示意图，仅供展示，非实物拍摄。",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 0,
+        "conflict_level": "none",
+        "risk_level": "high_risk"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 0,
+        "conflict_level": "none",
+        "risk_level": "high_risk"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+        "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+      ]
+    },
+    {
+      "id": "tc_07_tamper_lie",
+      "tests": "核心场景：文案声称未修图，篡改检测却给出高分 —— 硬矛盾",
+      "image_stem": "tampered_02_splice",
+      "text_preview": "这瓶是原图直出，没有任何后期，实物就这样。",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 0,
+        "conflict_level": "hard",
+        "risk_level": "high_risk"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 0,
+        "conflict_level": "hard",
+        "risk_level": "high_risk"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：发现硬矛盾 —— 文案称「原图直出」（上下文 …这瓶是原图直出，没有任何后期，实物…）；而 篡改检测给出 1.0（≥0.9），有明显篡改痕迹。两者只能有一边是真的"
+      ]
+    },
+    {
+      "id": "tc_08_tamper_honest",
+      "tests": "防误报：文案自己承认修过图，不算撒谎 —— 风险应来自 TruFor，不是图文矛盾",
+      "image_stem": "tampered_01_copy_move",
+      "text_preview": "拍完发现背景有点乱，就把背景虚化了一下，产品本身没动。",
+      "observed": {
+        "claim_high": 0,
+        "claim_medium": 0,
+        "conflict_level": "none",
+        "risk_level": "high_risk"
+      },
+      "expected": {
+        "claim_high_min": 0,
+        "claim_medium_min": 0,
+        "conflict_level": "none",
+        "risk_level": "high_risk"
+      },
+      "checks": {
+        "claim_high_ok": true,
+        "claim_medium_ok": true,
+        "conflict_ok": true,
+        "risk_ok": true
+      },
+      "all_ok": true,
+      "reasons": [
+        "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+        "AI 生成检测：AI 生成概率 0.0（<0.8）→ 看起来像真实拍摄/人工制作的图"
+      ]
+    }
+  ]
+}

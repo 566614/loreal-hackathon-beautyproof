@@ -32,6 +32,10 @@ THRESHOLDS = {
     # TruFor 阈值（已在本批素材上校准）
     "trufor_high": 0.9,          # 篡改分数 ≥ 这个 → 高风险
     "trufor_suspicious": 0.5,    # 篡改分数 ≥ 这个 → 可疑
+    # 文案侧（2026-09-23 新增，补赛题「文案 + 图片」双模态里缺的那一半）
+    "crossmodal_hard": 1,        # 图文硬矛盾 ≥ 这个 → 高风险（跨模态证据，比单侧分数硬）
+    "text_claim_high": 1,        # 高风险违禁宣称（明示医疗作用）≥ 这个 → 可疑（合规风险）
+    "text_claim_medium": 3,      # 中风险敏感表述（绝对化用语/效果承诺）≥ 这个 → 可疑
 }
 
 # AIGC 信号是否参与自动定级 —— 默认开启。
@@ -49,6 +53,17 @@ AIGC_TRIGGERS_RISK = True
 # ⚠️ 但阈值必须先在本批素材上实测：如果它也对真实图给高分（像 AIGC 那样零区分度），
 #    就把这里改成 False，让它跟 AIGC 一样只当参考。
 TRUFOR_TRIGGERS_RISK = True
+
+# 图文交叉验证是否参与自动定级 —— 默认开启。
+# 它是本系统唯一「跨模态」的证据：文案说原相机实拍、图却被判成整图 AI 生成，
+# 两边只能有一边是真的。这种自相矛盾不依赖任何单一模型的分数，
+# 比"某个分数偏高"可靠得多，所以优先级排在所有单侧信号之前。
+CROSSMODAL_TRIGGERS_RISK = True
+
+# 文案违禁宣称是否参与自动定级 —— 默认开启，但注意它定的是「合规风险」，
+# 不是「真伪风险」。涉嫌违法的宣称不等于内容造假，两者是不同维度，
+# 定级理由里必须写清楚是哪一类，不能混着说。
+TEXT_CLAIM_TRIGGERS_RISK = True
 
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
@@ -73,6 +88,29 @@ def load_evidence(repo_root, stem):
 def judge(evidence):
     """汇总所有工具信号，返回一个 (risk_level, reasons) 元组"""
     reasons = []
+
+    # 信号0：图文交叉验证 —— 跨模态证据，优先级高于任何单侧分数
+    cross_medium = False
+    cross = evidence.get("crossmodal")
+    if cross:
+        c0 = (cross.get("evidence") or [{}])[0]
+        level = c0.get("conflict_level")
+        cons = c0.get("contradictions") or []
+        top = cons[0] if cons else {}
+        if level == "hard" and CROSSMODAL_TRIGGERS_RISK:
+            reasons.append(
+                f"图文交叉验证：发现硬矛盾 —— {top.get('text_side', '')}；"
+                f"而 {top.get('image_side', '')}。两者只能有一边是真的")
+            return "high_risk", reasons
+        elif level == "medium":
+            cross_medium = True
+            reasons.append(
+                f"图文交叉验证：{c0.get('medium_count', 0)} 处图文口径不一致"
+                f"（{top.get('type', '')}），暂记为可疑，需人工核对哪边是最终口径")
+        elif level == "not_comparable":
+            reasons.append("图文交叉验证：图像侧证据不足，本次未做图文比对")
+        else:
+            reasons.append("图文交叉验证：文案与图像侧结论未发现互相矛盾")
 
     # 信号1：AI 生成图检测 —— 判断是不是整张由 AI 生成（TruFor 查不出的盲区，靠它兜底）
     aigc = evidence.get("aigc")
@@ -125,6 +163,31 @@ def judge(evidence):
         else:
             reasons.append(f"TruFor：篡改分数 {score}（<{THRESHOLDS['trufor_suspicious']}）→ 未发现明显篡改痕迹")
 
+    # 文案侧的中等矛盾：前面记下了，等强信号都判完再定级
+    if cross_medium:
+        return "suspicious", reasons
+
+    # 信号5：文案违禁宣称 —— 注意这是「合规风险」，不是「真伪风险」
+    text = evidence.get("text")
+    if text:
+        t0 = (text.get("evidence") or [{}])[0]
+        hi = t0.get("claim_high_count", 0)
+        med = t0.get("claim_medium_count", 0)
+        if TEXT_CLAIM_TRIGGERS_RISK and hi >= THRESHOLDS["text_claim_high"]:
+            reasons.append(
+                f"文案体检：命中 {hi} 处高风险违禁宣称（多为明示/暗示医疗作用）→ "
+                f"属合规风险，需对照《化妆品监督管理条例》人工核对")
+            return "suspicious", reasons
+        elif TEXT_CLAIM_TRIGGERS_RISK and med >= THRESHOLDS["text_claim_medium"]:
+            reasons.append(
+                f"文案体检：命中 {med} 处中风险敏感表述（绝对化用语 / 效果时限承诺）→ "
+                f"建议核改后再投放")
+            return "suspicious", reasons
+        elif hi or med:
+            reasons.append(f"文案体检：命中 {hi + med} 处敏感表述（未达定级线），仅提示")
+        else:
+            reasons.append("文案体检：未命中违禁宣称词典")
+
     # 信号3：ELA 压缩异常 —— 局部篡改痕迹
     ela = evidence.get("ela")
     if ela:
@@ -171,6 +234,17 @@ def explain(risk_level, evidence):
 
     c2pa_status = _first("c2pa").get("c2pa_status")
 
+    # 图文交叉验证：这是唯一跨模态的证据，说清楚它时要同时引用「文案原话」和「图像侧结论」
+    cross = _first("crossmodal")
+    cross_level = cross.get("conflict_level")
+    cross_top = (cross.get("contradictions") or [{}])
+    cross_top = cross_top[0] if cross_top else {}
+
+    # 文案违禁宣称（合规维度，与真伪分开讲）
+    txt = _first("text")
+    claim_hi = txt.get("claim_high_count", 0)
+    claim_med = txt.get("claim_medium_count", 0)
+
     # 高风险是不是由「整图 AI 生成」触发的（TruFor 查不出的盲区，靠 AIGC 兜底）。
     # 从 evidence 里直接取，不依赖 judge() 的 reasons —— 因为 explain() 只拿到 evidence。
     aigc = _first("aigc")
@@ -182,7 +256,19 @@ def explain(risk_level, evidence):
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
 
     if risk_level == "high_risk":
-        if aigc_triggered:
+        if cross_level == "hard":
+            headline = "文案和图在互相打架，建议立即复核"
+            summary = (f"{cross_top.get('text_side', '')}，"
+                       f"但图像侧检测的结果是：{cross_top.get('image_side', '')}。"
+                       f"同一件事两边说法不相容，只能有一边是真的 —— "
+                       f"这是最需要人工介入的一类情况。")
+            what_to_do = ("先不要用这条内容对外投放；分别向品牌方核实图片来源和文案出处，"
+                          "确认是哪一边出了错（也可能是文案套错了图）。")
+            return {
+                "headline": headline, "summary": summary,
+                "what_to_do": what_to_do, "caveat": caveat,
+            }
+        elif aigc_triggered:
             # 整图 AI 生成：这是 TruFor 查不出的盲区，由本域微调的 AIGC 模型兜底
             headline = "检测到整图由 AI 生成，建议人工复核"
             summary = (f"AI 生成检测给出 {aigc_score}"
@@ -214,8 +300,26 @@ def explain(risk_level, evidence):
                       "找品牌方要原始原图核对，或交给专业鉴定机构复核后再定。")
 
     elif risk_level == "suspicious":
-        headline = "有可疑迹象，建议人工看一眼"
-        if tru_ready:
+        if cross_level == "medium":
+            headline = "图文口径对不上，建议人工核对"
+            summary = (f"{cross_top.get('text_side', '')}，而 {cross_top.get('image_side', '')}。"
+                       "同一件事两边标注不一致，可能是改稿时手滑，"
+                       "也可能是图上另有说明，需要人工确认最终口径。")
+            what_to_do = "核对文案与包装/官方口径哪边为准，统一后再投放。"
+        elif claim_hi >= THRESHOLDS["text_claim_high"]:
+            headline = "文案涉嫌违规宣称，建议修改后再投放"
+            summary = (f"文案体检命中 {claim_hi} 处高风险违禁宣称，"
+                       "多为明示或暗示医疗作用的表述（化妆品广告不允许），"
+                       "依据是《化妆品监督管理条例》第 43 条与《广告法》第 17 条。"
+                       "注意：这是合规风险，不等于内容造假。")
+            what_to_do = "对照法规核改文案；是否构成违法由监管部门认定，此处仅作提示。"
+        elif claim_med >= THRESHOLDS["text_claim_medium"]:
+            headline = "文案有多处敏感表述，建议核改"
+            summary = (f"文案体检命中 {claim_med} 处中风险敏感表述，"
+                       "多为绝对化用语或效果时限承诺（如「永久」「七天美白」），"
+                       "依据是《广告法》第 9 条与《化妆品监督管理条例》第 43 条。")
+            what_to_do = "逐条核改这些表述，避免被平台或监管判为违规宣称。"
+        elif tru_ready:
             summary = f"取证模型给出的整图篡改分为 {score}，已超过可疑线"
             if ratio is not None:
                 summary += f"，可疑区域约占全图 {ratio:.1%}"

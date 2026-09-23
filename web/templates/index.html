@@ -137,6 +137,22 @@ button.primary:disabled{opacity:.5;cursor:default}
     </div>
   </div>
 
+  <div class="panel" style="padding:18px 22px;margin-top:14px">
+    <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px">
+      配套文案（选填）· 种草文 / 评论区原文
+    </div>
+    <div style="font-size:12.5px;color:var(--ink2);margin-bottom:10px;line-height:1.65">
+      填上文案才会跑「文案体检 + 图文交叉验证」。
+      比如文案写着「原相机实拍」，图却被判成整张 AI 生成的 ——
+      这种图文打架，只有两边都看才抓得到，只看图或只看字都发现不了。
+    </div>
+    <textarea id="text" rows="3"
+      placeholder="把这条内容的文案原文粘进来…（不填就只鉴定图片）"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);
+             border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;
+             background:var(--card);color:var(--ink);line-height:1.6"></textarea>
+  </div>
+
   <div class="panel" id="status">
     <h3>正在鉴定…</h3>
     <div class="steps" id="steps"></div>
@@ -237,6 +253,8 @@ function start(file){
   const fd=new FormData();
   fd.append("file",file);
   if($("#fast").checked)fd.append("fast","1");
+  const tx=($("#text")&&$("#text").value||"").trim();
+  if(tx)fd.append("text",tx);
   fetch("/api/analyze",{method:"POST",body:fd})
     .then(r=>r.json())
     .then(d=>{

@@ -1,0 +1,101 @@
+{
+  "_readme": [
+    "文案侧评测集 —— 补赛题「文案 + 图片」双模态里缺的那一半。",
+    "每条 case = 一段文案 + 一张图（图的图像侧证据已存在于 outputs/）+ 人工标注的期望结果。",
+    "",
+    "字段说明：",
+    "  image_stem          复用的图（clean_01 干净图 / ai_01 整图AI生成 / tampered_* 人工篡改）",
+    "  expect_claim_high   期望命中的高风险违禁宣称条数下限（明示医疗作用类）",
+    "  expect_claim_medium 期望命中的中风险敏感表述条数下限（绝对化用语 / 效果承诺）",
+    "  expect_conflict     期望的图文冲突等级：hard / medium / none / not_comparable",
+    "  expected_risk       期望系统给出的风险档位",
+    "  tests               这条 case 真正想验的事（防止为了命中率而凑样本）",
+    "",
+    "⚠️ 设计原则：",
+    "  必须同时包含「该报警的」和「不该报警的」两类。",
+    "  tc_01 / tc_08 是防误报样本 —— 只跑命中率不看这两条，等于自己骗自己。",
+    "  文案里的违禁词是刻意写进去用于测试词典的，不代表任何真实产品。"
+  ],
+  "cases": [
+    {
+      "id": "tc_01_normal_real",
+      "image_stem": "clean_01",
+      "text": "我是混油皮，这支粉底液色号选的02号，早上八点上脸，到下午三点鼻翼有点出油但不斑驳。用了大概一个月，柜姐说是新配方，我自己感觉比旧版薄一点。",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 0,
+      "expect_conflict": "none",
+      "expected_risk": "inconclusive",
+      "tests": "防误报：一条正常的真人分享，不应该被判任何风险"
+    },
+    {
+      "id": "tc_02_claim_medical",
+      "image_stem": "clean_01",
+      "text": "这款精华我用了两周，能治疗痘痘肌，还能消炎抗菌，皮肤科医生都推荐。",
+      "expect_claim_high": 2,
+      "expect_claim_medium": 0,
+      "expect_conflict": "none",
+      "expected_risk": "suspicious",
+      "tests": "高风险违禁宣称：明示医疗作用，图本身没问题，定级应来自合规维度而非真伪维度"
+    },
+    {
+      "id": "tc_03_claim_absolute",
+      "image_stem": "clean_01",
+      "text": "全网第一的口碑，100%有效，永久去皱，绝不反弹，姐妹们闭眼入！",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 3,
+      "expect_conflict": "none",
+      "expected_risk": "suspicious",
+      "tests": "中风险敏感表述：绝对化用语堆到 3 处以上才升级，避免一句话就误伤"
+    },
+    {
+      "id": "tc_04_mild_claim",
+      "image_stem": "clean_01",
+      "text": "这支口红颜色很正，我个人觉得是这个价位里最好的选择，显白。",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 1,
+      "expect_conflict": "none",
+      "expected_risk": "inconclusive",
+      "tests": "防误报：只命中 1 处中风险词（「最好的」），不该因此定级"
+    },
+    {
+      "id": "tc_05_aigc_lie",
+      "image_stem": "ai_01",
+      "text": "原相机实拍，无滤镜直出，亲测这款面霜，质地看图就知道了。",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 0,
+      "expect_conflict": "hard",
+      "expected_risk": "high_risk",
+      "tests": "核心场景：文案声称原相机实拍，图却被判整图 AI 生成 —— 硬矛盾"
+    },
+    {
+      "id": "tc_06_aigc_honest",
+      "image_stem": "ai_01",
+      "text": "这张是品牌官方提供的产品示意图，仅供展示，非实物拍摄。",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 0,
+      "expect_conflict": "none",
+      "expected_risk": "high_risk",
+      "tests": "防误报：图确实是 AI 生成的，但文案没撒谎 —— 不能记到图文矛盾的账上，风险应由 AIGC 工具单独给出"
+    },
+    {
+      "id": "tc_07_tamper_lie",
+      "image_stem": "tampered_02_splice",
+      "text": "这瓶是原图直出，没有任何后期，实物就这样。",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 0,
+      "expect_conflict": "hard",
+      "expected_risk": "high_risk",
+      "tests": "核心场景：文案声称未修图，篡改检测却给出高分 —— 硬矛盾"
+    },
+    {
+      "id": "tc_08_tamper_honest",
+      "image_stem": "tampered_01_copy_move",
+      "text": "拍完发现背景有点乱，就把背景虚化了一下，产品本身没动。",
+      "expect_claim_high": 0,
+      "expect_claim_medium": 0,
+      "expect_conflict": "none",
+      "expected_risk": "high_risk",
+      "tests": "防误报：文案自己承认修过图，不算撒谎 —— 风险应来自 TruFor，不是图文矛盾"
+    }
+  ]
+}

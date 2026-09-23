@@ -1,0 +1,27 @@
+{
+  "tool": "crossmodal",
+  "source_asset_id": "tampered_01_copy_move",
+  "observed": "文案与图像侧结论未发现互相矛盾之处。",
+  "cannot_prove": "图文冲突只能说明两边说法不相容，不能判定是谁在造假；数字不一致也可能是改稿手滑或图上另有说明，必须人工核对",
+  "evidence": [
+    {
+      "contradictions": [],
+      "hard_count": 0,
+      "medium_count": 0,
+      "conflict_level": "none",
+      "text_preview": "拍完发现背景有点乱，就把背景虚化了一下，产品本身没动。",
+      "image_tools_present": [
+        "aigc",
+        "c2pa",
+        "crossmodal",
+        "ela",
+        "hash",
+        "ocr",
+        "text",
+        "trufor"
+      ],
+      "negated_markers": [],
+      "calibrated": false
+    }
+  ]
+}

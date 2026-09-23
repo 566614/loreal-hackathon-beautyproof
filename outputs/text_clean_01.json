@@ -1,0 +1,40 @@
+{
+  "tool": "text",
+  "source_asset_id": "clean_01",
+  "observed": "文案共 29 字，命中 1 处敏感宣称（高风险 0 处、中风险 1 处）。最扎眼的一处：「最好」（绝对化用语，依据 《广告法》第9条），上下文 …，我个人觉得是这个价位里最好的选择，显白。…",
+  "cannot_prove": "文案工具只能核对「有没有出现法律点名的敏感宣称」，不能证明这段文案是 AI 写的、也不能证明它是假的或水军刷的；写作特征与重复率仅为统计提示，未校准为概率，不参与自动定级",
+  "evidence": [
+    {
+      "mode": "single",
+      "text_preview": "这支口红颜色很正，我个人觉得是这个价位里最好的选择，显白。",
+      "claim_violations": [
+        {
+          "category": "absolute",
+          "category_label": "绝对化用语",
+          "basis": "《广告法》第9条",
+          "severity": "medium",
+          "word": "最好",
+          "position": 20,
+          "context": "，我个人觉得是这个价位里最好的选择，显白。"
+        }
+      ],
+      "claim_violation_count": 1,
+      "claim_high_count": 0,
+      "claim_medium_count": 1,
+      "claim_risk_level": "medium",
+      "ai_style": {
+        "char_count": 29,
+        "sentence_count": 1,
+        "avg_sentence_len": 28,
+        "sentence_len_cv": 0.0,
+        "ai_marker_per_100": 0.0,
+        "template_marker_per_100": 0.0,
+        "has_number": false,
+        "has_time_detail": false,
+        "has_shade_detail": false
+      },
+      "comment_flood": {},
+      "calibrated": false
+    }
+  ]
+}

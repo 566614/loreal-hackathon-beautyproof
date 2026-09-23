@@ -1,0 +1,67 @@
+{
+  "tool": "text",
+  "source_asset_id": "ai_01",
+  "observed": "文案共 32 字，命中 4 处敏感宣称（高风险 1 处、中风险 3 处）。最扎眼的一处：「治疗」（明示或暗示医疗作用，依据 《化妆品监督管理条例》第43条 / 《广告法》第17条），上下文 …，无滤镜直出，这款精华能治疗痘痘肌，七天美白，永久去…",
+  "cannot_prove": "文案工具只能核对「有没有出现法律点名的敏感宣称」，不能证明这段文案是 AI 写的、也不能证明它是假的或水军刷的；写作特征与重复率仅为统计提示，未校准为概率，不参与自动定级",
+  "evidence": [
+    {
+      "mode": "single",
+      "text_preview": "原相机实拍，无滤镜直出，这款精华能治疗痘痘肌，七天美白，永久去皱",
+      "claim_violations": [
+        {
+          "category": "medical",
+          "category_label": "明示或暗示医疗作用",
+          "basis": "《化妆品监督管理条例》第43条 / 《广告法》第17条",
+          "severity": "high",
+          "word": "治疗",
+          "position": 17,
+          "context": "，无滤镜直出，这款精华能治疗痘痘肌，七天美白，永久去"
+        },
+        {
+          "category": "promise",
+          "category_label": "夸大功效 / 效果时限承诺",
+          "basis": "《化妆品监督管理条例》第43条（不得夸大功效）",
+          "severity": "medium",
+          "word": "七天美白",
+          "position": 23,
+          "context": "，这款精华能治疗痘痘肌，七天美白，永久去皱"
+        },
+        {
+          "category": "absolute",
+          "category_label": "绝对化用语",
+          "basis": "《广告法》第9条",
+          "severity": "medium",
+          "word": "永久",
+          "position": 28,
+          "context": "能治疗痘痘肌，七天美白，永久去皱"
+        },
+        {
+          "category": "promise",
+          "category_label": "夸大功效 / 效果时限承诺",
+          "basis": "《化妆品监督管理条例》第43条（不得夸大功效）",
+          "severity": "medium",
+          "word": "永久去皱",
+          "position": 28,
+          "context": "能治疗痘痘肌，七天美白，永久去皱"
+        }
+      ],
+      "claim_violation_count": 4,
+      "claim_high_count": 1,
+      "claim_medium_count": 3,
+      "claim_risk_level": "high",
+      "ai_style": {
+        "char_count": 32,
+        "sentence_count": 1,
+        "avg_sentence_len": 32,
+        "sentence_len_cv": 0.0,
+        "ai_marker_per_100": 0.0,
+        "template_marker_per_100": 0.0,
+        "has_number": false,
+        "has_time_detail": false,
+        "has_shade_detail": false
+      },
+      "comment_flood": {},
+      "calibrated": false
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "tool": "text",
+  "source_asset_id": "tampered_01_copy_move",
+  "observed": "文案共 27 字，未命中违禁宣称词典中的任何词条。",
+  "cannot_prove": "文案工具只能核对「有没有出现法律点名的敏感宣称」，不能证明这段文案是 AI 写的、也不能证明它是假的或水军刷的；写作特征与重复率仅为统计提示，未校准为概率，不参与自动定级",
+  "evidence": [
+    {
+      "mode": "single",
+      "text_preview": "拍完发现背景有点乱，就把背景虚化了一下，产品本身没动。",
+      "claim_violations": [],
+      "claim_violation_count": 0,
+      "claim_high_count": 0,
+      "claim_medium_count": 0,
+      "claim_risk_level": "none",
+      "ai_style": {
+        "char_count": 27,
+        "sentence_count": 1,
+        "avg_sentence_len": 26,
+        "sentence_len_cv": 0.0,
+        "ai_marker_per_100": 0.0,
+        "template_marker_per_100": 0.0,
+        "has_number": false,
+        "has_time_detail": false,
+        "has_shade_detail": false
+      },
+      "comment_flood": {},
+      "calibrated": false
+    }
+  ]
+}
