@@ -1,0 +1,802 @@
+{
+  "images": [
+    {
+      "file": "686fab0a0000000023007677\\001.webp",
+      "note": "686fab0a0000000023007677",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:2cdbb41ba9dde5e5d6ca1fa645577c845e9f25f55e37e1f57399a85a653635c6",
+        25524
+      ]
+    },
+    {
+      "file": "686fab0a0000000023007677\\002.webp",
+      "note": "686fab0a0000000023007677",
+      "aigc_score": 0.9998,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:52e9e81cc59c7a37de43513209c679b6385f79094b3207fab89767f71d9f06e5",
+        28036
+      ]
+    },
+    {
+      "file": "686fab0a0000000023007677\\003.webp",
+      "note": "686fab0a0000000023007677",
+      "aigc_score": 0.9999,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:2ac87681baf9806dc8e5e0d2e0687035d2af19d33ef77addefa4978ca0282ccd",
+        26644
+      ]
+    },
+    {
+      "file": "686fab0a0000000023007677\\004.webp",
+      "note": "686fab0a0000000023007677",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:5d605490e556853795486443d5762bd26a6ae8894905666bfa0b1c509137a902",
+        26206
+      ]
+    },
+    {
+      "file": "686fab0a0000000023007677\\005.webp",
+      "note": "686fab0a0000000023007677",
+      "aigc_score": 0.9817,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:189da5edc655964b1259413fe7b287dab296d2f125e9ca9ceb71ad33dc67955c",
+        26346
+      ]
+    },
+    {
+      "file": "691d1fcb000000000d00f794\\cover.webp",
+      "note": "691d1fcb000000000d00f794",
+      "aigc_score": 0.9997,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:b370438a261980c9ed0f74039a2fd62e3f50d7df955142a728da911c76cf8fc8",
+        108122
+      ]
+    },
+    {
+      "file": "694f944a000000001e0099aa\\cover.webp",
+      "note": "694f944a000000001e0099aa",
+      "aigc_score": 0.9932,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:52fa5185aa243380616fdb5cdd6224c4e2ba56bc30081641c9d847712df392f0",
+        60328
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\001.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:c5cafff0a4227c6402470e1a54114a2d492a816612caa637f8e83983f64a03f4",
+        98058
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\002.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:4c3affd552ab237cc8dfc689ca4c974c9e261c2e356469985bbf82a4eb9a5088",
+        72786
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\003.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:e5990c9dd2a4c3e1df059e863a52f5436f69c5efbe288eb482894b39ed8df88b",
+        108042
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\004.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:11c544edf1b0abe5f70945acb158b9d5ad50914ea749f4da68462bf6452ec983",
+        76968
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\005.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:db5f7d3c95fe83634cfe477795729c786dbed4a1bf1c719e98656c36a546441a",
+        114706
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\006.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:bea5bfb1a9ac21b270f5eed2184211aa7ff84c104ab9e66a12628aed07713890",
+        95094
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\007.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:2cfbafae0116a708dceb819cfa37f2eb9e630337128635328bd66a12ab6e1b36",
+        107136
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\008.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:6dbacf1a7db2fc420900e79883cdb0abd4a5583c2d51f3d261c7a09a1a125b61",
+        91588
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\009.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:d2be9cdacae18b6cf54298483b1e5c84166a5c1d4604b39ddd85ccabc542bc1c",
+        95090
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\010.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:e7a742efc68eb17478e3f199b8130e9f04b461c3f8ab2b79059a619bbeb88e6e",
+        88956
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\011.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:4600040be6c00187aefae2bba00434445e3f2b31ef6c780a33647969102bd4ab",
+        87846
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\012.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:78391f4d15d88b68b58821e0566f7a8b2af9742d9901a2962dd08e9724202d1f",
+        155994
+      ]
+    },
+    {
+      "file": "6961c5b2000000000e03f942\\013.webp",
+      "note": "6961c5b2000000000e03f942",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:15c94cc0ad87f1894e38d11cfbf5dae57ed17b623a9160dc503968e74dc6267f",
+        116552
+      ]
+    },
+    {
+      "file": "69717cc80000000021031e9c\\001.webp",
+      "note": "69717cc80000000021031e9c",
+      "aigc_score": 0.3296,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:b4423f012919bee4a85c139e21a210a597fade91c594d63d7e41920ed4279f83",
+        115000
+      ]
+    },
+    {
+      "file": "698c152f000000000a02d392\\001.webp",
+      "note": "698c152f000000000a02d392",
+      "aigc_score": 0.6428,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:45a06bc5531ca2000e1ecd5af0981a9d23ceeaeb7335088ee2662d7e85d9be9e",
+        161052
+      ]
+    },
+    {
+      "file": "698c152f000000000a02d392\\002.webp",
+      "note": "698c152f000000000a02d392",
+      "aigc_score": 0.0013,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:5a3c07297c28f7dbb77a05f5bb7ed1aca7cd9074809dc6a16c94bb7ee1027e79",
+        113686
+      ]
+    },
+    {
+      "file": "69c8ea2700000000220026fb\\cover.webp",
+      "note": "69c8ea2700000000220026fb",
+      "aigc_score": 0.0298,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:d77fd6f5c3343ba603ebf9335a798e4cbc2d8bb10290e8a173dcc538d7a512d4",
+        47474
+      ]
+    },
+    {
+      "file": "69d57c33000000001d01fa6e\\cover.webp",
+      "note": "69d57c33000000001d01fa6e",
+      "aigc_score": 0.9997,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:e95f47699315b9e54d1172f4ae66b64e4f696d3f2590111ca8d028e17f7a52a0",
+        85028
+      ]
+    },
+    {
+      "file": "69d896b50000000020039847\\cover.webp",
+      "note": "69d896b50000000020039847",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:5813a76cacea9ef924214f413aadb48ef57b5ca0a9822d4ad77b7177cbd0d6d6",
+        113272
+      ]
+    },
+    {
+      "file": "69e755ce000000001d01deb1\\001.webp",
+      "note": "69e755ce000000001d01deb1",
+      "aigc_score": 0.0002,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:c44c01e1d7d24797daf54166b2985440a2a3c1c4fc8498a741ce1ccf98a44d98",
+        141296
+      ]
+    },
+    {
+      "file": "69e755ce000000001d01deb1\\002.webp",
+      "note": "69e755ce000000001d01deb1",
+      "aigc_score": 0.0,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:923e237952c082cbdba092bc545071dd7d0a76d1d21446474b6277278e871f11",
+        94862
+      ]
+    },
+    {
+      "file": "69e755ce000000001d01deb1\\003.webp",
+      "note": "69e755ce000000001d01deb1",
+      "aigc_score": 0.0013,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:25aed208077a64d15a9d34b8a7c66a97e50d07145136c3e0fd4a723c3f1cb5d2",
+        148094
+      ]
+    },
+    {
+      "file": "69e755ce000000001d01deb1\\004.webp",
+      "note": "69e755ce000000001d01deb1",
+      "aigc_score": 0.0,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:52b8487765f6bccf0232331500bb8c2d581eeecd2da56b150e6ce9f0f7dca514",
+        123970
+      ]
+    },
+    {
+      "file": "69e755ce000000001d01deb1\\005.webp",
+      "note": "69e755ce000000001d01deb1",
+      "aigc_score": 0.0,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:85761c1ab44af2aed4b4202f9efe7f579871cc116d81b93e98c45375e6fb4f1b",
+        174792
+      ]
+    },
+    {
+      "file": "69edb99f0000000037035362\\001.webp",
+      "note": "69edb99f0000000037035362",
+      "aigc_score": 0.9991,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:dece6d69b66237a8edb5c62718d53fe8a0b5daaf286989ecfa281d988b4e5017",
+        639534
+      ]
+    },
+    {
+      "file": "69edb99f0000000037035362\\002.webp",
+      "note": "69edb99f0000000037035362",
+      "aigc_score": 0.0009,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:ea31061aca3da1915973536c76959449da1cbf10396563eaa1f6706f8515a965",
+        39594
+      ]
+    },
+    {
+      "file": "69f9d833000000002300626c\\cover.webp",
+      "note": "69f9d833000000002300626c",
+      "aigc_score": 0.0665,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:60c3bf4aa224116b5a914ca54efeb52a23758811971e67a049b88fedac55c660",
+        119474
+      ]
+    },
+    {
+      "file": "69fb0842000000001f007da1\\cover.webp",
+      "note": "69fb0842000000001f007da1",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:75c98f427842ea342d3a001fc750824194e1e6ecf0eab54674728c39472d552a",
+        204118
+      ]
+    },
+    {
+      "file": "6a049b310000000036019e93\\001.webp",
+      "note": "6a049b310000000036019e93",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:df45e3c021cada1d2ba1a8e22d8bb63d8c7aca5a7eb433fa27fb86d3225f5a48",
+        76062
+      ]
+    },
+    {
+      "file": "6a0c59c60000000007028068\\001.webp",
+      "note": "6a0c59c60000000007028068",
+      "aigc_score": 0.9228,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:91a9fe0de23d0fa214f5de9db3db62e47a5b1c050c092ffcda7e40b5a6c9a2e4",
+        59268
+      ]
+    },
+    {
+      "file": "6a0c59c60000000007028068\\002.webp",
+      "note": "6a0c59c60000000007028068",
+      "aigc_score": 0.9961,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:3eeaee996faf21f9892ea7d482751af5f603d83d80a37f7488a2c7374660c2ad",
+        95748
+      ]
+    },
+    {
+      "file": "6a0c59c60000000007028068\\003.webp",
+      "note": "6a0c59c60000000007028068",
+      "aigc_score": 0.1648,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:68d305e7bbf5b63b9bec7a316f85296996589d9f4408a64a1b7927f1ca5c23ea",
+        63074
+      ]
+    },
+    {
+      "file": "6a0c59c60000000007028068\\004.webp",
+      "note": "6a0c59c60000000007028068",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:b48caffb2fb3e34f194b071995c64d1050baf6a655d728f82729716c054127c0",
+        28548
+      ]
+    },
+    {
+      "file": "6a0c59c60000000007028068\\005.webp",
+      "note": "6a0c59c60000000007028068",
+      "aigc_score": 0.9992,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:74dbe640e3965996087983afd1ba974ba33c5826d37765d2a5be5e1ed712182c",
+        232822
+      ]
+    },
+    {
+      "file": "6a30cac3000000000f0302fb\\cover.webp",
+      "note": "6a30cac3000000000f0302fb",
+      "aigc_score": 0.0025,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:5214653530dfaf8ad6719f5208dfcafa1bcdb26e5305866b1acf59a2ab63d82a",
+        132750
+      ]
+    },
+    {
+      "file": "6a6322320000000006011924\\cover.webp",
+      "note": "6a6322320000000006011924",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:4b3002964e354b24cd36653935357e2ba6685a539e7e5e190692752368fc8235",
+        55622
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\001.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.9995,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:439307d70022881a68380b382ef2db65cfecffd66d88d1f4c704fb4ae05c6cab",
+        90332
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\002.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.9999,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:f52534cf2890289ce0073e5f2c48427abc2941b16b137cc22ca24c527b7d61a0",
+        222096
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\003.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.0008,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:e49cd25c61e0128ae5fc864a8602556f4a2880c5007a7f4ca9c957d810224b7b",
+        126194
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\004.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:ad88c5c60c17063975baf2156ee5e7e94bbcb7d5ccfbe9851d4e3bf464019871",
+        283958
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\005.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.2161,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:0d574ec60bddc0583599d4a3b674f3244a6b03e1adc5d3edfd84c0da5d5b8f8b",
+        165548
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\006.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.108,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:155e9409bb374cbf1108c38dbc5d5f27f3f039a6f00b8dba7c27fe3ba3a2d287",
+        274350
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\007.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.9995,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:48e395185b8c18241ab6cff8ec2ec8d1e4f1a7f9e8ed0223732227eec2e1f34e",
+        100818
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\008.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.9701,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:81eda2692b4a945f06e6bb7351118f68bd54c179b4b416b9921697ccf76e9e65",
+        109928
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\009.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.5341,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:4eca7015309474f0848e0644f8ec5074bb71ad57d09c1da762fd544bd91f805c",
+        98806
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\010.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 1.0,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:e747e2738713000ebb8bf177a9e06c2d1b4691904d7abb923525be746494b35f",
+        65874
+      ]
+    },
+    {
+      "file": "6a6b2994000000002c00028b\\011.webp",
+      "note": "6a6b2994000000002c00028b",
+      "aigc_score": 0.2378,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:b568c9a5a5e60cae9cc554bd6ef2897ce893568195eaa106fc429c61afc14bd4",
+        97172
+      ]
+    },
+    {
+      "file": "6a9a866300000000260302da\\cover.webp",
+      "note": "6a9a866300000000260302da",
+      "aigc_score": 0.9871,
+      "aigc_label": "ai_generated",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:6edd732ca1e46470b0f1266f569666abfa90ecb47184f53f392879842f279869",
+        221228
+      ]
+    },
+    {
+      "file": "6aa97b38000000000d02b43c\\cover.webp",
+      "note": "6aa97b38000000000d02b43c",
+      "aigc_score": 0.0623,
+      "aigc_label": "real",
+      "tc260_present": false,
+      "asset_id": [
+        "sha256:49ff978b047ab9032b570c971a45c0ec2869a345676c74c84bce9998ab6cdba4",
+        318812
+      ]
+    }
+  ],
+  "text": [
+    {
+      "note_id": "698c152f000000000a02d392",
+      "title": "今天要选哪支💄？",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69f9d833000000002300626c",
+      "title": "导个购眼神都拉丝了",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6a9a866300000000260302da",
+      "title": "爆款口红（八）",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "694f944a000000001e0099aa",
+      "title": "口红？真棒！",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6a6322320000000006011924",
+      "title": "口红广告里的绫波丽",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "691d1fcb000000000d00f794",
+      "title": "人不需要口红，上班的牛马需要！",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69717cc80000000021031e9c",
+      "title": "怕堵车可以拿一只口红在手里",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6a0c59c60000000007028068",
+      "title": "拍摄小花絮🎬",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6a6b2994000000002c00028b",
+      "title": "分享我的惊艳时刻💄",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69c8ea2700000000220026fb",
+      "title": "喜欢口红那姐姐给你",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6a049b310000000036019e93",
+      "title": "看到姐还在用阿玛尼的口红感慨啊",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69fb0842000000001f007da1",
+      "title": "死班。。。涂个口红压压惊！",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6961c5b2000000000e03f942",
+      "title": "年度爱用绝美大牌口红！！！",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6aa97b38000000000d02b43c",
+      "title": "Yanlab口红",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "686fab0a0000000023007677",
+      "title": "有素唇和哑光对比 好美。。。。。",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "6a30cac3000000000f0302fb",
+      "title": "用打火机烧女朋友的口红，就会变成美丽的花朵，给女朋友一个惊喜！",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69edb99f0000000037035362",
+      "title": "省考被岗一夸了要链接的口红",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69d896b50000000020039847",
+      "title": "死班。。。口红快给我续口气！",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69e755ce000000001d01deb1",
+      "title": "一个涂眼影，一个涂口红",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    },
+    {
+      "note_id": "69d57c33000000001d01fa6e",
+      "title": "爱用口红合集 & Lisa Eldridge Velvet试色",
+      "claim_count": 0,
+      "claim_high": 0,
+      "claim_medium": 0,
+      "claim_risk": "none",
+      "top_claim": null
+    }
+  ]
+}
