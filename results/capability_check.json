@@ -1,0 +1,241 @@
+{
+  "model": "beautyproof_aigen (v1)",
+  "controlled_35": {
+    "in_sample_seen": {
+      "set": "训练过的图(28)",
+      "n": 28,
+      "accuracy": 1.0,
+      "false_positive_rate_on_real": 0.0,
+      "fp": 0,
+      "n_real": 12
+    },
+    "held_out_7": {
+      "set": "没见过的图(7)",
+      "n": 7,
+      "accuracy": 1.0,
+      "false_positive_rate_on_real": 0.0,
+      "fp": 0,
+      "n_real": 3
+    },
+    "all_35": {
+      "set": "全部35张",
+      "n": 35,
+      "accuracy": 1.0,
+      "false_positive_rate_on_real": 0.0,
+      "fp": 0,
+      "n_real": 15
+    }
+  },
+  "per_image": [
+    {
+      "file": "ai_01.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_02.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_03.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_04.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_05.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_06.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_07.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_08.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_09.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_10.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_11.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_12.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_13.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_14.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_15.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_16.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "ai_17.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": false
+    },
+    {
+      "file": "ai_18.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": false
+    },
+    {
+      "file": "ai_20.png",
+      "label": "ai",
+      "ai_prob": 1.0,
+      "seen_in_training": false
+    },
+    {
+      "file": "ai_19.png",
+      "label": "ai",
+      "ai_prob": 0.9975,
+      "seen_in_training": false
+    },
+    {
+      "file": "real_10.jpg",
+      "label": "real",
+      "ai_prob": 0.0196,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_08.jpg",
+      "label": "real",
+      "ai_prob": 0.0014,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_07.jpg",
+      "label": "real",
+      "ai_prob": 0.0008,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_01.jpg",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_02.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_03.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_04.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_05.jpg",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_06.jpg",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "real_09.jpg",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "clean_01.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "clean_02_recompressed.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": true
+    },
+    {
+      "file": "tampered_01_copy_move.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": false
+    },
+    {
+      "file": "tampered_02_splice.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": false
+    },
+    {
+      "file": "tampered_03_text_edit.png",
+      "label": "real",
+      "ai_prob": 0.0,
+      "seen_in_training": false
+    }
+  ]
+}
