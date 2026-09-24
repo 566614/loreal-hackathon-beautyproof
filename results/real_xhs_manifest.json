@@ -1,0 +1,527 @@
+{
+  "stats": {
+    "too_small": 0,
+    "dup": 19,
+    "kept": 74
+  },
+  "files": [
+    {
+      "file": "real_000_new_001.jpg",
+      "src": "B_新包",
+      "orig": "new_001.webp",
+      "w": 1080,
+      "h": 1441
+    },
+    {
+      "file": "real_001_new_002.jpg",
+      "src": "B_新包",
+      "orig": "new_002.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_002_new_003.jpg",
+      "src": "B_新包",
+      "orig": "new_003.webp",
+      "w": 1080,
+      "h": 1439
+    },
+    {
+      "file": "real_003_new_004.jpg",
+      "src": "B_新包",
+      "orig": "new_004.webp",
+      "w": 960,
+      "h": 1280
+    },
+    {
+      "file": "real_004_new_005.jpg",
+      "src": "B_新包",
+      "orig": "new_005.webp",
+      "w": 1080,
+      "h": 1441
+    },
+    {
+      "file": "real_005_new_006.jpg",
+      "src": "B_新包",
+      "orig": "new_006.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_006_new_007.jpg",
+      "src": "B_新包",
+      "orig": "new_007.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_007_new_008.jpg",
+      "src": "B_新包",
+      "orig": "new_008.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_008_new_009.jpg",
+      "src": "B_新包",
+      "orig": "new_009.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_009_new_010.jpg",
+      "src": "B_新包",
+      "orig": "new_010.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_010_new_011.jpg",
+      "src": "B_新包",
+      "orig": "new_011.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_011_new_03_试色上手_白手套拿口红.jpg",
+      "src": "B_新包",
+      "orig": "new_03_试色上手_白手套拿口红.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_012_new_04_试色上手_车内手持口红.jpg",
+      "src": "B_新包",
+      "orig": "new_04_试色上手_车内手持口红.png",
+      "w": 1080,
+      "h": 1415
+    },
+    {
+      "file": "real_013_new_05_局部特写_嘴唇01.jpg",
+      "src": "B_新包",
+      "orig": "new_05_局部特写_嘴唇01.png",
+      "w": 1996,
+      "h": 1080
+    },
+    {
+      "file": "real_014_new_06_局部特写_嘴唇02.jpg",
+      "src": "B_新包",
+      "orig": "new_06_局部特写_嘴唇02.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_015_new_07_局部特写_嘴唇03.jpg",
+      "src": "B_新包",
+      "orig": "new_07_局部特写_嘴唇03.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_016_new_cover.jpg",
+      "src": "B_新包",
+      "orig": "new_cover.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_017_new_手背试色_01_手背试色_手臂长条多色.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_01_手背试色_手臂长条多色.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_018_new_手背试色_02_手背试色_手掌试色.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_02_手背试色_手掌试色.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_019_new_手背试色_03_手背试色_手臂多色带色号.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_03_手背试色_手臂多色带色号.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_020_new_手背试色_04_手背试色_手背双块.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_04_手背试色_手背双块.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_021_new_手背试色_05_手背试色_手臂双块_光泽.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_05_手背试色_手臂双块_光泽.png",
+      "w": 1080,
+      "h": 1080
+    },
+    {
+      "file": "real_022_new_手背试色_06_手背试色_手臂双块.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_06_手背试色_手臂双块.png",
+      "w": 1080,
+      "h": 1080
+    },
+    {
+      "file": "real_023_new_手背试色_07_手背试色_腮红手背.jpg",
+      "src": "B_新包",
+      "orig": "new_手背试色_07_手背试色_腮红手背.png",
+      "w": 782,
+      "h": 1042
+    },
+    {
+      "file": "real_024_new_精选_01_产品上手_粉底液瓶手持.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_01_产品上手_粉底液瓶手持.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_025_new_精选_02_产品上手_芭贝拉粉底液手持.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_02_产品上手_芭贝拉粉底液手持.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_026_new_精选_03_试色上手_手臂粉底试色条.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_03_试色上手_手臂粉底试色条.png",
+      "w": 880,
+      "h": 1174
+    },
+    {
+      "file": "real_027_new_精选_04_产品试色_粉底瓶旁色块.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_04_产品试色_粉底瓶旁色块.png",
+      "w": 875,
+      "h": 1168
+    },
+    {
+      "file": "real_028_new_精选_05_产品上手_美宝莲粉底液手持.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_05_产品上手_美宝莲粉底液手持.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_029_new_精选_06_产品试色_粉底液大理石试色.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_06_产品试色_粉底液大理石试色.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_030_new_精选_07_产品上手_持妆粉底液按压瓶.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_07_产品上手_持妆粉底液按压瓶.png",
+      "w": 972,
+      "h": 1297
+    },
+    {
+      "file": "real_031_new_精选_08_产品上手_3CE九宫格眼影盘.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_08_产品上手_3CE九宫格眼影盘.png",
+      "w": 1080,
+      "h": 1439
+    },
+    {
+      "file": "real_032_new_精选_09_产品静物_花知晓眼影盘.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_09_产品静物_花知晓眼影盘.png",
+      "w": 1440,
+      "h": 1080
+    },
+    {
+      "file": "real_033_new_精选_10_产品上手_橘朵眼影盘.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_10_产品上手_橘朵眼影盘.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_034_new_精选_11_产品静物_复古眼影盘.jpg",
+      "src": "B_新包",
+      "orig": "new_精选_11_产品静物_复古眼影盘.png",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_035_old_002.jpg",
+      "src": "A_口红包",
+      "orig": "old_002.webp",
+      "w": 2128,
+      "h": 1080
+    },
+    {
+      "file": "real_036_old_003.jpg",
+      "src": "A_口红包",
+      "orig": "old_003.webp",
+      "w": 1765,
+      "h": 1080
+    },
+    {
+      "file": "real_037_old_004.jpg",
+      "src": "A_口红包",
+      "orig": "old_004.webp",
+      "w": 1960,
+      "h": 1080
+    },
+    {
+      "file": "real_038_old_005.jpg",
+      "src": "A_口红包",
+      "orig": "old_005.webp",
+      "w": 2123,
+      "h": 1080
+    },
+    {
+      "file": "real_039_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_040_old_001.jpg",
+      "src": "A_口红包",
+      "orig": "old_001.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_041_old_003.jpg",
+      "src": "A_口红包",
+      "orig": "old_003.webp",
+      "w": 1080,
+      "h": 1434
+    },
+    {
+      "file": "real_042_old_004.jpg",
+      "src": "A_口红包",
+      "orig": "old_004.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_043_old_005.jpg",
+      "src": "A_口红包",
+      "orig": "old_005.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_044_old_006.jpg",
+      "src": "A_口红包",
+      "orig": "old_006.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_045_old_007.jpg",
+      "src": "A_口红包",
+      "orig": "old_007.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_046_old_008.jpg",
+      "src": "A_口红包",
+      "orig": "old_008.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_047_old_009.jpg",
+      "src": "A_口红包",
+      "orig": "old_009.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_048_old_011.jpg",
+      "src": "A_口红包",
+      "orig": "old_011.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_049_old_012.jpg",
+      "src": "A_口红包",
+      "orig": "old_012.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_050_old_013.jpg",
+      "src": "A_口红包",
+      "orig": "old_013.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_051_old_001.jpg",
+      "src": "A_口红包",
+      "orig": "old_001.webp",
+      "w": 1080,
+      "h": 1620
+    },
+    {
+      "file": "real_052_old_002.jpg",
+      "src": "A_口红包",
+      "orig": "old_002.webp",
+      "w": 1080,
+      "h": 1620
+    },
+    {
+      "file": "real_053_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1440,
+      "h": 1080
+    },
+    {
+      "file": "real_054_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_055_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1080,
+      "h": 1443
+    },
+    {
+      "file": "real_056_old_001.jpg",
+      "src": "A_口红包",
+      "orig": "old_001.webp",
+      "w": 1218,
+      "h": 1080
+    },
+    {
+      "file": "real_057_old_002.jpg",
+      "src": "A_口红包",
+      "orig": "old_002.webp",
+      "w": 1158,
+      "h": 1080
+    },
+    {
+      "file": "real_058_old_003.jpg",
+      "src": "A_口红包",
+      "orig": "old_003.webp",
+      "w": 1080,
+      "h": 1164
+    },
+    {
+      "file": "real_059_old_004.jpg",
+      "src": "A_口红包",
+      "orig": "old_004.webp",
+      "w": 1080,
+      "h": 1086
+    },
+    {
+      "file": "real_060_old_005.jpg",
+      "src": "A_口红包",
+      "orig": "old_005.webp",
+      "w": 1080,
+      "h": 1150
+    },
+    {
+      "file": "real_061_old_001.jpg",
+      "src": "A_口红包",
+      "orig": "old_001.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_062_old_002.jpg",
+      "src": "A_口红包",
+      "orig": "old_002.webp",
+      "w": 1080,
+      "h": 1439
+    },
+    {
+      "file": "real_063_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1080,
+      "h": 1441
+    },
+    {
+      "file": "real_064_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1080,
+      "h": 1443
+    },
+    {
+      "file": "real_065_old_001.jpg",
+      "src": "A_口红包",
+      "orig": "old_001.webp",
+      "w": 1080,
+      "h": 2438
+    },
+    {
+      "file": "real_066_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1440,
+      "h": 1080
+    },
+    {
+      "file": "real_067_old_001.jpg",
+      "src": "A_口红包",
+      "orig": "old_001.webp",
+      "w": 1080,
+      "h": 1440
+    },
+    {
+      "file": "real_068_old_002.jpg",
+      "src": "A_口红包",
+      "orig": "old_002.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_069_old_003.jpg",
+      "src": "A_口红包",
+      "orig": "old_003.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_070_old_004.jpg",
+      "src": "A_口红包",
+      "orig": "old_004.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_071_old_005.jpg",
+      "src": "A_口红包",
+      "orig": "old_005.webp",
+      "w": 1080,
+      "h": 1442
+    },
+    {
+      "file": "real_072_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 941,
+      "h": 1672
+    },
+    {
+      "file": "real_073_old_cover.jpg",
+      "src": "A_口红包",
+      "orig": "old_cover.webp",
+      "w": 1080,
+      "h": 1440
+    }
+  ]
+}

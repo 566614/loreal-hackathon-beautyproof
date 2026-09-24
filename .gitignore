@@ -234,6 +234,7 @@ models/*
 # 例外：本域微调的 AI 生成检测模型只有 17MB，且是流水线推理必需件，必须入库。
 # （注意写法：先 models/* 再取反，直接写 models/ + 取反是无效的——git 不会再进被忽略的目录）
 !models/beautyproof_aigen/
+!models/beautyproof_aigen_v2/
 
 # TruFor 推理中间产物（每次跑都会自动重建，且是原图副本 + 定位图 npz，不必进仓库）
 outputs/_trufor_in/

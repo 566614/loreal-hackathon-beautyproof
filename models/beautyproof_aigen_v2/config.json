@@ -1,0 +1,28 @@
+{
+  "framework": "timm",
+  "arch": "mobilenetv3_large_100",
+  "num_classes": 2,
+  "classes": [
+    "real",
+    "ai"
+  ],
+  "img_size": 224,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "version": "v2",
+  "trained_on": "data/ai(20 即梦AI) + data/real_xhs(74 真实美妆) + data/real|clean|tampered(15)",
+  "class_weight": {
+    "real": 0.6124,
+    "ai": 2.725
+  },
+  "best_epoch": 11,
+  "val_acc": 0.9545
+}

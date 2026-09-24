@@ -38,7 +38,10 @@ from pathlib import Path
 
 # 优先级：本域微调模型 > 通用模型兜底。
 # 顺序按实测区分度排（见 results/aigen_finetune.json）—— 微调模型胜。
-MODEL_PRIORITY = ["beautyproof_aigen", "airealnet", "capcheck"]
+# v2（2026-09-25）用 74 张真实精修美妆图扩充真实类后重训，
+# 真实美妆图误报率 66% → 1.4%（未参与训练的验证集 61% → 5.6%），AI 召回保持 100%。
+# v1 保留在第二位当兜底：若 v2 出问题，把下面这行的 v2 删掉即可秒级回滚。
+MODEL_PRIORITY = ["beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
 
 # 权重文件名（微调模型是 model.pt，通用模型是 safetensors / bin）
 WEIGHT_FILES = ("model.pt", "model.safetensors", "pytorch_model.bin")

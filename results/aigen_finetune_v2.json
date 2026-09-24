@@ -1,0 +1,793 @@
+{
+  "model": "beautyproof_aigen_v2",
+  "arch": "mobilenetv3_large_100",
+  "split": {
+    "train": {
+      "ai": 16,
+      "real": 71,
+      "total": 87
+    },
+    "val": {
+      "ai": 4,
+      "real": 18,
+      "total": 22,
+      "from_real_xhs": 16
+    }
+  },
+  "best_epoch": 11,
+  "best_val_loss": 0.2801,
+  "val_confusion": {
+    "tp": 4,
+    "fn": 0,
+    "fp": 1,
+    "tn": 17
+  },
+  "val_accuracy": 0.9545,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.9044,
+      "train_acc": 0.8391,
+      "val_loss": 2.5674,
+      "val_acc": 0.6364
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.9309,
+      "train_acc": 0.8161,
+      "val_loss": 1.5184,
+      "val_acc": 0.8182
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.6298,
+      "train_acc": 0.9425,
+      "val_loss": 1.5356,
+      "val_acc": 0.8182
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.1353,
+      "train_acc": 0.954,
+      "val_loss": 1.0877,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.2755,
+      "train_acc": 0.954,
+      "val_loss": 1.1495,
+      "val_acc": 0.7273
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.0225,
+      "train_acc": 0.9885,
+      "val_loss": 1.5,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.3154,
+      "train_acc": 0.954,
+      "val_loss": 1.1084,
+      "val_acc": 0.8182
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.1473,
+      "train_acc": 0.9655,
+      "val_loss": 1.1444,
+      "val_acc": 0.8182
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.0523,
+      "train_acc": 0.9885,
+      "val_loss": 1.3904,
+      "val_acc": 0.8182
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.1413,
+      "train_acc": 0.977,
+      "val_loss": 1.2745,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.1033,
+      "train_acc": 0.9885,
+      "val_loss": 0.2801,
+      "val_acc": 0.9545
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.0691,
+      "train_acc": 0.9885,
+      "val_loss": 0.3713,
+      "val_acc": 0.9545
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.0236,
+      "train_acc": 0.9885,
+      "val_loss": 0.4539,
+      "val_acc": 0.8636
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.1441,
+      "train_acc": 0.9655,
+      "val_loss": 0.4432,
+      "val_acc": 0.9091
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.0396,
+      "train_acc": 0.9885,
+      "val_loss": 1.0996,
+      "val_acc": 0.8182
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.0646,
+      "train_acc": 0.9885,
+      "val_loss": 1.2708,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.1421,
+      "train_acc": 0.954,
+      "val_loss": 1.4285,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.0017,
+      "train_acc": 1.0,
+      "val_loss": 1.7381,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.0317,
+      "train_acc": 0.977,
+      "val_loss": 2.127,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.3016,
+      "train_acc": 0.9655,
+      "val_loss": 2.2561,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 21,
+      "train_loss": 0.0687,
+      "train_acc": 0.977,
+      "val_loss": 2.0741,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 22,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 2.2466,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 23,
+      "train_loss": 0.033,
+      "train_acc": 0.9885,
+      "val_loss": 2.7161,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 24,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 2.723,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 25,
+      "train_loss": 0.1473,
+      "train_acc": 0.977,
+      "val_loss": 2.1214,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 26,
+      "train_loss": 0.0077,
+      "train_acc": 1.0,
+      "val_loss": 2.139,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 27,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 2.1668,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 28,
+      "train_loss": 0.0,
+      "train_acc": 1.0,
+      "val_loss": 2.1533,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 29,
+      "train_loss": 0.0069,
+      "train_acc": 1.0,
+      "val_loss": 2.2384,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 30,
+      "train_loss": 0.0002,
+      "train_acc": 1.0,
+      "val_loss": 2.4718,
+      "val_acc": 0.7727
+    },
+    {
+      "epoch": 31,
+      "train_loss": 0.0036,
+      "train_acc": 1.0,
+      "val_loss": 2.3017,
+      "val_acc": 0.7727
+    }
+  ],
+  "per_image_ai_prob": [
+    {
+      "file": "ai_01.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_02.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_03.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_04.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_07.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_08.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_09.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_10.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_11.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_12.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_13.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_14.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_16.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_17.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_18.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_19.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_20.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "real_066_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.9995
+    },
+    {
+      "file": "ai_05.png",
+      "label": "ai",
+      "ai_prob": 0.9792
+    },
+    {
+      "file": "ai_15.png",
+      "label": "ai",
+      "ai_prob": 0.893
+    },
+    {
+      "file": "ai_06.png",
+      "label": "ai",
+      "ai_prob": 0.6612
+    },
+    {
+      "file": "real_025_new_精选_02_产品上手_芭贝拉粉底液手持.jpg",
+      "label": "real",
+      "ai_prob": 0.2101
+    },
+    {
+      "file": "real_065_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.016
+    },
+    {
+      "file": "real_062_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.001
+    },
+    {
+      "file": "real_011_new_03_试色上手_白手套拿口红.jpg",
+      "label": "real",
+      "ai_prob": 0.0003
+    },
+    {
+      "file": "real_028_new_精选_05_产品上手_美宝莲粉底液手持.jpg",
+      "label": "real",
+      "ai_prob": 0.0002
+    },
+    {
+      "file": "real_061_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0002
+    },
+    {
+      "file": "real_024_new_精选_01_产品上手_粉底液瓶手持.jpg",
+      "label": "real",
+      "ai_prob": 0.0001
+    },
+    {
+      "file": "real_052_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0001
+    },
+    {
+      "file": "real_000_new_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_001_new_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_002_new_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_003_new_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_004_new_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_005_new_006.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_006_new_007.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_007_new_008.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_008_new_009.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_009_new_010.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_010_new_011.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_012_new_04_试色上手_车内手持口红.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_013_new_05_局部特写_嘴唇01.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_014_new_06_局部特写_嘴唇02.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_015_new_07_局部特写_嘴唇03.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_016_new_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_017_new_手背试色_01_手背试色_手臂长条多色.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_018_new_手背试色_02_手背试色_手掌试色.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_019_new_手背试色_03_手背试色_手臂多色带色号.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_020_new_手背试色_04_手背试色_手背双块.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_021_new_手背试色_05_手背试色_手臂双块_光泽.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_022_new_手背试色_06_手背试色_手臂双块.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_023_new_手背试色_07_手背试色_腮红手背.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_026_new_精选_03_试色上手_手臂粉底试色条.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_027_new_精选_04_产品试色_粉底瓶旁色块.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_029_new_精选_06_产品试色_粉底液大理石试色.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_030_new_精选_07_产品上手_持妆粉底液按压瓶.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_031_new_精选_08_产品上手_3CE九宫格眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_032_new_精选_09_产品静物_花知晓眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_033_new_精选_10_产品上手_橘朵眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_034_new_精选_11_产品静物_复古眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_035_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_036_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_037_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_038_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_039_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_040_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_041_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_042_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_043_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_044_old_006.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_045_old_007.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_046_old_008.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_047_old_009.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_048_old_011.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_049_old_012.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_050_old_013.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_051_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_053_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_054_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_055_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_056_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_057_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_058_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_059_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_060_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_063_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_064_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_067_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_068_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_069_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_070_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_071_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_072_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_073_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_01.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_02.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_03.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_04.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_05.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_06.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_07.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_08.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_09.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_10.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "clean_01.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "clean_02_recompressed.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_01_copy_move.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_02_splice.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_03_text_edit.png",
+      "label": "real",
+      "ai_prob": 0.0
+    }
+  ],
+  "elapsed_sec": 459.8
+}

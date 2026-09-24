@@ -28,6 +28,10 @@ from pathlib import Path
 THRESHOLDS = {
     "aigc_high_risk": 0.9,       # AI 生成概率 ≥ 这个 → 高风险（整图 AI 生成）
     "aigc_suspicious": 0.8,      # AI 生成概率 ≥ 这个 → 可疑
+    # 弃权下界（2026-09-25 v2 模型实测标定）：
+    # v2 真实类中位数 0.000 / AI 类中位数 1.000，落在 [0.2, 0.8) 的仅 2/109（1.8%）。
+    # 这段区间模型自己也没把握，就不硬判，只说"本项拿不准"，交给 TruFor 等后续信号。
+    "aigc_abstain": 0.2,         # AI 生成概率落在 [0.2, 0.8) → 本项弃权，不硬判
     "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑
     # TruFor 阈值（已在本批素材上校准）
     "trufor_high": 0.9,          # 篡改分数 ≥ 这个 → 高风险
@@ -135,9 +139,16 @@ def judge(evidence):
                     f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_suspicious']}）→ "
                     f"疑似整图由 AI 生成，建议人工核对")
                 return "suspicious", reasons
+            elif score >= THRESHOLDS["aigc_abstain"]:
+                # 弃权区：不硬判，也不 return —— 让 TruFor 等后续信号继续参与定级。
+                # 直接 return 会跳过 TruFor（我们最鲁棒的那部分），所以这里只记理由。
+                reasons.append(
+                    f"AI 生成检测：AI 生成概率 {score} 落在不确定区间 "
+                    f"[{THRESHOLDS['aigc_abstain']}, {THRESHOLDS['aigc_suspicious']}) → "
+                    f"本项模型拿不准，不做判定，交由其他证据与人工复核")
             else:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score}（<{THRESHOLDS['aigc_suspicious']}）→ "
+                    f"AI 生成检测：AI 生成概率 {score}（<{THRESHOLDS['aigc_abstain']}）→ "
                     f"看起来像真实拍摄/人工制作的图")
 
     # 信号2：TruFor 深度学习篡改检测 —— 真的查"有没有被人工改过"
