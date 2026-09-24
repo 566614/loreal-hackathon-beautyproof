@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BeautyProof · 素材盘点 · AI vs 真实 对比展示</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,"Microsoft YaHei",sans-serif;margin:0;background:#f5f6f8;color:#222}
+  header{background:#1f2430;color:#fff;padding:22px 28px}
+  header h1{margin:0 0 6px;font-size:20px}
+  header p{margin:0;opacity:.8;font-size:13px}
+  .summary{display:flex;gap:14px;flex-wrap:wrap;padding:18px 28px;background:#fff;border-bottom:1px solid #eee}
+  .stat{flex:1;min-width:160px;background:#fafbfc;border:1px solid #eceff3;border-radius:10px;padding:14px}
+  .stat .n{font-size:26px;font-weight:700}
+  .stat .l{font-size:12px;color:#666}
+  .group{padding:20px 28px}
+  .group h2{font-size:16px;margin:0 0 4px}
+  .group .sub{font-size:12px;color:#777;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+  .card{background:#fff;border:1px solid #eceff3;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .card img{width:100%;height:180px;object-fit:cover;background:#eee;display:block}
+  .meta{padding:10px 12px 14px}
+  .fname{font-size:11px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+  .badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:20px}
+  .badge-yes{background:#fdecea;color:#c62828}
+  .badge-no{background:#e8f5e9;color:#2e7d32}
+  .row{display:flex;justify-content:space-between;font-size:12px;margin:8px 0 4px}
+  .bar{height:7px;background:#eee;border-radius:4px;overflow:hidden}
+  .fill{height:100%}
+  .fmt{font-size:11px;color:#888;margin-top:6px}
+  .verdict{font-size:12px;font-weight:600;margin-top:8px;padding:5px 8px;border-radius:6px;text-align:center}
+  .v-ai{background:#fdecea;color:#c62828}
+  .v-real{background:#e8f5e9;color:#2e7d32}
+  .note{padding:0 28px 30px;font-size:12px;color:#666;line-height:1.7}
+  .note code{background:#eef;padding:1px 5px;border-radius:4px}
+</style></head>
+<body>
+<header>
+  <h1>BeautyProof · 素材盘点对比展示</h1>
+  <p>用户提供的两个压缩包：① ai训练集.zip（AI 生成）② 训练集.zip（真实拍摄）→ 已解包为 <code>data/incoming_ai/</code> 与 <code>data/incoming_real/</code></p>
+</header>
+<div class="summary">
+  <div class="stat"><div class="n">30</div><div class="l">素材总数（AI 20 + 真实 10）</div></div>
+  <div class="stat"><div class="n">30/30</div><div class="l">TC260 + 本域模型双重判定一致</div></div>
+  <div class="stat"><div class="n">20/20</div><div class="l">AI 组带 TC260 AIGC 强制标识（Label=1）</div></div>
+  <div class="stat"><div class="n">0/10</div><div class="l">真实组带 TC260 标识（符合预期）</div></div>
+  <div class="stat"><div class="n">0</div><div class="l">模型对真实组的假阳性（阈值 0.9）</div></div>
+</div>
+<div class="group">
+  <h2>① AI 生成组（ai训练集.zip，20 张）</h2>
+  <div class="sub">判定依据：TC260 AIGC 元数据（生成器自声明，无需模型）+ 本域微调 aigc 模型（分数 0.9975~1.0）。二者一致。</div>
+  <div class="grid"><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-15-6646-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png">jimeng-2026-09-15-6646-亚洲女性面部特</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 2453.9 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-15-7316-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png">jimeng-2026-09-15-7316-亚洲女性面部特</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 3187.6 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-15-8273-亚洲女性面部特写，精致韩式妆容，无瑕奶油肌，柔光摄影，高清细节_0.png">jimeng-2026-09-15-8273-亚洲女性面部特</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 2913.4 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-1127-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png">jimeng-2026-09-16-1127-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2454.1 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-1640-16_9 画幅比例，专业产品摄影。输入图中的产品放置在画面构图中央，置于多层天然....png">jimeng-2026-09-16-1640-16_9 画幅</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 4959.3 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-1751-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清.png">jimeng-2026-09-16-1751-桌面平铺多支口</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 4898.5 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-1850-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png">jimeng-2026-09-16-1850-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2401.1 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-1895-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png">jimeng-2026-09-16-1895-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2797.6 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-2601-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png">jimeng-2026-09-16-2601-一瓶粉底液产品</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 700.7 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-2813-年轻女性日常妆半身自拍，突出眼影色彩，自然光，手机拍摄感.png">jimeng-2026-09-16-2813-年轻女性日常妆</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 4845.8 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-4099-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png">jimeng-2026-09-16-4099-一瓶粉底液产品</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 794.0 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-4126-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，表情冷静自信、神态疏离。布光....png">jimeng-2026-09-16-4126-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2567.8 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png">jimeng-2026-09-16-5713-一瓶粉底液产品</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 739.6 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-6980-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-6980-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清.png">jimeng-2026-09-16-6980-一瓶粉底液产品</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 728.9 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-16-8015-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清 ....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-16-8015-桌面平铺多支口红，不同色号排列，木质桌面，侧光，景深虚化，电商详情页风格，高清 ....png">jimeng-2026-09-16-8015-桌面平铺多支口</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 5210.7 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-17-3104-              美妆编辑级动态人像，东亚年轻漂亮女性，身体微转向侧面....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-17-3104-              美妆编辑级动态人像，东亚年轻漂亮女性，身体微转向侧面....png">jimeng-2026-09-17-3104-       </div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2545.4 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-17-5657-美妆编辑级特写人像，东亚年轻漂亮女性，面部微侧约 3_4 朝向镜头，下巴微微扬起....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-17-5657-美妆编辑级特写人像，东亚年轻漂亮女性，面部微侧约 3_4 朝向镜头，下巴微微扬起....png">jimeng-2026-09-17-5657-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2442.3 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-17-7202-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，头部微低，眼神从下往上看向镜....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-17-7202-美妆编辑级特写人像，东亚年轻漂亮女性，面部正对镜头，头部微低，眼神从下往上看向镜....png">jimeng-2026-09-17-7202-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 1908.3 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/jimeng-2026-09-17-9496-美妆编辑级特写人像，东亚年轻男性，短发黑发，面部正对镜头、略带 3_4 侧，表情....png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="jimeng-2026-09-17-9496-美妆编辑级特写人像，东亚年轻男性，短发黑发，面部正对镜头、略带 3_4 侧，表情....png">jimeng-2026-09-17-9496-美妆编辑级特写</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.9975</b></div>
+    <div class="bar"><div class="fill" style="width:99%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2560×1440 · 2385.3 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_ai/微信图片_20260915133821_36_192.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="微信图片_20260915133821_36_192.png">微信图片_20260915133821_36_192.png</div>
+    <span class="badge badge-yes">✓ 有 TC260 AIGC 标识</span>
+    <div class="row"><span>aigc 分数</span><b>1.0000</b></div>
+    <div class="bar"><div class="fill" style="width:100%;background:#e53935"></div></div>
+    <div class="fmt">PNG · 2048×2048 · 3186.1 KB</div>
+    <div class="verdict v-ai">AI 生成</div>
+  </div>
+</div></div>
+</div>
+<div class="group">
+  <h2>② 真实拍摄组（训练集.zip，10 张）</h2>
+  <div class="sub">判定依据：无 TC260 标识（符合真实图常态）+ 本域 aigc 模型（分数 0.0~0.0196，远低于 0.9 阈值）。其中含 L'Oréal×HYROX 活动实拍等高质量真实素材。</div>
+  <div class="grid"><div class="card">
+  <img src="../data/incoming_real/134f155ed30fc187b4d60dd6396c912a.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="134f155ed30fc187b4d60dd6396c912a.jpg">134f155ed30fc187b4d60dd6396c91</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 1080×1388 · 425.7 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/1d0d18aae704fa8ece9a283bb9ea8098.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="1d0d18aae704fa8ece9a283bb9ea8098.png">1d0d18aae704fa8ece9a283bb9ea80</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">PNG · 894×1216 · 1156.9 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/1f3d358d00628dc63d072d9c9067d79c.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="1f3d358d00628dc63d072d9c9067d79c.png">1f3d358d00628dc63d072d9c9067d7</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">PNG · 1088×1214 · 1389.9 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/7ebeaa72095a78b27c631bfb3717e570.png" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="7ebeaa72095a78b27c631bfb3717e570.png">7ebeaa72095a78b27c631bfb3717e5</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">PNG · 1094×876 · 1025.5 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/83df7b47bec3f422c2b37b064926b68e.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="83df7b47bec3f422c2b37b064926b68e.jpg">83df7b47bec3f422c2b37b064926b6</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 1080×1280 · 340.4 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/aa2ea040fe8046d78d72988f582408af.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="aa2ea040fe8046d78d72988f582408af.jpg">aa2ea040fe8046d78d72988f582408</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 1080×1324 · 351.2 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/b51c2c88cd5aeba99423f1f357601089.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="b51c2c88cd5aeba99423f1f357601089.jpg">b51c2c88cd5aeba99423f1f3576010</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0008</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 1080×1224 · 316.5 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/d764c1afd0d3553198f3a883b03d145d.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="d764c1afd0d3553198f3a883b03d145d.jpg">d764c1afd0d3553198f3a883b03d14</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0014</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 900×1356 · 288.6 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/f2150f63ec2bd8ae47c49b641851ccca.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="f2150f63ec2bd8ae47c49b641851ccca.jpg">f2150f63ec2bd8ae47c49b641851cc</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0000</b></div>
+    <div class="bar"><div class="fill" style="width:0%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 1080×1340 · 373.2 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div><div class="card">
+  <img src="../data/incoming_real/f8979024b4e097ae533ba1873b63cbad.jpg" alt="" loading="lazy"/>
+  <div class="meta">
+    <div class="fname" title="f8979024b4e097ae533ba1873b63cbad.jpg">f8979024b4e097ae533ba1873b63cb</div>
+    <span class="badge badge-no">✗ 无 TC260 标识</span>
+    <div class="row"><span>aigc 分数</span><b>0.0196</b></div>
+    <div class="bar"><div class="fill" style="width:1%;background:#2e9e4f"></div></div>
+    <div class="fmt">JPEG · 1080×1228 · 321.4 KB</div>
+    <div class="verdict v-real">真实拍摄（无 AI 信号）</div>
+  </div>
+</div></div>
+</div>
+<div class="note">
+  <b>关于"判断方法"：</b>本页判定不依赖人工肉眼，也不依赖通用大模型（LLM）。
+  强证据来自 <b>TC260 AIGC 元数据</b>（中国《人工智能生成合成内容标识办法》要求的强制标识，读文件即可复核）；
+  弱但有价值的补充来自 <b>本域微调的轻量分类模型</b>（MobileNetV3，17MB，仅判"整图是否 AI 生成"，不调用任何 LLM）。<br/>
+  <b>注意：</b>TC260 标识可被截图/转格式/重保存剥离，"无标识"不等于"是真图"；且本批 AI 图全部来自单一生成器「即梦」，跨生成器（Midjourney/SD/Flux）泛化能力尚未验证。
+</div>
+</body></html>
