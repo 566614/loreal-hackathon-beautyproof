@@ -1,0 +1,151 @@
+# BeautyProof CI
+#
+# 设计取舍（为什么这么分层，避免后人误改）：
+#   本仓库真正的核心逻辑（rule_engine 定级 / planner 跳过规则 / validator 护栏）
+#   **只依赖标准库**，而 aigc / trufor / ocr 需要 torch、paddle 等重型依赖
+#   （torch 走 PyPI 默认会拉到带 CUDA 的巨包，必须显式用 CPU 源）。
+#   所以 CI 刻意分成三层：
+#     ① lint / ② test   —— 零重型依赖，几十秒出结果，每次 push 与 PR 都跑；
+#     ③ deps-smoke      —— 装完整依赖做导入冒烟，只在手动 workflow_dispatch 时跑，
+#                          避免每次提交都花几十分钟装 torch+paddle 还容易超时。
+#
+# 密钥：任何敏感值一律走 Settings → Secrets and variables → Actions 注入，
+#       用 ${{ secrets.XXX }} 引用，**绝不写进本文件**（见文末 deploy-demo 示例作业）。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # 手动触发：用来跑重型依赖冒烟 / 部署示例
+  workflow_dispatch:
+
+# 最小权限原则：默认只读代码，需要写权限的作业单独声明
+permissions:
+  contents: read
+
+# 并发控制：同一分支的新提交取消旧运行；main 上的运行不取消，保证主干记录完整
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+jobs:
+  # ---------------------------------------------------------------- ① 代码检查
+  lint:
+    name: lint（构建编译 + 静态检查）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7.0.1
+
+      - name: 准备 Python 3.13
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+          # 用 setup-python 内置的 pip 缓存（官方推荐，替代手写 actions/cache）
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: 安装检查工具
+        run: python -m pip install --upgrade pip ruff
+
+      - name: 构建检查：全量字节码编译（语法错误在此硬失败）
+        run: python -m compileall -q tools web tests
+
+      # 说明：存量代码尚未按 ruff 规范清理，此步设为「只提示不阻断」，
+      # 避免一次性把历史风格问题变成红灯。等清理完再去掉 continue-on-error。
+      - name: 静态检查：ruff（提示性，不阻断）
+        continue-on-error: true
+        run: ruff check tools web tests
+
+  # ---------------------------------------------------------------- ② 单测
+  test:
+    name: test（py${{ matrix.python-version }}）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # 覆盖最低与当前主力版本；test_core.py 只用标准库，无需装依赖
+        python-version: ["3.11", "3.13"]
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7.0.1
+
+      - name: 准备 Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 核心单测（rule_engine / planner / validator）
+        run: python tests/test_core.py -v
+
+  # ---------------------------------------------------------------- ③ 依赖冒烟（手动）
+  deps-smoke:
+    name: deps-smoke（完整依赖导入冒烟，仅手动触发）
+    # 装 torch + paddle 耗时且占带宽，默认不跑；需要时去 Actions 页面手动 Run workflow
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7.0.1
+
+      - name: 准备 Python 3.13（带 pip 缓存）
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: 升级 pip
+        run: python -m pip install --upgrade pip
+
+      # 必须先装 CPU 版：直接 pip install -r 会从 PyPI 拉到含 CUDA 的巨包
+      - name: 安装 CPU 版 torch / torchvision
+        run: python -m pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: 安装其余依赖
+        run: python -m pip install -r requirements.txt
+
+      - name: 冒烟：核心模块可导入
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "tools")
+          for m in ("rule_engine", "planner", "validator", "report_generator", "roundtable"):
+              __import__(m)
+              print("import ok:", m)
+          PY
+
+  # ---------------------------------------------------------------- ④ 密钥用法示例
+  # 这个作业默认是跳过的，存在的唯一目的是示范「敏感信息怎么用密钥」：
+  #   - 值从 ${{ secrets.DEMO_DEPLOY_TOKEN }} 注入，yml 里不出现任何明文
+  #   - 未配置该密钥时打印警告并正常退出，不会让 CI 变红
+  #   - 全程不打印密钥内容，只打印长度
+  deploy-demo:
+    name: deploy-demo（密钥注入示例，默认跳过）
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      DEMO_TOKEN: ${{ secrets.DEMO_DEPLOY_TOKEN }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7.0.1
+
+      - name: 校验密钥（未配置则跳过，不失败）
+        run: |
+          if [ -z "${DEMO_TOKEN}" ]; then
+            echo "::warning::未配置 secrets.DEMO_DEPLOY_TOKEN，跳过部署示例（如需启用：仓库 Settings → Secrets and variables → Actions）"
+            exit 0
+          fi
+          echo "密钥已注入，长度 ${#DEMO_TOKEN}（不打印内容）"
