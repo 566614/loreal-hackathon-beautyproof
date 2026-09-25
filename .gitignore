@@ -249,6 +249,8 @@ outputs/ocr_*.json
 outputs/c2pa_*.json
 outputs/hash_*.json
 outputs/trufor_*.json
+outputs/crossmodal_*.json
+outputs/text_*.json
 !outputs/trufor_cache.json
 # 鲁棒性测试的扰动图（48 张，重跑脚本会重建）
 outputs/_robust/
