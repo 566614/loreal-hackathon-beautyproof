@@ -1,0 +1,82 @@
+{
+  "model": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v2",
+  "generator_note": "测试图由非即梦生成器生成（与训练用即梦不同），属跨生成器零样本测试",
+  "total": 8,
+  "available": 8,
+  "recall_ai_score_ge_0.5": 0.25,
+  "high_conf_ge_0.8": 0.25,
+  "missed": [
+    "cross_01.png",
+    "cross_02.png",
+    "cross_03.png",
+    "cross_05.png",
+    "cross_06.png",
+    "cross_08.png"
+  ],
+  "details": [
+    {
+      "file": "cross_01.png",
+      "category": "口红特写人脸",
+      "ai_score": 0.007,
+      "label": "real",
+      "available": true,
+      "verdict": "真实/未命中"
+    },
+    {
+      "file": "cross_02.png",
+      "category": "眼影盘平铺",
+      "ai_score": 0.0335,
+      "label": "real",
+      "available": true,
+      "verdict": "真实/未命中"
+    },
+    {
+      "file": "cross_03.png",
+      "category": "手背试色",
+      "ai_score": 0.0001,
+      "label": "real",
+      "available": true,
+      "verdict": "真实/未命中"
+    },
+    {
+      "file": "cross_04.png",
+      "category": "精华瓶产品",
+      "ai_score": 1.0,
+      "label": "ai_generated",
+      "available": true,
+      "verdict": "AI生成(命中)"
+    },
+    {
+      "file": "cross_05.png",
+      "category": "精致全妆",
+      "ai_score": 0.3251,
+      "label": "real",
+      "available": true,
+      "verdict": "真实/未命中"
+    },
+    {
+      "file": "cross_06.png",
+      "category": "粉底静物",
+      "ai_score": 0.0015,
+      "label": "real",
+      "available": true,
+      "verdict": "真实/未命中"
+    },
+    {
+      "file": "cross_07.png",
+      "category": "素颜自然妆",
+      "ai_score": 0.9372,
+      "label": "ai_generated",
+      "available": true,
+      "verdict": "AI生成(命中)"
+    },
+    {
+      "file": "cross_08.png",
+      "category": "指甲油",
+      "ai_score": 0.0007,
+      "label": "real",
+      "available": true,
+      "verdict": "真实/未命中"
+    }
+  ]
+}
