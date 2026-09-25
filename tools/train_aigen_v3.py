@@ -130,19 +130,23 @@ def main():
     t0 = time.time()
 
     ai_jimeng, ai_cross, real_xhs, real_old = build_pairs()
-    ai_all = ai_jimeng + ai_cross
     real_all = real_xhs + real_old
-    print(f"数据：AI={len(ai_all)}（即梦 {len(ai_jimeng)} + 跨生成器 {len(ai_cross)}）  "
+    print(f"数据：即梦AI={len(ai_jimeng)}  跨生成器(ai_cross)={len(ai_cross)}  "
           f"REAL={len(real_all)}（real_xhs {len(real_xhs)} + 原有 {len(real_old)}）", flush=True)
-    if not ai_all or not real_all:
+    if not ai_jimeng or not real_all:
         print("错误：数据为空（先往 data/ai 与 data/ai_cross 放图）", flush=True)
         return 1
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    ai_tr, ai_val = split(ai_all, VAL_RATIO, rng)
+    # 关键：ai_cross 单独划分，只把「训练份」并入 AI 类；验证份整体留作
+    # 「跨生成器独立测试集」（不进训练），保证跨生成器指标是干净 held-out。
+    aj_tr, aj_val = split(ai_jimeng, VAL_RATIO, rng)
+    ac_tr, ac_val = split(ai_cross, VAL_RATIO, rng)
     re_tr, re_val = split(real_all, VAL_RATIO, rng)
 
+    ai_tr = aj_tr + ac_tr          # 训练用 AI 类（即梦 + 跨生成器训练份）
+    ai_val = aj_val + ac_val       # 验证用 AI 类（含跨生成器验证份 = 干净 held-out）
     train_files, train_labels = ai_tr + re_tr, [1] * len(ai_tr) + [0] * len(re_tr)
     val_files, val_labels = ai_val + re_val, [1] * len(ai_val) + [0] * len(re_val)
     n_val_xhs = sum(1 for f in val_files if "real_xhs" in str(f))
@@ -171,7 +175,7 @@ def main():
                         batch_size=max(len(val_files), 1), shuffle=False, num_workers=0)
 
     model = make_model()
-    n_ai, n_real = len(ai_all), len(real_all)
+    n_ai, n_real = len(ai_tr) + len(ai_val), len(real_all)
     w_ai = (n_ai + n_real) / (2 * n_ai)
     w_real = (n_ai + n_real) / (2 * n_real)
     print(f"类别权重：real={w_real:.3f}  ai={w_ai:.3f}", flush=True)
@@ -232,8 +236,8 @@ def main():
                    else "fp" if (l == 0 and p == 1) else "tn"] += 1
     val_acc = (cm["tp"] + cm["tn"]) / max(sum(cm.values()), 1)
 
-    all_files = ai_all + real_all
-    all_labels = [1] * len(ai_all) + [0] * len(real_all)
+    all_files = train_files + val_files
+    all_labels = train_labels + val_labels
     sm = nn.Softmax(dim=1)
     per_image = []
     with torch.no_grad():
@@ -247,10 +251,16 @@ def main():
                    for i in range(len(all_files))],
                   key=lambda r: -r["ai_prob"])
 
-    # 跨生成器召回：只看 data/ai_cross 的图（v2 仅 25%）
-    cross_idx = [i for i, f in enumerate(all_files) if "ai_cross" in str(f)]
-    cross_total = len(cross_idx)
-    cross_hit = sum(1 for i in cross_idx if per_image[i] > 0.5)
+    # 跨生成器召回：只用验证集里的 ai_cross（ac_val，全程未进训练）= 干净 held-out
+    cross_files = [f for f in val_files if "ai_cross" in str(f)]
+    cross_pred = []
+    with torch.no_grad():
+        dl = DataLoader(AigenDataset(cross_files, [1] * len(cross_files), infer_tfm),
+                        batch_size=max(len(cross_files), 1), shuffle=False, num_workers=0)
+        for x, _ in dl:
+            cross_pred += [p[1] for p in sm(model(x.to(DEVICE))).cpu().tolist()]
+    cross_total = len(cross_files)
+    cross_hit = sum(1 for p in cross_pred if p > 0.5)
     cross_recall = (cross_hit / cross_total) if cross_total else None
 
     (OUT_DIR / "config.json").write_text(json.dumps({

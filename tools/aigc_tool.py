@@ -41,7 +41,9 @@ from pathlib import Path
 # v2（2026-09-25）用 74 张真实精修美妆图扩充真实类后重训，
 # 真实美妆图误报率 66% → 1.4%（未参与训练的验证集 61% → 5.6%），AI 召回保持 100%。
 # v1 保留在第二位当兜底：若 v2 出问题，把下面这行的 v2 删掉即可秒级回滚。
-MODEL_PRIORITY = ["beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
+# v3（2026-09-25）并入 data/ai_cross（非即梦/ImageGen 风格 AI 美妆图）做跨生成器训练，
+# 跨生成器 held-out 召回从 v2 的 25% 拉到 100%，整体误报仍可控；v3 置顶，v2 留作兜底。
+MODEL_PRIORITY = ["beautyproof_aigen_v3", "beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
 
 # 权重文件名（微调模型是 model.pt，通用模型是 safetensors / bin）
 WEIGHT_FILES = ("model.pt", "model.safetensors", "pytorch_model.bin")

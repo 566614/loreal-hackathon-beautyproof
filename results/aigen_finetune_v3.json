@@ -1,0 +1,914 @@
+{
+  "model": "beautyproof_aigen_v3",
+  "arch": "mobilenetv3_large_100",
+  "split": {
+    "train": {
+      "ai": 37,
+      "real": 71,
+      "total": 108
+    },
+    "val": {
+      "ai": 9,
+      "real": 18,
+      "total": 27,
+      "from_real_xhs": 16
+    }
+  },
+  "best_epoch": 9,
+  "best_val_loss": 0.1038,
+  "val_confusion": {
+    "tp": 9,
+    "fn": 0,
+    "fp": 1,
+    "tn": 17
+  },
+  "val_accuracy": 0.963,
+  "cross_generator": {
+    "total": 5,
+    "hit": 5,
+    "recall": 1.0
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.8198,
+      "train_acc": 0.6389,
+      "val_loss": 0.6454,
+      "val_acc": 0.7778
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.5088,
+      "train_acc": 0.8796,
+      "val_loss": 1.3798,
+      "val_acc": 0.7037
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.1799,
+      "train_acc": 0.9444,
+      "val_loss": 0.4469,
+      "val_acc": 0.8148
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.3882,
+      "train_acc": 0.8981,
+      "val_loss": 0.3755,
+      "val_acc": 0.963
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.5033,
+      "train_acc": 0.9074,
+      "val_loss": 0.3682,
+      "val_acc": 0.9259
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.1633,
+      "train_acc": 0.9352,
+      "val_loss": 0.431,
+      "val_acc": 0.9259
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.2156,
+      "train_acc": 0.9722,
+      "val_loss": 0.3655,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.1437,
+      "train_acc": 0.9907,
+      "val_loss": 0.1108,
+      "val_acc": 0.963
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.1303,
+      "train_acc": 0.9722,
+      "val_loss": 0.1038,
+      "val_acc": 0.963
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.2964,
+      "train_acc": 0.9537,
+      "val_loss": 0.5808,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.112,
+      "train_acc": 0.963,
+      "val_loss": 0.785,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.2793,
+      "train_acc": 0.9537,
+      "val_loss": 0.6692,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.0528,
+      "train_acc": 0.9815,
+      "val_loss": 0.5845,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.0463,
+      "train_acc": 0.9815,
+      "val_loss": 0.575,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.0187,
+      "train_acc": 0.9815,
+      "val_loss": 0.6398,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.0194,
+      "train_acc": 0.9907,
+      "val_loss": 0.7771,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.1546,
+      "train_acc": 0.963,
+      "val_loss": 0.7318,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.1254,
+      "train_acc": 0.9722,
+      "val_loss": 0.5639,
+      "val_acc": 0.9259
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.0236,
+      "train_acc": 0.9815,
+      "val_loss": 0.5447,
+      "val_acc": 0.9259
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.0009,
+      "train_acc": 1.0,
+      "val_loss": 0.7226,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 21,
+      "train_loss": 0.1026,
+      "train_acc": 0.9815,
+      "val_loss": 0.688,
+      "val_acc": 0.9259
+    },
+    {
+      "epoch": 22,
+      "train_loss": 0.0103,
+      "train_acc": 0.9907,
+      "val_loss": 0.9671,
+      "val_acc": 0.8148
+    },
+    {
+      "epoch": 23,
+      "train_loss": 0.0494,
+      "train_acc": 0.9722,
+      "val_loss": 0.7495,
+      "val_acc": 0.9259
+    },
+    {
+      "epoch": 24,
+      "train_loss": 0.0061,
+      "train_acc": 1.0,
+      "val_loss": 0.8433,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 25,
+      "train_loss": 0.008,
+      "train_acc": 1.0,
+      "val_loss": 0.8048,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 26,
+      "train_loss": 0.0026,
+      "train_acc": 1.0,
+      "val_loss": 0.8461,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 27,
+      "train_loss": 0.0371,
+      "train_acc": 0.9907,
+      "val_loss": 0.89,
+      "val_acc": 0.8889
+    },
+    {
+      "epoch": 28,
+      "train_loss": 0.0336,
+      "train_acc": 0.9907,
+      "val_loss": 0.9306,
+      "val_acc": 0.8519
+    },
+    {
+      "epoch": 29,
+      "train_loss": 0.0496,
+      "train_acc": 0.9815,
+      "val_loss": 0.6382,
+      "val_acc": 0.8889
+    }
+  ],
+  "per_image_ai_prob": [
+    {
+      "file": "ai_10.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_14.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_16.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_07.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_13.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_18.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_11.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_02.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_12.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_03.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_08.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_09.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_01.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_04.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_06.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "glamorous_eyeshadow_look__stud_2026-09-25T07-41-43.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "bold_eyeliner_and_lipstick__hi_2026-09-25T07-41-42.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cyberpunk_beauty__neon_makeup__2026-09-25T07-43-00.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "close_up_beauty_face__dewy_gla_2026-09-25T07-42-59.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "bridal_makeup__soft_curls__lum_2026-09-25T07-43-04.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_01.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "glam_red_carpet_makeup__contou_2026-09-25T07-42-59.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "soft_warm_glam_makeup__close_u_2026-09-25T07-41-43.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_08.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_02.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "artistic_makeup__colorful_grap_2026-09-25T07-42-56.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_05.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "fashion_makeup_look__soft_past_2026-09-25T07-41-43.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_04.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "editorial_beauty_shot__metalli_2026-09-25T07-43-00.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "vintage_hollywood_makeup__red__2026-09-25T07-42-59.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "natural_no_makeup_glow__freckl_2026-09-25T07-42-57.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "skincare_and_makeup_beauty_por_2026-09-25T07-41-41.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_03.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "korean_idol_style_makeup__aegy_2026-09-25T07-42-59.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_20.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_05.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "photorealistic_beauty_portrait_2026-09-25T07-41-41.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "cross_07.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "smokey_eye_makeup__studio_shot_2026-09-25T07-41-43.png",
+      "label": "ai",
+      "ai_prob": 1.0
+    },
+    {
+      "file": "ai_17.png",
+      "label": "ai",
+      "ai_prob": 0.9994
+    },
+    {
+      "file": "matte_makeup__warm_brown_tones_2026-09-25T07-42-58.png",
+      "label": "ai",
+      "ai_prob": 0.998
+    },
+    {
+      "file": "ai_15.png",
+      "label": "ai",
+      "ai_prob": 0.9978
+    },
+    {
+      "file": "natural_glowing_skin_makeup__s_2026-09-25T07-41-42.png",
+      "label": "ai",
+      "ai_prob": 0.9962
+    },
+    {
+      "file": "ai_19.png",
+      "label": "ai",
+      "ai_prob": 0.9892
+    },
+    {
+      "file": "real_066_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.9606
+    },
+    {
+      "file": "ai_06.png",
+      "label": "ai",
+      "ai_prob": 0.863
+    },
+    {
+      "file": "real_001_new_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0473
+    },
+    {
+      "file": "real_062_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0467
+    },
+    {
+      "file": "real_011_new_03_试色上手_白手套拿口红.jpg",
+      "label": "real",
+      "ai_prob": 0.0242
+    },
+    {
+      "file": "real_054_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0183
+    },
+    {
+      "file": "real_025_new_精选_02_产品上手_芭贝拉粉底液手持.jpg",
+      "label": "real",
+      "ai_prob": 0.0074
+    },
+    {
+      "file": "real_028_new_精选_05_产品上手_美宝莲粉底液手持.jpg",
+      "label": "real",
+      "ai_prob": 0.0021
+    },
+    {
+      "file": "real_009_new_010.jpg",
+      "label": "real",
+      "ai_prob": 0.0008
+    },
+    {
+      "file": "real_064_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0006
+    },
+    {
+      "file": "real_027_new_精选_04_产品试色_粉底瓶旁色块.jpg",
+      "label": "real",
+      "ai_prob": 0.0005
+    },
+    {
+      "file": "real_09.jpg",
+      "label": "real",
+      "ai_prob": 0.0002
+    },
+    {
+      "file": "real_000_new_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0002
+    },
+    {
+      "file": "real_018_new_手背试色_02_手背试色_手掌试色.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_050_old_013.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_021_new_手背试色_05_手背试色_手臂双块_光泽.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_057_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_007_new_008.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_036_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_02.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_051_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_039_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_030_new_精选_07_产品上手_持妆粉底液按压瓶.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_069_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_049_old_012.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_032_new_精选_09_产品静物_花知晓眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_033_new_精选_10_产品上手_橘朵眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_072_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_061_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_055_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_045_old_007.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_056_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_002_new_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_060_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_003_new_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_014_new_06_局部特写_嘴唇02.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_067_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_053_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_059_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_03.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_052_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "clean_02_recompressed.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_065_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_034_new_精选_11_产品静物_复古眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_071_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_040_old_001.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_038_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_004_new_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_041_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_043_old_005.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_044_old_006.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_017_new_手背试色_01_手背试色_手臂长条多色.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_042_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_013_new_05_局部特写_嘴唇01.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_022_new_手背试色_06_手背试色_手臂双块.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_047_old_009.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_020_new_手背试色_04_手背试色_手背双块.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_05.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_02_splice.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_035_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "clean_01.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_012_new_04_试色上手_车内手持口红.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_04.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_10.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_08.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_029_new_精选_06_产品试色_粉底液大理石试色.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_03_text_edit.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_008_new_009.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_024_new_精选_01_产品上手_粉底液瓶手持.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_073_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_046_old_008.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_06.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_07.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_037_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_070_old_004.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_010_new_011.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_048_old_011.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_015_new_07_局部特写_嘴唇03.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_068_old_002.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_058_old_003.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_005_new_006.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_023_new_手背试色_07_手背试色_腮红手背.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_063_old_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_006_new_007.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_026_new_精选_03_试色上手_手臂粉底试色条.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_016_new_cover.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_01.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "tampered_01_copy_move.png",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_019_new_手背试色_03_手背试色_手臂多色带色号.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    },
+    {
+      "file": "real_031_new_精选_08_产品上手_3CE九宫格眼影盘.jpg",
+      "label": "real",
+      "ai_prob": 0.0
+    }
+  ],
+  "elapsed_sec": 406.8
+}

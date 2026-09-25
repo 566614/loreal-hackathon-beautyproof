@@ -1,0 +1,29 @@
+{
+  "framework": "timm",
+  "arch": "mobilenetv3_large_100",
+  "num_classes": 2,
+  "classes": [
+    "real",
+    "ai"
+  ],
+  "img_size": 224,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "version": "v3",
+  "trained_on": "data/ai(20 即梦) + data/ai_cross(26 非即梦) + data/real_xhs(74) + 原有(15)",
+  "class_weight": {
+    "real": 0.7584,
+    "ai": 1.4674
+  },
+  "best_epoch": 9,
+  "val_acc": 0.963,
+  "cross_generator_recall": 1.0
+}
