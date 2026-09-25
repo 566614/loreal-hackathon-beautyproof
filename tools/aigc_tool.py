@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# 来源：原创为主 —— 优先使用团队自训 beautyproof_aigen_v* 模型；第三方 airealnet/capcheck 仅作兜底
 """
 AIGC 工具 —— 判断一张图是不是「整张由 AI 生成」的，输出统一格式的证据 JSON
 

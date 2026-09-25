@@ -40,7 +40,17 @@ BeautyProof —— 第三方组件与许可证声明（NOTICE）
    matplotlib（数值与可视化）、Pillow（图像读写）、requests（HTTP 客户端）
    - 许可证：各自原始许可证（以 BSD / Apache-2.0 / PSF / HPND 为主）。
 
+9. 预训练检测模型权重（兜底 / 实验用，已随仓分发，默认不被主流程优先使用）
+   - airealnet（XenArcAI/AIRealNet）：AIGC 兜底模型，许可证待核实（研究用途）。
+   - capcheck（capcheck/ai-human-generated-image-detection）：Apache-2.0。
+   - sdxl-detector（Organika/sdxl-detector）：许可证待核实（通常 Apache-2.0），已弃用。
+   - clip-vit-large-patch14（openai/clip-vit-large-patch14）：Apache-2.0，仅实验用。
+   - timm_mobilenetv3（timm MobileNetV3-Large ImageNet 主干）：MIT / Apache-2.0，
+     仅作为团队自训 AIGC 模型的主干初始化权重。
+   以上权重均由团队在 `tools/download_*.py` 中从官方 Hub 取得，本团队不主张其知识产权。
+
 ---
-本仓库不 bundled 任何第三方模型的权重文件与受版权保护的训练数据；
+本仓库除第 9 条所列随仓分发的预训练权重外，不 bundled 其余第三方模型的权重文件
+（如 TruFor 约 370MB、Qwen3-VL 约 2.5GB 均运行前按需下载）与受版权保护的训练数据；
 权重与数据按体积/隐私原因在首次运行时从官方源按需获取（见 README 的
 「首次拿到仓库后」一节）。如有任何许可证疑问，请联系项目维护者。

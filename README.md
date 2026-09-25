@@ -13,6 +13,15 @@ BeautyProof 把**八种取证手段**（六种看图 + 两种读字）交给**�
 > 赛题原话是「识别……被篡改、拼接或伪造的**文案与图片**」——文案和图片是并列的，
 > 所以文案侧不是锦上添花，是补齐缺的那一半。详见最后一章。
 
+## 来源声明 / Provenance
+
+为响竞赛规则对「原创性与知识产权」的要求（规则第 3 条：雷同或无创新贡献 = 全队取消成绩），
+本项目已明确区分 **第三方 / 开源改编** 与 **BeautyProof 团队原创** 两部分。
+完整清单见 [`docs/SOURCES.md`](docs/SOURCES.md)；第三方归属与许可证汇总见仓库顶层 `NOTICE`（本项目代码以 Apache-2.0 发布，见 `LICENSE`）。
+
+**原创边界一句话**：TruFor（CVPR2023）、PaddleOCR、c2patool、ELA 方法论、以及 airealnet/capcheck/sdxl-detector/clip/timm 等预训练权重均为**被调用的第三方能力 / 兜底模型**；
+而**统一八工具证据格式、规则引擎四档判定、本域微调 AIGC 分类器（beautyproof_aigen_v1/v2/v3）、跨生成器验证方案、流水线编排与可解释 Agent、图文交叉验证、报告与护栏、Web/离线 demo** 均为 **BeautyProof 团队原创工作**。
+
 ## 四种打开方式
 
 ```bash

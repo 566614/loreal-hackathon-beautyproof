@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# 来源：第三方调用 —— PaddleOCR (PP-OCRv6, Apache-2.0) 为被调用能力；统一证据封装为 BeautyProof 团队原创
 """
 OCR 检测工具 —— 把图上的文字抄下来，输出「统一格式」的证据 JSON
 

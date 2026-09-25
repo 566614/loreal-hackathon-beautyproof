@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# 来源：原创 —— BeautyProof 团队多 Agent 圆桌交叉复核（ImageAgent/TextAgent/SourceAgent/JudgeAgent 结构化会诊）
 """多 Agent 圆桌协作 —— 方案 B 的核心，终于落地了。
 
 设计初衷（方案 B）：

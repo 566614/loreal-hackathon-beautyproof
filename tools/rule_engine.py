@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# 来源：原创 —— BeautyProof 团队规则引擎（high_risk/suspicious/credible/inconclusive 四档判定），核心创新贡献
 """
 规则引擎 —— 把多个检测工具的证据汇总，给这张图定一个风险等级
 
