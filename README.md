@@ -32,6 +32,11 @@ BeautyProof 把**八种取证手段**（六种看图 + 两种读字）交给**�
 ./run.sh tools/pipeline.py <图片路径> --text "原相机实拍，无滤镜，七天美白亲测有效"
 ./run.sh tools/pipeline.py <图片路径> --text-file 种草文.txt
 
+# 开启方案 C 的大模型「人话解读」层（需先准备本地模型，见下方「可选：大模型解读层」）
+./run.sh tools/pipeline.py <图片路径> --llm
+# 开启方案 B 的多 Agent 圆桌交叉复核（纯结构化角色复核，零额外依赖）
+./run.sh tools/pipeline.py <图片路径> --roundtable
+
 # 3) 数据集批量评测（自动算命中率）
 ./run.sh tools/batch_run.py
 ```
@@ -42,6 +47,27 @@ BeautyProof 把**八种取证手段**（六种看图 + 两种读字）交给**�
 ./run.sh tools/setup_trufor.py          # 下载并部署 TruFor 官方代码 + 权重（约 370MB），四项体检要全 OK
 ./run.sh tools/make_dataset.py          # 现场再造评测数据集（干净图 + 三种篡改图）
 ```
+
+## 大模型解读层（可选，方案 C 的可解释核心）
+
+默认报告由模板从证据拼装，严谨可审计。若想多一段「大模型人话解读」，
+需本地准备一个开源多模态模型（默认 Qwen3-VL-4B-Instruct，Apache-2.0、纯 CPU 可跑）：
+
+```bash
+./run.sh tools/download_vlm.py                              # 从 hf-mirror 下 GGUF（约 2.5GB）
+ollama create qwen3vl-4b -f models/qwen3vl-4b/Modelfile      # 注册成本地模型
+ollama serve                                                # 保证 11434 端口在跑
+./run.sh tools/pipeline.py <图片> --llm                      # 报告会多一段「五、大模型辅助解读」
+```
+
+模型不可用时 `--llm` 自动降级，不影响主流程。该段仅作理解参考，最终定性仍以规则引擎为准，
+且会过 validator 的禁用措辞护栏。
+
+## 许可证与第三方声明
+
+本项目以 Apache-2.0 许可证发布（见 `LICENSE`）。TruFor、PyTorch、timm、PaddleOCR、
+Qwen3-VL 等第三方组件的许可证与归属见 `NOTICE`。模型权重与训练数据因体积/隐私原因不随仓库分发，
+首次运行按 README 顶部说明从官方源按需获取。
 
 ## 它怎么工作
 

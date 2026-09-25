@@ -7,6 +7,8 @@
     python tools/pipeline.py <图片路径> --fast       # 跳过慢的深度学习模型，秒出结论
     python tools/pipeline.py <图1> <图2> --json-only # 只写 JSON，不打印详细过程
     python tools/pipeline.py <图片路径> --pdf    # 额外导出一份 PDF（法务 / 品牌方存档）
+    python tools/pipeline.py <图片路径> --llm    # 开启大模型「人话解读」层（需本地 Ollama + Qwen3-VL-4B）
+    python tools/pipeline.py <图片路径> --roundtable  # 开启方案B 多 Agent 圆桌交叉复核
 
     # 带上配套文案一起鉴定 —— 这才是赛题要的「文案 + 图片」双模态
     python tools/pipeline.py <图片路径> --text "原相机实拍，无滤镜，七天美白亲测有效"
@@ -186,7 +188,7 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
 
 # ---------------------------------------------------------------- 主流程
 def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
-            on_progress=None, text=None):
+            on_progress=None, text=None, llm=False, roundtable=False):
     """对一张图跑完整流水线，返回结构化结果
 
     on_progress: 可选回调 fn(tool, 第几个, 共几个, 状态) —— Web 界面靠它显示实时进度
@@ -344,6 +346,34 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         "tool_meta": TOOL_META,   # 每个工具的人话说明，网页/离线 Demo 直接读它
     }
 
+    # 可选：方案 C 的大模型人话解读层（默认关闭，--llm 开启）。
+    # 模型不可用时自动降级，不影响主流程。
+    if llm:
+        try:
+            import llm_explainer  # noqa: E402
+            llm_text = llm_explainer.generate_for_pipeline(
+                result, image_path=str(image_path), verbose=verbose)
+            if llm_text:
+                result["llm_explanation"] = llm_text
+        except Exception as e:  # noqa: BLE001
+            if verbose:
+                print(f"  [LLM] 解读层异常，已跳过：{type(e).__name__}：{e}")
+
+    # 可选：方案 B 的多 Agent 圆桌交叉复核（默认关闭，--roundtable 开启）。
+    # 纯结构化角色复核，零额外依赖，随时可跑。
+    if roundtable:
+        try:
+            import roundtable  # noqa: E402
+            rt = roundtable.run_roundtable(stem, evidence, {
+                "risk_level": risk_level, "reasons": reasons})
+            if rt:
+                result["roundtable"] = rt
+                if verbose:
+                    print("  [圆桌] 多 Agent 交叉复核完成")
+        except Exception as e:  # noqa: BLE001
+            if verbose:
+                print(f"  [圆桌] 复核异常，已跳过：{type(e).__name__}：{e}")
+
     out = REPO / "outputs" / f"analysis_{stem}.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     result["_output_file"] = str(out)
@@ -383,6 +413,8 @@ def main():
     fast = "--fast" in args
     json_only = "--json-only" in args
     want_pdf = "--pdf" in args
+    want_llm = "--llm" in args
+    want_roundtable = "--roundtable" in args
 
     # 配套文案：--text "..." 直接给，或 --text-file 文件.txt（一整段）
     text = None
@@ -410,7 +442,8 @@ def main():
 
     for p in paths:
         print(f"\n=== 鉴定：{Path(p).name} ===")
-        res = analyze(p, fast=fast, verbose=not json_only, text=text)
+        res = analyze(p, fast=fast, verbose=not json_only, text=text,
+                       llm=want_llm, roundtable=want_roundtable)
         v = res["verdict"]
         if json_only:
             print(json.dumps({"image": res["image"]["name"], "risk_level": v["risk_level"]},

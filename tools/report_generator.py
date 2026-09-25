@@ -212,10 +212,59 @@ def build_report(stem, evidence, verdict):
     lines.append("")
     lines.append(ADVICE.get(risk, ADVICE["NO_VERDICT"]))
     lines.append("")
+
+    # 可选：大模型辅助解读段（方案 C 的可解释层）。仅当 pipeline 跑了 --llm 且模型可用时才有。
+    # 这一段是模型基于工具证据翻译的大白话，**不替代规则引擎结论**；
+    # 且会过 validator 的禁用措辞关，越界表述会被拦下。
+    llm_path = OUT_DIR / f"llm_explain_{stem}.json"
+    if llm_path.exists():
+        try:
+            llm_data = json.loads(llm_path.read_text(encoding="utf-8"))
+            llm_text = (llm_data.get("evidence") or [{}])[0].get("text", "")
+        except Exception:  # noqa: BLE001
+            llm_text = ""
+        if llm_text.strip():
+            lines.append("## 五、大模型辅助解读（可选，经规则护栏校验）")
+            lines.append("")
+            lines.append("> 以下由本地大模型（Qwen3-VL-4B）把上面的工具证据翻译成大白话，"
+                         "**仅供理解参考，最终定性仍以规则引擎结论为准**。")
+            lines.append(">")
+            for para in llm_text.split("\n"):
+                if para.strip():
+                    lines.append(f"> {para.strip()}")
+            lines.append("")
+
+    # 可选：多 Agent 圆桌交叉验证（方案 B）。仅在 pipeline 跑了 --roundtable 时才有。
+    rt_path = OUT_DIR / f"roundtable_{stem}.json"
+    if rt_path.exists():
+        try:
+            rt_data = json.loads(rt_path.read_text(encoding="utf-8"))
+            rt = (rt_data.get("evidence") or [{}])[0]
+        except Exception:  # noqa: BLE001
+            rt = {}
+        if rt:
+            lines.append("## 六、多 Agent 圆桌交叉验证（可选）")
+            lines.append("")
+            lines.append("> 由 ImageAgent / TextAgent / SourceAgent 三路角色各自看证据、"
+                         "JudgeAgent 汇总共识，复核规则引擎结论。")
+            lines.append(">")
+            for key, zh in (("image_agent", "图像侧"), ("text_agent", "文案侧"),
+                            ("source_agent", "来源侧")):
+                b = rt.get(key, {})
+                lines.append(f"> **{zh}（{b.get('role', key)}）**："
+                             + ("；".join(b.get("signals", [])) or "（无）"))
+                if b.get("concern"):
+                    lines.append(f"> ⚠ 顾虑：{b['concern']}")
+            jd = rt.get("judge", {})
+            lines.append(f"> **裁判结论**：{jd.get('consensus', '')}")
+            lines.append(f"> **建议**：{jd.get('recommendation', '')}")
+            lines.append("")
+
     lines.append("---")
     lines.append("")
-    lines.append("*本报告由模板从工具证据 JSON 直接拼装，未使用大模型生成，"
-                 "所有结论均可追溯到 `outputs/` 下的原始证据文件。*")
+    lines.append("*本报告主体由模板从工具证据 JSON 直接拼装（结论可追溯到 `outputs/` 下的原始证据文件）。"
+                 "若存在「五、大模型辅助解读」段，则为模型基于证据生成的辅助说明，"
+                 "已通过禁用措辞校验，不替代规则引擎结论。*")
     return "\n".join(lines) + "\n"
 
 

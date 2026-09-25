@@ -1,0 +1,46 @@
+BeautyProof —— 第三方组件与许可证声明（NOTICE）
+=================================================
+
+本项目自身代码以 Apache-2.0 许可证发布（见 LICENSE 文件）。
+以下第三方组件被本项目在运行时调用或作为依赖使用，各自的知识产权与许可证
+归原作者所有。本项目严格遵守其许可证条款，未将其修改后据为己有。
+
+1. TruFor（篡改痕迹检测核心模型）
+   - 来源：《TruFor: Leveraging all-round clues for trustworthy image
+     forgery detection and localization》, CVPR 2023。
+   - 许可证：原作者研究用途许可证（research-only / 学术使用）。
+   - 使用方式：代码与权重不随本仓库分发，运行 `tools/setup_trufor.py`
+     时从官方仓库按需下载到本地（约 370MB），**未在本仓库内重新分发**。
+   - 说明：TruFor 的权重与代码仅用于学术/竞赛演示，若用于商业部署需另行
+     取得原作者授权。
+
+2. PyTorch / TorchVision（深度学习框架）
+   - 许可证：BSD-3-Clause。本项目使用其 CPU 构建版本（torch 2.14.0+cpu）。
+
+3. timm —— PyTorch Image Models（本域 AIGC 模型的 MobileNetV3 主干）
+   - 许可证：Apache-2.0 / MIT。
+
+4. Transformers / huggingface_hub / safetensors（模型加载与 Hub 下载）
+   - 许可证：Apache-2.0。
+
+5. PaddlePaddle / PaddleOCR（OCR 文字识别）
+   - 许可证：Apache-2.0。
+
+6. Qwen3-VL-4B-Instruct-GGUF（可选的大模型「人话解释」生成器）
+   - 许可证：Apache-2.0（通义千问官方发布）。
+   - 使用方式：通过 `tools/download_vlm.py` 从 HuggingFace 镜像按需下载
+     GGUF 量化文件（约 2.5GB）到本地 `models/qwen3vl-4b/`，**未随仓库分发**；
+     经本地 Ollama 加载后，仅用于把取证证据转写成普通人能看懂的解读文字，
+     所有结论仍以规则引擎与工具证据为准。
+
+7. Flask（本地演示 Web 服务）
+   - 许可证：BSD-3-Clause。
+
+8. OpenCV（图像处理）、NumPy / SciPy / scikit-image / scikit-learn /
+   matplotlib（数值与可视化）、Pillow（图像读写）、requests（HTTP 客户端）
+   - 许可证：各自原始许可证（以 BSD / Apache-2.0 / PSF / HPND 为主）。
+
+---
+本仓库不 bundled 任何第三方模型的权重文件与受版权保护的训练数据；
+权重与数据按体积/隐私原因在首次运行时从官方源按需获取（见 README 的
+「首次拿到仓库后」一节）。如有任何许可证疑问，请联系项目维护者。

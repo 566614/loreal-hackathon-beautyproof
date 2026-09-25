@@ -113,9 +113,9 @@ def check(stem):
     elif risk == "high_risk":
         aigc = evidence.get("aigc", {}).get("evidence", [{}])
         score = aigc[0].get("aigc_score") if aigc else None
-        ok = score is not None and score >= THRESHOLDS["aigc_ai_score"]
+        ok = score is not None and score >= THRESHOLDS["aigc_high_risk"]
         add("高风险结论有 AIGC 支撑", ok,
-            f"AIGC 分数 {score}，阈值 {THRESHOLDS['aigc_ai_score']}")
+            f"AIGC 分数 {score}，阈值 {THRESHOLDS['aigc_high_risk']}")
     else:
         add("结论一致性", True, f"风险等级 {risk}，无需额外证据支撑")
 
