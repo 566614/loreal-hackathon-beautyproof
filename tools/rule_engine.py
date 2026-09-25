@@ -331,6 +331,7 @@ def explain(risk_level, evidence):
                        "依据是《广告法》第 9 条与《化妆品监督管理条例》第 43 条。")
             what_to_do = "逐条核改这些表述，避免被平台或监管判为违规宣称。"
         elif tru_ready:
+            headline = "发现可疑篡改痕迹，建议人工核对"
             summary = f"取证模型给出的整图篡改分为 {score}，已超过可疑线"
             if ratio is not None:
                 summary += f"，可疑区域约占全图 {ratio:.1%}"
@@ -340,6 +341,7 @@ def explain(risk_level, evidence):
             else:
                 summary += "。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
         else:
+            headline = "有可疑信号，建议人工核对"
             summary = "有取证信号提示这张图可能被动过，但强度不足以直接定性。"
         what_to_do = "暂缓对外投放，人工对照原图确认后再用。"
 

@@ -17,7 +17,7 @@
         710,
         784
       ],
-      "expected_risk": "suspicious"
+      "expected_risk": "high_risk"
     },
     {
       "id": "tampered_02_splice",
@@ -29,7 +29,7 @@
         364,
         484
       ],
-      "expected_risk": "suspicious"
+      "expected_risk": "high_risk"
     },
     {
       "id": "tampered_03_text_edit",
