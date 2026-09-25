@@ -240,7 +240,7 @@ models/*
 outputs/_trufor_in/
 outputs/_trufor_out/
 # TruFor 生成的定位图 / 热力图（按图生成、demo 已 base64 内嵌，不必进仓库）
-outputs/*.png
+outputs/**/*.png
 # 各工具逐张中间证据 JSON（analysis_*.json 已聚合全部证据，不必重复进仓库）
 outputs/aigc_*.json
 outputs/ela_*.json
@@ -256,3 +256,15 @@ outputs/_clip_cache/
 # Web 演示的上传暂存与本地调试残留
 uploads/
 outputs/_api_*.json
+
+# 各工具聚合证据与判定结果（逐张 analysis/verdict 已由报告聚合，不必进仓库）
+outputs/analysis_*.json
+outputs/verdict_*.json
+# 批量运行产物（HTML 报告 + 定位图，按 run 时间戳重建，不必进仓库）
+outputs/batch/
+# 多 Agent 圆桌 / LLM 解读中间产物（运行时生成，不必进仓库）
+outputs/roundtable_*.json
+outputs/llm_explain_*.json
+# 外部爬取 / 临时探查残留
+outputs/_external_*/
+outputs/_peek/

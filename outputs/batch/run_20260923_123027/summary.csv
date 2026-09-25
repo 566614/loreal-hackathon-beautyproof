@@ -1,6 +1,0 @@
-﻿文件名,stem,风险等级,风险(中文),TruFor分数,可疑占比,可疑方位,AIGC概率,需人工复核
-tampered_02_splice.png,tampered_02_splice,high_risk,高风险,1.0000,2.5%,画面中部,0.9596,是
-tampered_01_copy_move.png,tampered_01_copy_move,high_risk,高风险,0.9946,1.5%,画面右下角,0.9578,是
-tampered_03_text_edit.png,tampered_03_text_edit,suspicious,可疑,0.5950,6.4%,画面左下角,0.8491,是
-clean_02_recompressed.png,clean_02_recompressed,inconclusive,无法判定,0.4113,1.0%,画面上部,0.9989,否
-clean_01.png,clean_01,inconclusive,无法判定,0.3503,5.3%,画面中部,0.9551,否
