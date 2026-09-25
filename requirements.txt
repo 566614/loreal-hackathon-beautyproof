@@ -36,3 +36,7 @@ scipy==1.18.0
 matplotlib==3.11.2
 pillow==12.3.0
 protobuf==6.33.4
+
+# ---- 测试 ----
+# 单测：pytest tests -q（亦可直接 python tests/test_core.py，无需 pytest）
+pytest==9.1.1
