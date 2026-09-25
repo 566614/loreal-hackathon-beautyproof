@@ -36,7 +36,7 @@ TOOLS = REPO / "tools"
 
 MODEL_NAME = os.environ.get("BP_LLM_MODEL", "qwen3vl-4b")
 OLLAMA_URL = os.environ.get("BP_LLM_URL", "http://localhost:11434").rstrip("/")
-TIMEOUT = int(os.environ.get("BP_LLM_TIMEOUT", "90"))
+TIMEOUT = int(os.environ.get("BP_LLM_TIMEOUT", "240"))
 
 
 # ---------------------------------------------------------------- 模型就绪
