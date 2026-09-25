@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeautyProof 演示 · 美妆内容信任守护师</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; background:#0e0e12; color:#f4f1ec; font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif; overflow:hidden; }
+  #stage { position:relative; width:100vw; height:100vh; }
+  .scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6vh 8vw; opacity:0; transform:scale(1.02); transition:opacity .8s ease, transform .8s ease; pointer-events:none; }
+  .scene.active { opacity:1; transform:scale(1); pointer-events:auto; }
+  .kicker { color:#c8a24b; letter-spacing:.3em; font-size:14px; margin-bottom:18px; text-transform:uppercase; }
+  h1 { font-size:60px; font-weight:800; line-height:1.1; margin-bottom:20px; }
+  h2 { font-size:38px; font-weight:800; margin-bottom:22px; }
+  .sub { font-size:20px; color:#b9b3aa; max-width:900px; text-align:center; line-height:1.6; }
+  .accent { color:#e89aa8; }
+  .gold { color:#c8a24b; }
+  .pill { display:inline-block; border:1px solid #c8a24b; color:#c8a24b; border-radius:999px; padding:6px 18px; font-size:14px; margin:6px; }
+  /* tool grid */
+  .tools { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; width:920px; margin-top:10px; }
+  .tool { background:#1b1b22; border:1px solid #2c2c36; border-radius:12px; padding:16px; font-size:15px; display:flex; align-items:center; gap:10px; }
+  .tool .dot { width:12px; height:12px; border-radius:50%; background:#444; flex:none; transition:background .4s; }
+  .tool.done .dot { background:#5fd08a; box-shadow:0 0 10px #5fd08a; }
+  .tool.done { border-color:#5fd08a; }
+  /* verdict */
+  .verdict { margin-top:18px; padding:18px 40px; border-radius:14px; font-size:30px; font-weight:800; background:#3a1414; border:1px solid #e11d48; color:#ff9aae; }
+  .verdict.ok { background:#13301c; border-color:#5fd08a; color:#9fe6b4; }
+  /* report card */
+  .report { background:#16161c; border:1px solid #2c2c36; border-left:5px solid #c8a24b; border-radius:12px; padding:22px 28px; width:880px; text-align:left; font-size:17px; line-height:1.9; }
+  .report b { color:#c8a24b; }
+  /* chart */
+  .chart { width:760px; margin-top:24px; }
+  .bar { display:flex; align-items:center; margin:14px 0; }
+  .bar .lbl { width:180px; font-size:16px; text-align:right; padding-right:16px; }
+  .bar .track { flex:1; background:#1b1b22; border-radius:8px; height:38px; overflow:hidden; }
+  .bar .fill { height:100%; width:0; border-radius:8px; transition:width 1.6s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; justify-content:flex-end; padding-right:12px; font-weight:800; color:#0e0e12; }
+  .fill.bad { background:linear-gradient(90deg,#e11d48,#ff7a90); }
+  .fill.good { background:linear-gradient(90deg,#5fd08a,#9fe6b4); }
+  /* controls */
+  #bar { position:fixed; bottom:0; left:0; right:0; height:6px; background:#1b1b22; }
+  #bar > i { display:block; height:100%; width:0; background:#c8a24b; }
+  #nav { position:fixed; bottom:18px; right:24px; display:flex; gap:10px; align-items:center; }
+  #nav button { background:#1b1b22; color:#f4f1ec; border:1px solid #2c2c36; border-radius:8px; padding:8px 14px; font-size:14px; cursor:pointer; }
+  #nav button:hover { border-color:#c8a24b; }
+  .step { position:fixed; bottom:18px; left:24px; font-size:14px; color:#8b857c; }
+  .demo-link { margin-top:26px; font-size:16px; color:#b9b3aa; }
+  .demo-link a { color:#c8a24b; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <section class="scene" data-name="封面">
+    <div class="kicker">L'ORÉAL HACKATHON · 赛题2 信任守护师</div>
+    <h1>美妆图，<span class="accent">经得起追问</span>吗？</h1>
+    <div class="sub">BeautyProof —— 一张美妆图进去，一份带证据的信任结论出来。<br>下面 90 秒，看它怎么工作。</div>
+    <div style="margin-top:30px">
+      <span class="pill">多模态取证</span><span class="pill">可解释 Agent</span>
+      <span class="pill">本域微调</span><span class="pill">开源可复现</span>
+    </div>
+  </section>
+
+  <section class="scene" data-name="输入">
+    <div class="kicker">STEP 01 · 输入</div>
+    <h2>一张<span class="gold">口红试色</span>图，丢进来</h2>
+    <div class="sub">可能是种草帖、评论区、或品牌素材。我们不知道它是拍的还是 AI 画的——<br>BeautyProof 的任务，就是给它一份「体检报告」。</div>
+    <div style="margin-top:28px;width:300px;height:200px;border-radius:16px;background:linear-gradient(135deg,#3a2030,#1b2733);display:flex;align-items:center;justify-content:center;font-size:64px;">💄</div>
+  </section>
+
+  <section class="scene" data-name="取证">
+    <div class="kicker">STEP 02 · 取证</div>
+    <h2>八件工具，各出一份证据</h2>
+    <div class="tools" id="tools">
+      <div class="tool"><span class="dot"></span>hash · 图片指纹</div>
+      <div class="tool"><span class="dot"></span>c2pa · 出生证</div>
+      <div class="tool"><span class="dot"></span>ela · 篡改噪点</div>
+      <div class="tool"><span class="dot"></span>ocr · 抄字</div>
+      <div class="tool"><span class="dot"></span>aigc · 整图AI(本域)</div>
+      <div class="tool"><span class="dot"></span>trufor · 局部篡改</div>
+      <div class="tool"><span class="dot"></span>text · 文案分析</div>
+      <div class="tool"><span class="dot"></span>crossmodal · 图文对得上</div>
+    </div>
+    <div class="sub" style="margin-top:22px">统一证据格式 <code style="color:#c8a24b">{tool, observed, cannot_prove, evidence[]}</code> —— 可组合、可审计。</div>
+  </section>
+
+  <section class="scene" data-name="判定">
+    <div class="kicker">STEP 03 · 判定</div>
+    <h2>规则引擎：四档定级</h2>
+    <div class="sub">Agent（planner）决定「下一步查什么」，规则引擎给出四档结论：<br><span class="gold">高危 / 可疑 / 可信 / 无法判定</span></div>
+    <div class="verdict" id="verdict">⬇ 正在定级…</div>
+  </section>
+
+  <section class="scene" data-name="报告">
+    <div class="kicker">STEP 04 · 人话报告</div>
+    <h2>普通人看得懂的结论</h2>
+    <div class="report">
+      <div>📌 <b>结论</b>：这张图高度疑似 AI 生成（整图合成），建议标记为「AI 内容」。</div>
+      <div>🔍 <b>依据</b>：aigc 本域模型 AI 概率 0.997；trufor 未检出局部篡改；c2pa 无可信出处。</div>
+      <div>❓ <b>说不清的</b>：无法确认具体生成器（即梦 / MJ / SD 难区分）。</div>
+      <div>✅ <b>建议</b>：高风险，发布前人工复核；可作为平台标注信号。</div>
+    </div>
+    <div class="sub" style="margin-top:16px">LLM 解释层把结论翻成人话，但<b>只翻译、不下结论</b>——法官是规则引擎。</div>
+  </section>
+
+  <section class="scene" data-name="翻车修复">
+    <div class="kicker">STEP 05 · 真实翻车 → 修复</div>
+    <h2>通用模型不准？我们为美妆<span class="gold">重训</span></h2>
+    <div class="sub">起初用通用 AIGC 检测器，真实精修美妆图被误判为 AI 的比例高达 <b style="color:#ff7a90">66.2%</b>。<br>用 74 张真实图 + 20 张即梦图本域微调后 ——</div>
+    <div class="chart">
+      <div class="bar"><div class="lbl">重训前 误报</div><div class="track"><div class="fill bad" data-w="66" id="f1">66.2%</div></div></div>
+      <div class="bar"><div class="lbl">重训后 误报</div><div class="track"><div class="fill good" data-w="1.4" id="f2">1.4%</div></div></div>
+    </div>
+    <div class="sub" style="margin-top:14px">AI 召回保持 <b class="gold">100%</b>（即梦域），v1 留作兜底。</div>
+  </section>
+
+  <section class="scene" data-name="结尾">
+    <div class="kicker">BEAUTYPROOF</div>
+    <h1>让每一张美妆图<br><span class="accent">都经得起追问</span></h1>
+    <div class="sub">TruFor 篡改定位（鲁棒）+ 图文交叉验证 是主防线；<br>整图 AI 判定主动说「校准中 + 高风险人工复核」。</div>
+    <div class="demo-link">在线实测 Demo：<a href="https://beautyproof-demo.app.workbuddy.host/" target="_blank">beautyproof-demo.app.workbuddy.host</a></div>
+  </section>
+
+</div>
+
+<div id="bar"><i></i></div>
+<div class="step" id="step">1 / 7</div>
+<div id="nav">
+  <button id="prev">◀ 上一步</button>
+  <button id="play">⏸ 暂停</button>
+  <button id="next">下一步 ▶</button>
+</div>
+
+<script>
+  const scenes = [...document.querySelectorAll('.scene')];
+  let idx = 0, timer = null, playing = true;
+  const DUR = 5200;
+  const bar = document.querySelector('#bar > i');
+  const stepEl = document.getElementById('step');
+
+  function animateChart(){
+    document.querySelectorAll('.fill').forEach(f=>{ f.style.width = f.dataset.w + '%'; });
+  }
+  function resetChart(){
+    document.querySelectorAll('.fill').forEach(f=>{ f.style.width = '0%'; });
+  }
+  function animateTools(){
+    const ts = document.querySelectorAll('#tools .tool');
+    ts.forEach((t,i)=> setTimeout(()=> t.classList.add('done'), 250*(i+1)));
+  }
+  function resetTools(){
+    document.querySelectorAll('#tools .tool').forEach(t=> t.classList.remove('done'));
+  }
+  function setVerdict(){
+    const v = document.getElementById('verdict');
+    v.textContent = '⚠ 高危（high_risk）：高度疑似 AI 生成';
+    v.classList.add('ok'); // keep red style intentionally via class but show text
+    v.style.background = '#3a1414'; v.style.borderColor='#e11d48'; v.style.color='#ff9aae';
+  }
+
+  function show(i){
+    scenes.forEach(s=>s.classList.remove('active'));
+    idx = (i + scenes.length) % scenes.length;
+    const s = scenes[idx];
+    s.classList.add('active');
+    stepEl.textContent = (idx+1) + ' / ' + scenes.length;
+    // reset & trigger animations per scene
+    resetChart(); resetTools();
+    document.getElementById('verdict').textContent = '⬇ 正在定级…';
+    if(s.dataset.name === '取证') animateTools();
+    if(s.dataset.name === '翻车修复') setTimeout(animateChart, 400);
+    if(s.dataset.name === '判定') setTimeout(setVerdict, 600);
+    restartBar();
+  }
+  function restartBar(){
+    bar.style.transition='none'; bar.style.width='0%';
+    requestAnimationFrame(()=>{ bar.style.transition='width '+(DUR/1000)+'s linear'; bar.style.width='100%'; });
+  }
+  function next(){ show(idx+1); }
+  function tick(){ if(playing) next(); }
+  function schedule(){ clearInterval(timer); timer = setInterval(tick, DUR); }
+  document.getElementById('next').onclick = ()=>{ show(idx+1); schedule(); };
+  document.getElementById('prev').onclick = ()=>{ show(idx-1); schedule(); };
+  document.getElementById('play').onclick = (e)=>{
+    playing = !playing; e.target.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+    if(playing) schedule(); else clearInterval(timer);
+  };
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'){ show(idx+1); schedule(); }
+    if(e.key==='ArrowLeft'){ show(idx-1); schedule(); }
+  });
+  show(0); schedule();
+</script>
+</body>
+</html>
