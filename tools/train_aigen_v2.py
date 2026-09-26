@@ -258,6 +258,10 @@ def main():
     (OUT_DIR / "config.json").write_text(json.dumps({
         "framework": "timm", "arch": ARCH, "num_classes": 2,
         "classes": ["real", "ai"], "img_size": IMG_SIZE, "mean": MEAN, "std": STD,
+        # 来源披露：骨干是他人预训练来源模型（ImageNet-1k 权重），仅作初始化，
+        # 非训练数据；本模型训练数据全部为团队自产美妆图（见 trained_on）。
+        "backbone_source": "timm/mobilenetv3_large_100.ra_in1k (ImageNet-1k 预训练权重, "
+                            "MIT/Apache-2.0, 仅初始化, 非训练数据)",
         "version": "v2",
         "trained_on": f"data/ai({len(ai)} 即梦AI) + data/real_xhs({len(real_xhs)} 真实美妆) "
                       f"+ data/real|clean|tampered({len(real_old)})",

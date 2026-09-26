@@ -32,6 +32,8 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from PIL import Image
 import timm
+# 域增强：覆盖「美颜/滤镜/重压缩后的真实美妆图」分布。纯图像处理，无外部数据、无第三方权重。
+from beauty_aug import get_train_transform, get_infer_transform
 
 REPO = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO / "models" / "beautyproof_aigen_v3"
@@ -153,21 +155,11 @@ def main():
     print(f"训练 {len(train_files)}（AI {len(ai_tr)} / REAL {len(re_tr)}）  "
           f"验证 {len(val_files)}（AI {len(ai_val)} / REAL {len(re_val)}，其中 real_xhs {n_val_xhs} 张）", flush=True)
 
-    train_tfm = transforms.Compose([
-        transforms.Resize(256),
-        transforms.RandomCrop(IMG_SIZE),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ColorJitter(0.25, 0.25, 0.25, 0.1),
-        transforms.RandomApply([transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))], p=0.3),
-        transforms.ToTensor(),
-        transforms.Normalize(MEAN, STD),
-    ])
-    infer_tfm = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(IMG_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize(MEAN, STD),
-    ])
+    # 域增强（beauty_aug.get_train_transform）：在 v2 基础上补强「真实美妆图分布」覆盖
+    # —— 更强色彩抖动、轻微旋转、更强高斯模糊（近似磨皮）、平台缩放伪影、JPEG 重压缩、
+    # 轻度噪声。全部只作用在自产图上，无外部数据。
+    train_tfm = get_train_transform()
+    infer_tfm = get_infer_transform()
 
     train_dl = DataLoader(AigenDataset(train_files, train_labels, train_tfm),
                           batch_size=BATCH, shuffle=True, num_workers=0)
@@ -266,6 +258,10 @@ def main():
     (OUT_DIR / "config.json").write_text(json.dumps({
         "framework": "timm", "arch": ARCH, "num_classes": 2,
         "classes": ["real", "ai"], "img_size": IMG_SIZE, "mean": MEAN, "std": STD,
+        # 来源披露：骨干是他人预训练来源模型（ImageNet-1k 权重），仅作初始化，
+        # 非训练数据；本模型训练数据全部为团队自产美妆图（见 trained_on）。
+        "backbone_source": "timm/mobilenetv3_large_100.ra_in1k (ImageNet-1k 预训练权重, "
+                            "MIT/Apache-2.0, 仅初始化, 非训练数据)",
         "version": "v3",
         "trained_on": f"data/ai({len(ai_jimeng)} 即梦) + data/ai_cross({len(ai_cross)} 非即梦) "
                       f"+ data/real_xhs({len(real_xhs)}) + 原有({len(real_old)})",

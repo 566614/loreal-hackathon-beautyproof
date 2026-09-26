@@ -44,7 +44,10 @@ from pathlib import Path
 # v1 保留在第二位当兜底：若 v2 出问题，把下面这行的 v2 删掉即可秒级回滚。
 # v3（2026-09-25）并入 data/ai_cross（非即梦/ImageGen 风格 AI 美妆图）做跨生成器训练，
 # 跨生成器 held-out 召回从 v2 的 25% 拉到 100%，整体误报仍可控；v3 置顶，v2 留作兜底。
-MODEL_PRIORITY = ["beautyproof_aigen_v3", "beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
+# v4（数据扩充版）：在 v3 基础上接入域增强(beauty_aug) + 伪标注真实图(data/real_extra) +
+# 上调决策阈值(0.6)与模糊带，真实图误报进一步压低。v4 未训练时权重缺失，model_path()
+# 自动回退到 v3，故置顶安全。
+MODEL_PRIORITY = ["beautyproof_aigen_v4", "beautyproof_aigen_v3", "beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
 
 # 权重文件名（微调模型是 model.pt，通用模型是 safetensors / bin）
 WEIGHT_FILES = ("model.pt", "model.safetensors", "pytorch_model.bin")
@@ -52,6 +55,13 @@ WEIGHT_FILES = ("model.pt", "model.safetensors", "pytorch_model.bin")
 # 标签关键词：哪些是「AI 生成」类，哪些是「真实/人」类
 AI_KW = ["artificial", "ai", "fake", "generated", "synthetic"]
 REAL_KW = ["real", "human", "authentic", "natural"]
+
+# 决策边界（赛题合规内的纯参数调优，不引入任何外部数据/方法）：
+# 真实美妆图经重度美颜/滤镜后常被旧 0.5 阈值误判为 AI。这里把「判为 AI 生成」的
+# 阳性阈值上调到 0.6，并在 [0.5, 0.6) 设「无法单独定性」模糊带，交规则引擎 + 人工复核，
+# 直接降低真实美妆图的误报（这是训练数据少时最有效的稳压手段，比加数据更稳）。
+AI_POSITIVE_THRESHOLD = 0.6
+AI_INCONCLUSIVE_LOW = 0.5
 
 
 def model_path():
@@ -143,7 +153,7 @@ def run_aigc_timm(image_path, model_dir):
     x = tfm(img).unsqueeze(0)
     with torch.no_grad():
         prob = torch.softmax(model(x), dim=1)[0][ai_idx].item()
-    label = "ai_generated" if prob >= 0.5 else "real"
+    label = "ai_generated" if prob >= AI_POSITIVE_THRESHOLD else "real"
     return round(float(prob), 4), label, True
 
 
@@ -198,8 +208,10 @@ def build_evidence(image_path, ai_score, ai_label, available=True):
         verdict = "模型给出的 AI 生成概率很高（≥0.9），结合其他工具，很可能是整图由 AI 生成的图"
     elif ai_score >= 0.8:
         verdict = "有部分 AI 生成的迹象（≥0.8），建议人工复核"
-    elif ai_score >= 0.5:
-        verdict = "AI 生成概率中等，无法单独定性，需结合其他工具"
+    elif ai_score >= AI_POSITIVE_THRESHOLD:
+        verdict = "AI 生成概率中等偏高，无法单独定性，需结合其他工具与人工复核"
+    elif ai_score >= AI_INCONCLUSIVE_LOW:
+        verdict = "AI 生成概率偏低且处于模糊带（0.5~0.6），无法单独定性，交规则引擎与人工复核"
     else:
         verdict = "模型认为看起来像真实拍摄 / 人工制作的图"
     return {

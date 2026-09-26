@@ -7,6 +7,7 @@
     "ai"
   ],
   "img_size": 224,
+  "backbone_source": "timm/mobilenetv3_large_100.ra_in1k (ImageNet-1k 预训练权重, MIT/Apache-2.0, 仅初始化, 非训练数据)",
   "mean": [
     0.485,
     0.456,
