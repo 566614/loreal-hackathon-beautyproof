@@ -37,6 +37,8 @@ import json
 import sys
 from pathlib import Path
 
+from rule_engine import THRESHOLDS  # 复用规则引擎阈值，避免文案阈值与定级阈值悄悄失同步
+
 # 优先级：本域微调模型 > 通用模型兜底。
 # 顺序按实测区分度排（见 results/aigen_finetune.json）—— 微调模型胜。
 # v2（2026-09-25）用 74 张真实精修美妆图扩充真实类后重训，
@@ -204,14 +206,14 @@ def build_evidence(image_path, ai_score, ai_label, available=True):
             ],
         }
     # 措辞保持中性：新模型在本素材上确实能区分真实图与 AI 图，但仍强调「分数不是事实」。
-    if ai_score >= 0.9:
-        verdict = "模型给出的 AI 生成概率很高（≥0.9），结合其他工具，很可能是整图由 AI 生成的图"
-    elif ai_score >= 0.8:
-        verdict = "有部分 AI 生成的迹象（≥0.8），建议人工复核"
+    if ai_score >= THRESHOLDS["aigc_high_risk"]:
+        verdict = f"模型给出的 AI 生成概率很高（≥{THRESHOLDS['aigc_high_risk']}），结合其他工具，很可能是整图由 AI 生成的图"
+    elif ai_score >= THRESHOLDS["aigc_suspicious"]:
+        verdict = f"有部分 AI 生成的迹象（≥{THRESHOLDS['aigc_suspicious']}），建议人工复核"
     elif ai_score >= AI_POSITIVE_THRESHOLD:
         verdict = "AI 生成概率中等偏高，无法单独定性，需结合其他工具与人工复核"
     elif ai_score >= AI_INCONCLUSIVE_LOW:
-        verdict = "AI 生成概率偏低且处于模糊带（0.5~0.6），无法单独定性，交规则引擎与人工复核"
+        verdict = f"AI 生成概率偏低且处于模糊带（{AI_INCONCLUSIVE_LOW}~{AI_POSITIVE_THRESHOLD}），无法单独定性，交规则引擎与人工复核"
     else:
         verdict = "模型认为看起来像真实拍摄 / 人工制作的图"
     return {

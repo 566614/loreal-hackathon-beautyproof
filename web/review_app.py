@@ -25,9 +25,7 @@ BeautyProof 人工复核工作台（独立 Flask 应用）
 """
 from __future__ import annotations
 
-import base64
 import datetime as dt
-import io
 import json
 import os
 import sys
@@ -63,19 +61,9 @@ app = Flask(__name__)
 
 # ---------------------------------------------------------------- 工具函数
 def _to_data_uri(path: Path, max_side: int = 380, quality: int = 80) -> str | None:
-    """把一个图片文件压成缩略图再转 data URI（和 pipeline.to_data_uri 同思路，本地自给自足）。"""
-    try:
-        from PIL import Image
-        img = Image.open(path).convert("RGB")
-        w, h = img.size
-        scale = max_side / max(w, h)
-        if scale < 1:
-            img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=quality)
-        return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
-    except Exception:  # noqa: BLE001
-        return None
+    """把一个图片文件压成缩略图再转 data URI（逻辑收敛到 tools/_imageutil.image_to_base64，单一实现）。"""
+    from _imageutil import image_to_base64
+    return image_to_base64(path, max_side=max_side, quality=quality)
 
 
 def load_analysis(stem: str) -> dict | None:

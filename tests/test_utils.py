@@ -55,6 +55,10 @@ class TestThresholdCentralization(unittest.TestCase):
         self.assertIs(planner._first, rule_engine._first)
         self.assertIs(roundtable._first, rule_engine._first)
 
+    def test_trufor_mild_threshold_registered(self):
+        self.assertIn("trufor_mild", rule_engine.THRESHOLDS)
+        self.assertEqual(rule_engine.THRESHOLDS['trufor_mild'], 0.2)
+
 
 if __name__ == "__main__":
     unittest.main()

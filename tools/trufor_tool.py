@@ -29,6 +29,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from rule_engine import THRESHOLDS  # 复用规则引擎篡改阈值，避免与定级阈值失同步
+
 import cv2
 import numpy as np
 
@@ -335,11 +337,11 @@ def build_evidence(image_path, res):
     score = res["trufor_score"]
     ratio = res.get("tampered_area_ratio")
 
-    if score >= 0.9:
+    if score >= THRESHOLDS["trufor_high"]:
         verdict = "篡改痕迹非常明显"
-    elif score >= 0.5:
+    elif score >= THRESHOLDS["trufor_suspicious"]:
         verdict = "有明显篡改痕迹"
-    elif score >= 0.2:
+    elif score >= THRESHOLDS["trufor_mild"]:
         verdict = "有轻微篡改痕迹"
     else:
         verdict = "未发现明显篡改痕迹"
