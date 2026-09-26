@@ -26,14 +26,11 @@ import json
 import sys
 from pathlib import Path
 
+from rule_engine import THRESHOLDS, _first
+
 REPO = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO / "outputs"
 TOOLS = REPO / "tools"
-
-
-def _first(ev, tool):
-    items = (ev.get(tool, {}).get("evidence") or [{}])
-    return items[0] if items else {}
 
 
 # ---------------------------------------------------------------- 角色 1：图像侧
@@ -46,23 +43,23 @@ def image_agent(ev):
     ela = _first(ev, "ela")
 
     aigc_score = aigc.get("aigc_score")
-    if aigc_score is not None and aigc_score >= 0.9:
+    if aigc_score is not None and aigc_score >= THRESHOLDS["aigc_high_risk"]:
         signals.append(f"AI 生成检测给出 {aigc_score}，强烈指向整图由 AI 生成")
-    elif aigc_score is not None and aigc_score >= 0.8:
+    elif aigc_score is not None and aigc_score >= THRESHOLDS["aigc_suspicious"]:
         signals.append(f"AI 生成检测 {aigc_score}，疑似 AI 生成")
 
     tru_score = tru.get("trufor_score")
-    if tru_score is not None and tru_score >= 0.9:
+    if tru_score is not None and tru_score >= THRESHOLDS["trufor_high"]:
         signals.append(f"篡改检测 {tru_score}，整图有重度人工改动痕迹")
         concern = concern or "图像被整体改动的可能性高"
-    elif tru_score is not None and tru_score >= 0.5:
+    elif tru_score is not None and tru_score >= THRESHOLDS["trufor_suspicious"]:
         signals.append(f"篡改检测 {tru_score}，存在局部可疑区域")
         concern = concern or "存在局部疑似篡改区域，建议看定位图"
 
     regions = ela.get("suspicious_regions") or []
     if regions:
         top = regions[0].get("ela_score", 0)
-        if top >= 2.0:
+        if top >= THRESHOLDS["ela_region_score"]:
             signals.append(f"ELA 最可疑区域误差 {top}（超阈值 2.0）")
             concern = concern or "局部压缩痕迹异常，疑似拼接/复制移动"
 

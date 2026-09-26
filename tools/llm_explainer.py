@@ -24,7 +24,6 @@
     BP_LLM_MODEL  模型名（默认 qwen3vl-4b）
     BP_LLM_URL    Ollama 地址（默认 http://localhost:11434）
 """
-import base64
 import json
 import os
 import sys
@@ -99,19 +98,10 @@ def ensure_model_created(verbose=True):
 
 # ---------------------------------------------------------------- 调用
 def _encode_image(path, max_side=768, quality=80):
-    try:
-        from PIL import Image
-        import io
-        img = Image.open(path).convert("RGB")
-        w, h = img.size
-        scale = max_side / max(w, h)
-        if scale < 1:
-            img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=quality)
-        return base64.b64encode(buf.getvalue()).decode()
-    except Exception:  # noqa: BLE001
-        return None
+    """图片 → base64（缩略图 + JPEG）。逻辑收敛到 tools/_imageutil.image_to_base64。"""
+    sys.path.insert(0, str(TOOLS))
+    from _imageutil import image_to_base64
+    return image_to_base64(path, max_side=max_side, quality=quality)
 
 
 def _chat(prompt, image_path=None, timeout=TIMEOUT):

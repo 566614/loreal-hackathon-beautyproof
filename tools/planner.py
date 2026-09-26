@@ -31,6 +31,8 @@ Agent 决策层 —— 决定「下一步该查什么、什么可以不用查」
 """
 from pathlib import Path
 
+from rule_engine import THRESHOLDS, _first
+
 # 图像侧工具分三波，先便宜的后贵的 —— 贵的结果依赖便宜的结论来决定要不要跑
 WAVES = [
     ("快检", ["hash", "c2pa"]),
@@ -38,11 +40,6 @@ WAVES = [
     ("深检", ["aigc", "trufor"]),
 ]
 TEXT_TOOLS = ["text", "crossmodal"]
-
-
-def _first(ev, tool):
-    items = (ev.get(tool, {}).get("evidence") or [{}])
-    return items[0] if items else {}
 
 
 def decide_next(ev, ctx, done=None):
@@ -107,7 +104,7 @@ def decide_next(ev, ctx, done=None):
     # ---------------------------------------------------------- R5 整图 AI 生成 → TruFor 只定位不定性
     if "aigc" in done and "trufor" not in done:
         score = _first(ev, "aigc").get("aigc_score")
-        if score is not None and score >= 0.9:
+        if score is not None and score >= THRESHOLDS["aigc_high_risk"]:
             decisions.append({
                 "tool": "trufor", "action": "run_limited", "rule": "R5",
                 "reason": f"AI 生成检测已给出 {score}（≥0.9），判定整图由 AI 生成。"

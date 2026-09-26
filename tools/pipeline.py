@@ -24,7 +24,6 @@
     reports/report_<图片名>.md       人能读的 Markdown 鉴定报告
     reports/report_<图片名>.pdf      （加 --pdf 时）可直接存档/转发的 PDF 版
 """
-import base64
 import datetime as dt
 import json
 import subprocess
@@ -64,21 +63,12 @@ TOOL_META = {
 
 # ---------------------------------------------------------------- 图片 → base64
 def to_data_uri(path, max_side=900, quality=85):
-    """把图片压成缩略图再转成 data URI —— 这样报告 / 网页不用依赖原图文件，拷走就能看"""
-    try:
-        from PIL import Image
-        img = Image.open(path)
-        img = img.convert("RGB")
-        w, h = img.size
-        scale = max_side / max(w, h)
-        if scale < 1:
-            img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-        import io
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=quality)
-        return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
-    except Exception:  # noqa: BLE001
-        return None
+    """把图片压成缩略图再转成 data URI —— 这样报告 / 网页不用依赖原图文件，拷走就能看。
+    实际编码逻辑收敛到 tools/_imageutil.image_to_base64（pipeline 与 llm_explainer 共用单一实现）。
+    """
+    sys.path.insert(0, str(TOOLS))
+    from _imageutil import image_to_base64
+    return image_to_base64(path, max_side=max_side, quality=quality)
 
 
 def image_info(path):
@@ -111,24 +101,28 @@ def run_tool(script, image_path, timeout=900):
     return proc
 
 
-def collect_evidence(stem):
-    """收集 outputs/ 下所有 <tool>_<stem>.json —— 与规则引擎口径完全一致"""
+def _import_rule_engine():
+    """集中处理「把 tools/ 加进 path 再 import rule_engine」这件事。
+    之前 collect_evidence / judge / explain_verdict 三处各自写一遍同样的
+    sys.path.insert + import，既重复又容易漏。收到一处即可。
+    """
     sys.path.insert(0, str(TOOLS))
     import rule_engine  # noqa: E402
-    return rule_engine.load_evidence(REPO, stem)
+    return rule_engine
+
+
+def collect_evidence(stem):
+    """收集 outputs/ 下所有 <tool>_<stem>.json —— 与规则引擎口径完全一致"""
+    return _import_rule_engine().load_evidence(REPO, stem)
 
 
 def judge(evidence):
-    sys.path.insert(0, str(TOOLS))
-    import rule_engine  # noqa: E402
-    return rule_engine.judge(evidence)
+    return _import_rule_engine().judge(evidence)
 
 
 def explain_verdict(risk_level, evidence):
     """把分级结果翻译成品牌方 / 法务也看得懂的大白话"""
-    sys.path.insert(0, str(TOOLS))
-    import rule_engine  # noqa: E402
-    return rule_engine.explain(risk_level, evidence)
+    return _import_rule_engine().explain(risk_level, evidence)
 
 
 def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total=8):
@@ -242,6 +236,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
     total = len([x for x in enabled]) + (2 if ctx["has_text"] else 0)
     t0 = time.time()
     ran, failed = [], []
+    tool_errors = {}  # 工具失败诊断（stderr 末尾），新增字段，不破坏 tools_failed 形状
     skipped, decisions = set(), []
     idx = 0
 
@@ -280,6 +275,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
                 print(f"  · {tool:7s} ...", end="", flush=True)
             _note(tool, "running")
             ts = time.time()
+            proc = None
             try:
                 proc = run_tool(script_of[tool], image_path, timeout=timeout)
                 ok = proc.returncode == 0
@@ -291,8 +287,16 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
                     print(f" 完成 ({time.time() - ts:.1f}s)")
             else:
                 failed.append(tool)
+                # 抓取工具报错诊断：以前只说"跳过"，真崩了没处查；
+                # 现在把 stderr 末尾截一段，既打印也写进结果的 tool_errors。
+                err = (proc.stderr or "").strip() if proc is not None else ""
+                tail = err[-600:] if err else "（超时，无 stderr）"
+                tool_errors[tool] = "timeout" if proc is None else (err[:600] or "no_stderr")
                 if verbose:
-                    print(" 跳过（工具报错或超时）")
+                    if err:
+                        print(f" 跳过（工具报错）：…{tail}")
+                    else:
+                        print(" 跳过（工具报错或超时）")
             _note(tool, "done" if ok else "failed")
 
     # 文案侧（可选）：只有传了 text 才跑，写完 outputs/ 后下面的 collect_evidence 会一起收上来
@@ -339,6 +343,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
             "tools_used": sorted(evidence.keys()),
             "tools_ran": ran + text_tools_ran,
             "tools_failed": failed,
+            "tool_errors": tool_errors,
         },
         "text_input": (text or "").strip() or None,
         "agent": agent_log,   # 决策过程：跑了什么、跳了什么、为什么

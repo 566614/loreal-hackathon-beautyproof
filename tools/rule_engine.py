@@ -73,6 +73,12 @@ TEXT_CLAIM_TRIGGERS_RISK = True
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
 
+def _first(ev, tool):
+    """从证据里取某个工具的第一个证据条目（证据统一是 {tool: {evidence: [item, ...]}}）。"""
+    items = (ev.get(tool, {}).get("evidence") or [{}])
+    return items[0] if items else {}
+
+
 def load_evidence(repo_root, stem):
     """读 outputs/ 下所有 <stem>_<tool>.json，按 tool 分类返回字典"""
     out_dir = repo_root / "outputs"
@@ -235,31 +241,27 @@ def explain(risk_level, evidence):
         what_to_do  建议下一步做什么
         caveat      必须提醒的边界（算法不是法律结论）
     """
-    def _first(tool):
-        items = evidence.get(tool, {}).get("evidence", [{}])
-        return items[0] if items else {}
-
-    tru = _first("trufor")
+    tru = _first(evidence, "trufor")
     score = tru.get("trufor_score")
     ratio = tru.get("tampered_area_ratio")
     tru_ready = bool(tru.get("available", True)) and score is not None
 
-    c2pa_status = _first("c2pa").get("c2pa_status")
+    c2pa_status = _first(evidence, "c2pa").get("c2pa_status")
 
     # 图文交叉验证：这是唯一跨模态的证据，说清楚它时要同时引用「文案原话」和「图像侧结论」
-    cross = _first("crossmodal")
+    cross = _first(evidence, "crossmodal")
     cross_level = cross.get("conflict_level")
     cross_top = (cross.get("contradictions") or [{}])
     cross_top = cross_top[0] if cross_top else {}
 
     # 文案违禁宣称（合规维度，与真伪分开讲）
-    txt = _first("text")
+    txt = _first(evidence, "text")
     claim_hi = txt.get("claim_high_count", 0)
     claim_med = txt.get("claim_medium_count", 0)
 
     # 高风险是不是由「整图 AI 生成」触发的（TruFor 查不出的盲区，靠 AIGC 兜底）。
     # 从 evidence 里直接取，不依赖 judge() 的 reasons —— 因为 explain() 只拿到 evidence。
-    aigc = _first("aigc")
+    aigc = _first(evidence, "aigc")
     aigc_score = aigc.get("aigc_score")
     aigc_ready = bool(aigc.get("available", True)) and aigc_score is not None
     aigc_triggered = aigc_ready and aigc_score >= THRESHOLDS["aigc_high_risk"]
