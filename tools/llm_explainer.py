@@ -197,49 +197,72 @@ def build_prompt(stem, evidence, verdict):
 
 # ---------------------------------------------------------------- 对外
 def explain(stem, evidence, verdict, image_path=None, verbose=True):
-    """生成大模型人话解读。不可用时返回 None。"""
-    if not ollama_available():
+    """生成大模型人话解读。
+
+    离线 / Ollama 不可达 / 模型未就绪 / 超时 / 连接被拒 / JSON 解析错误 / 任何意外异常，
+    一律返回 None —— 优雅降级，绝不向上抛，绝不让流水线卡死。
+    降级时打印一行明确日志 `[llm] offline/degraded, fallback to rule report`，
+    方便答辩现场一眼确认走了离线分支。
+    """
+    try:
+        if not ollama_available():
+            if verbose:
+                print("  [llm] offline/degraded, fallback to rule report (Ollama unreachable)")
+            return None
+        if not ensure_model_created(verbose=verbose):
+            if verbose:
+                print("  [llm] offline/degraded, fallback to rule report (model not ready)")
+            return None
+        prompt = build_prompt(stem, evidence, verdict)
+        text = _chat(prompt, image_path=image_path)
+        if not text:
+            if verbose:
+                print("  [llm] offline/degraded, fallback to rule report (empty response)")
+            return None
+        # 护栏：清掉越界表述（与 validator 关6 同口径，双保险）
+        for bad in ("确认为伪造", "确认造假", "一定是假的", "已经被篡改", "证实为"):
+            text = text.replace(bad, "**疑似**")
         if verbose:
-            print("  [LLM] Ollama 未运行，跳过人话解读（不影响主流程）")
-        return None
-    if not ensure_model_created(verbose=verbose):
-        return None
-    prompt = build_prompt(stem, evidence, verdict)
-    text = _chat(prompt, image_path=image_path)
-    if not text:
+            print("  [LLM] 人话解读生成完成")
+        return text
+    except Exception as e:  # noqa: BLE001
+        # 兜底：任何意外异常都降级，绝不冒泡到 pipeline，保证断网也能出完整报告。
+        # （requests/urllib 超时、连接被拒、JSON 解析错误等都落到这里）
         if verbose:
-            print("  [LLM] 调用无返回，跳过")
+            print(f"  [llm] offline/degraded, fallback to rule report ({type(e).__name__}: {e})")
         return None
-    # 护栏：清掉越界表述（与 validator 关6 同口径，双保险）
-    for bad in ("确认为伪造", "确认造假", "一定是假的", "已经被篡改", "证实为"):
-        text = text.replace(bad, "**疑似**")
-    if verbose:
-        print("  [LLM] 人话解读生成完成")
-    return text
 
 
 def generate_for_pipeline(result, image_path=None, verbose=True):
-    """pipeline 调用入口：从 result 里取证据+结论，产出解读并落盘。"""
-    stem = result["image"]["stem"]
-    evidence = result.get("evidence", {})
-    verdict = {
-        "risk_level": result["verdict"]["risk_level"],
-        "reasons": result["verdict"]["reasons"],
-    }
-    text = explain(stem, evidence, verdict, image_path=image_path, verbose=verbose)
-    if not text:
+    """pipeline 调用入口：从 result 里取证据+结论，产出解读并落盘。
+
+    任何异常都吞掉并返回 None，保证不影响主流程（pipeline 也已在外层包了一层 try）。
+    """
+    try:
+        stem = result["image"]["stem"]
+        evidence = result.get("evidence", {})
+        verdict = {
+            "risk_level": result["verdict"]["risk_level"],
+            "reasons": result["verdict"]["reasons"],
+        }
+        text = explain(stem, evidence, verdict, image_path=image_path, verbose=verbose)
+        if not text:
+            return None
+        OUT_DIR.mkdir(exist_ok=True)
+        out = OUT_DIR / f"llm_explain_{stem}.json"
+        payload = {
+            "tool": "llm_explain",
+            "source_asset_id": stem,
+            "observed": "大模型（Qwen3-VL-4B）基于工具证据生成的辅助解读",
+            "cannot_prove": "本段为模型辅助解读，不替代规则引擎结论；最终定性以规则引擎为准",
+            "evidence": [{"text": text, "model": MODEL_NAME}],
+        }
+        out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        return text
+    except Exception as e:  # noqa: BLE001
+        if verbose:
+            print(f"  [llm] offline/degraded, fallback to rule report ({type(e).__name__}: {e})")
         return None
-    OUT_DIR.mkdir(exist_ok=True)
-    out = OUT_DIR / f"llm_explain_{stem}.json"
-    payload = {
-        "tool": "llm_explain",
-        "source_asset_id": stem,
-        "observed": "大模型（Qwen3-VL-4B）基于工具证据生成的辅助解读",
-        "cannot_prove": "本段为模型辅助解读，不替代规则引擎结论；最终定性以规则引擎为准",
-        "evidence": [{"text": text, "model": MODEL_NAME}],
-    }
-    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    return text
 
 
 def main():
