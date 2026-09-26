@@ -1,0 +1,278 @@
+{
+  "compliance_policy": {
+    "forbidden": [
+      "欧莱雅官网/电商站(天猫京东官网商城)产品图：ToS 禁止复制与商用，侵权风险",
+      "CC-BY-SA（衍生需同协议开源，与专有提交冲突）",
+      "CC-BY-NC / NonCommercial（非商用，商业奖金场景不符，同 GenImage 排除）",
+      "小红书/微博/抖音等他人 UGC 美妆图（版权归原作者，未授权不进）",
+      "GenImage / COCO / ImageNet(训练集) / 任何第三方训练库"
+    ],
+    "allowed": [
+      "自产实拍（团队拥有的产品/真实美妆照）：首选，零授权问题，天然未修图",
+      "Wikimedia Commons CC0 / CC-BY(非SA,非NC)：逐张核验许可 + 署名",
+      "公域 CC0 源（Smithsonian / Met / Pixabay）：免署名可商用",
+      "owner 自己提供/已获授权的真实美妆图（归团队自产）"
+    ],
+    "rule_ref": "赛题2(天池532496)：不得侵犯第三方知识产权；数据来源需合法合规"
+  },
+  "schema_fields": [
+    "file",
+    "source",
+    "license",
+    "is_retouched",
+    "purpose",
+    "in_training",
+    "risk",
+    "note"
+  ],
+  "current_inventory": [
+    {
+      "file": "data/ai/*",
+      "count": 20,
+      "source": "即梦生成(团队生成)",
+      "license": "team-generated",
+      "is_retouched": "n/a(AI生成)",
+      "purpose": "AI训练",
+      "in_training": true,
+      "risk": "low",
+      "note": "即梦文生图美妆图，v3 训练见过 16/20"
+    },
+    {
+      "file": "data/ai_cross/*",
+      "count": 26,
+      "source": "自产非即梦 AI 美妆(含ImageGen风格)",
+      "license": "team-generated",
+      "is_retouched": "n/a(AI生成)",
+      "purpose": "AI训练 + 跨生成器held-out",
+      "in_training": true,
+      "risk": "low",
+      "note": "单独 held-out，跨生成器召回实证用"
+    },
+    {
+      "file": "data/real_xhs/*",
+      "count": 74,
+      "source": "老板提供真实美妆帖",
+      "license": "team-provided-real",
+      "is_retouched": "unknown(精修美妆照)",
+      "purpose": "REAL训练",
+      "in_training": true,
+      "risk": "medium",
+      "note": "web来源真实图；后续优先用自拍原图补充以降低授权模糊性"
+    },
+    {
+      "file": "data/real/*",
+      "count": 10,
+      "source": "老板提供真实图(训练集.zip)",
+      "license": "team-provided-real",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练",
+      "in_training": true,
+      "risk": "medium",
+      "note": "与 real_xhs 同源性质"
+    },
+    {
+      "file": "data/clean/*",
+      "count": 2,
+      "source": "本地 base.png 合成",
+      "license": "team-synthetic",
+      "is_retouched": "n/a(合成)",
+      "purpose": "对照/演示",
+      "in_training": true,
+      "risk": "low",
+      "note": "make_dataset.py 现场再造"
+    },
+    {
+      "file": "data/tampered/*",
+      "count": 3,
+      "source": "本地 base.png 合成",
+      "license": "team-synthetic",
+      "is_retouched": "true(人工篡改)",
+      "purpose": "篡改对照",
+      "in_training": true,
+      "risk": "low",
+      "note": "copy-move/splice 对照"
+    },
+    {
+      "file": "data/real_extra/*",
+      "count": 0,
+      "source": "pseudo_label.py 产出",
+      "license": "team-self-produced(伪标注)",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练(扩充位)",
+      "in_training": false,
+      "risk": "low",
+      "note": "待老板放自产未标注真实图到 data/xhs_real_unlabeled/ 后生成"
+    }
+  ],
+  "collection_protocol": [
+    "目录：data/xhs_real_unlabeled/(自产未标注) → pseudo_label.py 伪标注进 REAL；data/real/(已确认自产)；data/cc_verified/(CC图+同名_license.txt)",
+    "每张进库图必须在 manifest 登记 source + license，查不到来源的一律不进",
+    "CC-BY 图保留作者+许可+来源链接署名；排除 CC-BY-SA 与 CC-BY-NC",
+    "进训练前：pipeline/训练脚本只读 data/ 自产子目录；cc_verified 需先经伪标注或人工确认用途",
+    "品牌/电商站产品图一律不碰"
+  ],
+  "to_collect_self_produced": [
+    "口红/唇釉(多色号,平拍+上嘴)",
+    "粉底液/气垫(瓶身+手背试色)",
+    "眼影盘(盘体+上眼)",
+    "护肤精华/面霜(瓶身+质地)",
+    "不同光照/不同手机直出(保留EXIF证明未修图)"
+  ],
+  "to_collect_cc_verified": [
+    "Wikimedia Commons Category:L'Oréal 下逐张核验许可的产品/场景图(CC0/CC-BY非SA非NC)",
+    "Pixabay/Smithsonian/Met 标注 CC0 的美妆相关图(按需)"
+  ],
+  "note": "本清单为当前已合规库存 + 采集协议 + 待采集模板；实际 CC/web 扩充需在老板确认路线后由 AI 拉取并补全条目。品牌/电商站图不进入本清单。",
+  "collected_cc": [
+    {
+      "file": "data/cc_verified/5 scientists Vilahur Pveda Valle Imanez and Cosar.png",
+      "source": "https://commons.wikimedia.org/wiki/File:5_scientists_Vilahur_Pveda_Valle_Imanez_and_Cosar.png",
+      "license": "cc by 3.0 creative commons attribution 3.0",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/Elisa Orth.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Elisa_Orth.png",
+      "license": "cc by 3.0 creative commons attribution 3.0",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/L_Oreal predstavitev. Ljubljana 1969 5.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_5.jpg",
+      "license": "public domain public domain",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/IMG 2641 Greenpeace demonstration Loreal september 11 2006 Alphen aan den Rijn.JPG",
+      "source": "https://commons.wikimedia.org/wiki/File:IMG_2641_Greenpeace_demonstration_Loreal_september_11_2006_Alphen_aan_den_Rijn.JPG",
+      "license": "cc by 2.5 creative commons attribution 2.5",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/IMG 2642 Greenpeace demonstration Loreal september 11 2006 Alphen aan den Rijn.JPG",
+      "source": "https://commons.wikimedia.org/wiki/File:IMG_2642_Greenpeace_demonstration_Loreal_september_11_2006_Alphen_aan_den_Rijn.JPG",
+      "license": "cc by 2.5 creative commons attribution 2.5",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/Madrid - Acampada Sol 2011 20.JPG",
+      "source": "https://commons.wikimedia.org/wiki/File:Madrid_-_Acampada_Sol_2011_20.JPG",
+      "license": "cc0 creative commons zero, public domain dedication",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/Elisa Orth lab.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Elisa_Orth_lab.png",
+      "license": "cc by 3.0 creative commons attribution 3.0",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/L_Oreal predstavitev. Ljubljana 1969 1.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_1.jpg",
+      "license": "public domain public domain",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/L_Oreal predstavitev. Ljubljana 1969 2.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_2.jpg",
+      "license": "public domain public domain",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/L_Oreal predstavitev. Ljubljana 1969 3.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_3.jpg",
+      "license": "public domain public domain",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/L_Oreal predstavitev. Ljubljana 1969 4.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_4.jpg",
+      "license": "public domain public domain",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/L_Oreal predstavitev. Ljubljana 1969 6.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_6.jpg",
+      "license": "public domain public domain",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/LOreal Paris Intelligent Color Experience. _10578283953_.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:LOreal_Paris_Intelligent_Color_Experience._(10578283953).jpg",
+      "license": "cc by 2.0 creative commons attribution 2.0",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/LOreal Paris Intelligent Color Experience. _10578285283_.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:LOreal_Paris_Intelligent_Color_Experience._(10578285283).jpg",
+      "license": "cc by 2.0 creative commons attribution 2.0",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    },
+    {
+      "file": "data/cc_verified/Lea Michele L_Oreal Paris.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:Lea_Michele_L%27Oreal_Paris.jpg",
+      "license": "cc by 3.0 creative commons attribution 3.0",
+      "is_retouched": "unknown",
+      "purpose": "REAL训练补充/产品参考",
+      "in_training": false,
+      "risk": "low",
+      "note": "Wikimedia Commons CC 合规图，已逐张核验许可"
+    }
+  ]
+}

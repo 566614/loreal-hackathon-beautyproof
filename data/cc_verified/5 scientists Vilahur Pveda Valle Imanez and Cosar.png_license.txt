@@ -1,0 +1,5 @@
+source: https://commons.wikimedia.org/wiki/File:5_scientists_Vilahur_Pveda_Valle_Imanez_and_Cosar.png
+license: cc by 3.0 creative commons attribution 3.0
+artist: lorealespana
+retrieved: 2026-09-26
+note: 仅用于赛题2 合规参考集；CC-BY 需保留署名。

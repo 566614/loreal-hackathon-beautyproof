@@ -1,0 +1,5 @@
+source: https://commons.wikimedia.org/wiki/File:Lea_Michele_L%27Oreal_Paris.jpg
+license: cc by 3.0 creative commons attribution 3.0
+artist: L’Oréal Paris Norge
+retrieved: 2026-09-26
+note: 仅用于赛题2 合规参考集；CC-BY 需保留署名。

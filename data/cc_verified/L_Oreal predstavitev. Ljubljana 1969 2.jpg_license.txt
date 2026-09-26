@@ -1,0 +1,5 @@
+source: https://commons.wikimedia.org/wiki/File:L%27Oreal_predstavitev._Ljubljana_1969_2.jpg
+license: public domain public domain
+artist: Unknown authorUnknown author
+retrieved: 2026-09-26
+note: 仅用于赛题2 合规参考集；CC-BY 需保留署名。

@@ -1,0 +1,5 @@
+source: https://commons.wikimedia.org/wiki/File:Elisa_Orth.png
+license: cc by 3.0 creative commons attribution 3.0
+artist: academiabrasciencias
+retrieved: 2026-09-26
+note: 仅用于赛题2 合规参考集；CC-BY 需保留署名。

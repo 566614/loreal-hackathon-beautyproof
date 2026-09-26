@@ -1,0 +1,84 @@
+{
+  "ran_at": "2026-09-26T19:25:35",
+  "model_active_per_case": {
+    "active_model": "beautyproof_aigen_v4",
+    "basis": "tools/aigc_tool.py::model_path() 按 MODEL_PRIORITY 解析：models/beautyproof_aigen_v4 同时存在 config.json 与 model.pt，故返回该目录；pipeline 的 aigc 分支走 run_aigc->run_aigc_timm 加载 v4 权重。",
+    "config_check_before_run": {
+      "models/beautyproof_aigen_v4/config.json": "exists",
+      "models/beautyproof_aigen_v4/model.pt": "exists",
+      "resolved_model_path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v4"
+    },
+    "config_check_after_run": {
+      "models/beautyproof_aigen_v4/config.json": "exists",
+      "models/beautyproof_aigen_v4/model.pt": "exists",
+      "resolved_model_path": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v4"
+    },
+    "note": "跑前、跑后两次检查均显示 v4 配置存在且权重就绪，故本次 4 例 pipeline 判定均在 v4 模型下产出。crossgen_eval.json 的 58.33% 召回是此前显式 pin 到 v3 的 held-out 测试，两者均属有效结果；本 e2e 的 4 例不代表跨生成器召回，仅验证本地四档判定链路在 v4 下可用。",
+    "per_case": {
+      "clean_01": "v4",
+      "tampered_01_copy_move": "v4",
+      "tampered_02_splice": "v4",
+      "ai_17": "v4"
+    }
+  },
+  "pytest_summary": {
+    "command": "python -m pytest tests -q",
+    "framework_note": "tests/test_core.py 为 unittest 结构，但 pytest 可正常收集其 TestCase 子类",
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "detail": "11 passed in 3.45s",
+    "cases_covered": [
+      "rule_engine: high_risk_aigc / suspicious_aigc / abstain_aigc / high_risk_trufor / credible_c2pa / inconclusive_empty",
+      "planner: r1_skip_ela_on_png / r1_keep_ela_on_jpeg / r2_skip_on_known_original / r3_skip_text_without_copy",
+      "validator: forbidden_phrase_caught"
+    ]
+  },
+  "pipeline_cases": [
+    {
+      "case": "clean_01",
+      "ground_truth": "clean",
+      "verdict": "inconclusive",
+      "expected_risk_baseline_v3": "inconclusive",
+      "key_scores": {
+        "aigc_prob": 0.0,
+        "trufor_score": 0.3503,
+        "tampered_area_ratio": 0.053
+      }
+    },
+    {
+      "case": "tampered_01_copy_move",
+      "ground_truth": "copy_move",
+      "verdict": "high_risk",
+      "expected_risk_baseline_v3": "suspicious",
+      "key_scores": {
+        "aigc_prob": 0.0,
+        "trufor_score": 0.9946,
+        "tampered_area_ratio": 0.0145
+      }
+    },
+    {
+      "case": "tampered_02_splice",
+      "ground_truth": "splice",
+      "verdict": "high_risk",
+      "expected_risk_baseline_v3": "suspicious",
+      "key_scores": {
+        "aigc_prob": 0.0,
+        "trufor_score": 1.0,
+        "tampered_area_ratio": 0.0247
+      }
+    },
+    {
+      "case": "ai_17",
+      "ground_truth": "ai_generated",
+      "verdict": "high_risk",
+      "expected_risk_baseline_v3": "high_risk",
+      "key_scores": {
+        "aigc_prob": 1.0,
+        "trufor_score": 0.9962,
+        "tampered_area_ratio": 0.0084
+      }
+    }
+  ],
+  "issues": []
+}

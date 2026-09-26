@@ -1,0 +1,5 @@
+source: https://commons.wikimedia.org/wiki/File:IMG_2642_Greenpeace_demonstration_Loreal_september_11_2006_Alphen_aan_den_Rijn.JPG
+license: cc by 2.5 creative commons attribution 2.5
+artist: No machine-readable author provided. Ellywa assumed (based on copyright claims).
+retrieved: 2026-09-26
+note: 仅用于赛题2 合规参考集；CC-BY 需保留署名。

@@ -1,0 +1,5 @@
+source: https://commons.wikimedia.org/wiki/File:LOreal_Paris_Intelligent_Color_Experience._(10578283953).jpg
+license: cc by 2.0 creative commons attribution 2.0
+artist: Metropolitan Transportation Authority of the State of New York
+retrieved: 2026-09-26
+note: 仅用于赛题2 合规参考集；CC-BY 需保留署名。

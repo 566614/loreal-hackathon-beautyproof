@@ -1,0 +1,30 @@
+{
+  "framework": "timm",
+  "arch": "mobilenetv3_large_100",
+  "num_classes": 2,
+  "classes": [
+    "real",
+    "ai"
+  ],
+  "img_size": 224,
+  "backbone_source": "timm/mobilenetv3_large_100.ra_in1k (ImageNet-1k 预训练权重, MIT/Apache-2.0, 仅初始化, 非训练数据)",
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "version": "v4",
+  "trained_on": "data/ai(20 即梦) + data/ai_cross(26 非即梦) + data/real_xhs(74) + 原有(15) + beauty_aug 域增强（real_extra 为空，未并入伪标注真实图）",
+  "augmentation": "beauty_aug.get_train_transform()：更强色彩抖动/旋转/高斯模糊(≈磨皮)/平台缩放伪影/JPEG 重压缩/轻度噪声，覆盖重滤镜真实美妆图分布",
+  "data_expansion": "v4 在 v3 基础上接入域增强，未引入任何第三方数据/方法",
+  "compliance": "全程自产数据；骨干仅初始化且机器可核验披露；拒绝 GenImage(CC BY-NC-SA 非商用)/COCO/品牌图",
+  "best_epoch": null,
+  "val_acc": null,
+  "cross_generator_recall": null,
+  "note": "config 由主代理补全（训练 subagent 中途退出未写 config）。训练过程中未留下任何 best_epoch/val_acc 日志（仓库仅见 train_v2.log，无 v4 训练记录），故 val_acc/best_epoch 严格保留 null，绝不臆造数字。2026-09-26 用 v4 生效状态重跑 6 方向评测（results/v4_eval.json）：clean_01、clean_02_recompressed 的 aigc_score 均为 0.0（<0.5，不误报）；tampered_01/02/03 的 trufor_score 分别为 0.9946/1.0/0.595（均 >=0.5，篡改召回保持）；ai_17 aigc_score=1.0 仍为 high_risk。6/6 命中、档位 6/6 一致，相对 v3 基线零退化。"
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeautyProof 评测透明度页 · 美妆图取证（赛题2）</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2530; --sub:#5b6573;
+    --line:#e3e7ee; --accent:#2f6df0; --accent-soft:#eaf1ff;
+    --green:#1f9d5b; --green-soft:#e7f6ee; --amber:#c9821a; --amber-soft:#fdf2e1;
+    --red:#d6453d; --red-soft:#fdecea; --gray:#8a93a2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.65;font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+  .disclaimer{background:var(--amber-soft);border:1px solid #f0d9a8;color:#7a4d05;
+    border-radius:10px;padding:12px 16px;font-weight:600;margin-bottom:18px;font-size:14px}
+  header h1{font-size:24px;margin:0 0 6px}
+  header .meta{color:var(--sub);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 22px;margin:16px 0;box-shadow:0 1px 2px rgba(20,30,50,.03)}
+  .card h2{font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card h2 .tag{font-size:11px;font-weight:700;color:#fff;background:var(--accent);
+    border-radius:6px;padding:2px 8px}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 14px}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f4f9;font-weight:600}
+  tr:nth-child(even) td{background:#fafbfc}
+  .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600}
+  .ok{background:var(--green-soft);color:var(--green)}
+  .warn{background:var(--amber-soft);color:var(--amber)}
+  .bad{background:var(--red-soft);color:var(--red)}
+  .neu{background:#eef1f6;color:var(--sub)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:10px}
+  .stat{background:#fafbfc;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .stat .n{font-size:22px;font-weight:700;color:var(--accent)}
+  .stat .l{font-size:12.5px;color:var(--sub);margin-top:2px}
+  ul.tight{margin:8px 0 0;padding-left:20px}
+  ul.tight li{margin:4px 0}
+  code{background:#f1f4f9;border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .src{color:var(--gray);font-size:12px;margin-top:10px}
+  .src a{color:var(--gray)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.two{grid-template-columns:1fr}}
+  .footer{color:var(--gray);font-size:12px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="disclaimer">
+    ⚠️ 免责声明：本页所有「分数」均为模型在有限样本上的统计表现，<b>非法律结论</b>；
+    任何高风险判定都<b>必须人工复核</b>后方可对外引用。
+  </div>
+
+  <header>
+    <h1>BeautyProof · 评测透明度页</h1>
+    <div class="meta">美妆图取证流水线（赛题2「信任守护师」）· 页面生成时间：2026-09-26 19:25（e2e 跑批时间）</div>
+  </header>
+
+  <!-- ① 受控集 / 跨生成器 / 真实集 -->
+  <div class="card">
+    <h2><span class="tag">①</span>受控集 vs 真实集 / 跨生成器 分列</h2>
+    <p class="lead">三组评测口径不同、不可混为一谈；下列数字分别来自仓库内对应 <code>results/*.json</code> 与 <code>docs/*.md</code>。</p>
+
+    <h3 style="margin:6px 0 2px;font-size:15px">A. 受控集（自产合成/验证图，6 例全中）</h3>
+    <p class="lead" style="margin:0 0 6px">来源：<code>results/dataset_eval_baseline_v3.json</code>（6 例，v3 模型下产出）</p>
+    <div class="grid">
+      <div class="stat"><div class="n">6 / 6</div><div class="l">方向命中（篡改图报警 / 干净图不误报）</div></div>
+      <div class="stat"><div class="n">4 / 6</div><div class="l">档位严丝合缝（2 例篡改图判 high_risk，比清单预期 suspicious 偏严，非漏判）</div></div>
+    </div>
+    <table>
+      <tr><th>案例</th><th>真值</th><th>预期</th><th>实际判定</th><th>结果</th></tr>
+      <tr><td>clean_01</td><td>clean</td><td>inconclusive</td><td>inconclusive</td><td><span class="pill ok">命中·严丝合缝</span></td></tr>
+      <tr><td>tampered_01_copy_move</td><td>copy_move</td><td>suspicious</td><td>high_risk</td><td><span class="pill ok">命中·偏严</span></td></tr>
+      <tr><td>tampered_02_splice</td><td>splice</td><td>suspicious</td><td>high_risk</td><td><span class="pill ok">命中·偏严</span></td></tr>
+      <tr><td>tampered_03_text_edit</td><td>text_edit</td><td>suspicious</td><td>suspicious</td><td><span class="pill ok">命中·严丝合缝</span></td></tr>
+      <tr><td>clean_02_recompressed</td><td>clean</td><td>inconclusive</td><td>inconclusive</td><td><span class="pill ok">命中·严丝合缝</span></td></tr>
+      <tr><td>ai_17</td><td>ai_generated</td><td>high_risk</td><td>high_risk</td><td><span class="pill ok">命中·严丝合缝</span></td></tr>
+    </table>
+
+    <h3 style="margin:18px 0 2px;font-size:15px">B. 跨生成器零样本（ImageGen held-out，12 张全新图）</h3>
+    <p class="lead" style="margin:0 0 6px">来源：<code>results/crossgen_eval.json</code>（模型显式 pin 到 <b>v3</b>，召回 58.33% = 7/12）</p>
+    <div class="grid">
+      <div class="stat"><div class="n">7 / 12</div><div class="l">整图 AI 召回（阈值 0.6 与 0.5 下一致）</div></div>
+      <div class="stat"><div class="n">5 漏检</div><div class="l">漏检呈明显风格聚集</div></div>
+    </div>
+    <p class="lead" style="margin:10px 0 4px"><b>漏检集中在以下风格（分数极低，调阈值无济于事）：</b></p>
+    <table>
+      <tr><th>漏检风格</th><th>AI 概率</th><th>原因</th></tr>
+      <tr><td>社交媒体滤镜自拍（贴纸+磨皮）</td><td>0.0023</td><td rowspan="5">光学特征（美颜滤镜 / 简陋灯光 / 生活纪实感 / 插画质感）与训练集中的真实精修美妆图高度重叠，被归入 real 簇</td></tr>
+      <tr><td>电商直播截图风（简陋灯光+直播美颜）</td><td>0.0004</td></tr>
+      <tr><td>生活感护肤场景（浴室窗边逆光）</td><td>0.0000</td></tr>
+      <tr><td>水彩插画美妆广告</td><td>0.3418</td></tr>
+      <tr><td>时尚杂志封面风（硬光金属眼妆）</td><td>0.3178</td></tr>
+    </table>
+    <p class="src">命中风格（召回正常，≥0.9）：电商产品静物、棚拍带妆人像、品牌海报、磨皮精修人像、复古胶片、赛博霓虹、3D 渲染、电商直播之外的棚拍类。注：此组为 ImageGen 风格 held-out，<b>不等同</b>真实 MJ/SD/Flux 原生图，外推需谨慎。</p>
+
+    <h3 style="margin:18px 0 2px;font-size:15px">C. 真实世界集（真实小红书美妆图，56 张）</h3>
+    <p class="lead" style="margin:0 0 6px">来源：<code>results/xhs_beauty_test.json</code>（56 张真实 UGC，docs 口径见 <code>docs/参赛竞争力评估.md</code>）</p>
+    <div class="grid">
+      <div class="stat"><div class="n">56 张</div><div class="l">真实小红书美妆图（地面真值均为 real）</div></div>
+      <div class="stat"><div class="n">39 张</div><div class="l">被整图 AI 检测误判为 AI（实测误报率 69.6%）</div></div>
+      <div class="stat"><div class="n">≈66%</div><div class="l">docs 历史口径误报率（v2→1.4% 后为验证集未参与训练前的统计）</div></div>
+    </div>
+    <p class="src">说明：真实分布覆盖薄（训练真实图约 84 张且多为「精修美妆照」），重度滤镜/生活流真实照仍易被整图 AI 检测误报，这是当前最该补的短板，也是本页列为「已知盲区」的核心原因。</p>
+  </div>
+
+  <!-- ② 已知盲区 + 应对 -->
+  <div class="card">
+    <h2><span class="tag">②</span>已知盲区 + 应对</h2>
+    <div class="two">
+      <div>
+        <p class="lead" style="margin:0"><b>盲区 1 · 重度滤镜真实照</b></p>
+        <ul class="tight">
+          <li>真实美妆图经重度美颜/滤镜后被误判为 AI（真实集误报 ~66–70%）。</li>
+          <li><b>应对：</b>v4 已接入域增强（beauty_aug：色彩抖动/高斯模糊≈磨皮/平台缩放伪影/JPEG 重压缩）+ 决策阈值上调至 0.6 并设 [0.5,0.6) 模糊带；继续扩充<b>自产实拍未修图</b>真实图压误报（目标 ≤5%）。</li>
+        </ul>
+      </div>
+      <div>
+        <p class="lead" style="margin:0"><b>盲区 2 · 跨生成器风格聚集漏检</b></p>
+        <ul class="tight">
+          <li>生活流/滤镜/插画/杂志封面风格零样本召回低（跨生成器 held-out 58.3%）。</li>
+          <li><b>应对：</b>TruFor（生成器无关主干）作第二道防线兜底；此类风格图在流水线中<b>默认转人工复核</b>，不单独依赖本模型分数。</li>
+        </ul>
+      </div>
+      <div>
+        <p class="lead" style="margin:0"><b>盲区 3 · 百张级数据量</b></p>
+        <ul class="tight">
+          <li>训练数据仅百张级，模型概率已饱和到 0/1，泛化上限受小数据限制，不能说「很准」。</li>
+          <li><b>应对：</b>如实暴露边界，统计结论标注样本量；优先自产实拍扩充至更大规模。</li>
+        </ul>
+      </div>
+      <div>
+        <p class="lead" style="margin:0"><b>盲区 4 · 非司法鉴定</b></p>
+        <ul class="tight">
+          <li>分数只是「模型觉得」，不是「一定事实」；真实照可误报、AI 图可蒙混。</li>
+          <li><b>应对：</b>分数<b>非法律结论</b>，高风险必人工复核；报告含边界声明与「无法判定」弃权档。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 模型/数据来源一页速览 -->
+  <div class="card">
+    <h2><span class="tag">③</span>模型 / 数据来源一页速览</h2>
+
+    <h3 style="margin:4px 0 2px;font-size:15px">骨干（已机器可核验披露）</h3>
+    <ul class="tight">
+      <li>骨干：<code>timm/mobilenetv3_large_100.ra_in1k</code>（ImageNet-1k 预训练，MIT/Apache-2.0）。</li>
+      <li>使用方式：<b>仅作初始化权重</b>（<code>timm.create_model(pretrained=False)</code> + 手动 load_state_dict 灌入骨干张量，分类头丢弃重训），非训练数据。</li>
+      <li>披露落点：<code>models/beautyproof_aigen_v3/config.json</code> 与 <code>v4/config.json</code> 的 <code>"backbone_source"</code> 字段，可被评审直接核验。</li>
+    </ul>
+
+    <h3 style="margin:14px 0 2px;font-size:15px">训练数据（全部自产，未用任何第三方图库训练）</h3>
+    <table>
+      <tr><th>数据池</th><th>张数</th><th>来源</th><th>用途</th></tr>
+      <tr><td>data/ai</td><td>20</td><td>即梦（团队生成）</td><td>AI 训练</td></tr>
+      <tr><td>data/ai_cross</td><td>26</td><td>自产非即梦 AI 美妆</td><td>AI 训练 + 跨生成器 held-out</td></tr>
+      <tr><td>data/real_xhs</td><td>74</td><td>团队提供真实美妆帖</td><td>REAL 训练</td></tr>
+      <tr><td>data/real + clean + tampered 等原有</td><td>≈15</td><td>本地合成 / 团队提供</td><td>对照 / REAL 训练</td></tr>
+      <tr><td>beauty_aug 域增强</td><td>—</td><td>自产增强（色彩/模糊/压缩/噪声）</td><td>v4 扩充真实分布覆盖</td></tr>
+    </table>
+
+    <h3 style="margin:14px 0 2px;font-size:15px">合规红线清单（明确拒绝）</h3>
+    <ul class="tight">
+      <li><span class="pill bad">拒绝</span> GenImage（CC BY-NC-SA 非商用）——仅作离线评测，不入仓不进训练。</li>
+      <li><span class="pill bad">拒绝</span> COCO / ImageNet(训练集) / 任何第三方大规模标注库作训练。</li>
+      <li><span class="pill bad">拒绝</span> 品牌图（欧莱雅官网/电商站产品图，ToS 禁止商用）。</li>
+      <li><span class="pill ok">允许</span> 自产实拍 / 团队提供真实图；CC0 / CC-BY(非SA,非NC) 逐张核验署名。</li>
+    </ul>
+    <p class="src">依据：<code>docs/模型来源与训练数据合规声明.md</code>、<code>docs/标准图片采集与合规清单.md</code>、<code>docs/训练数据来源清单.md</code>、<code>NOTICE</code>。</p>
+  </div>
+
+  <!-- ④ 底部声明 + e2e 附注 -->
+  <div class="card">
+    <h2><span class="tag">④</span>版本与本次 e2e 附注</h2>
+    <ul class="tight">
+      <li><b>本次全链路 e2e（4 例）</b>：clean_01 → inconclusive、tampered_01_copy_move → high_risk、tampered_02_splice → high_risk、ai_17 → high_risk；四档判定均成功落盘（见 <code>results/e2e_check.json</code>）。</li>
+      <li><b>模型版本：</b>跑前/跑后两次检查均确认 <code>models/beautyproof_aigen_v4/config.json</code> 与 <code>model.pt</code> 存在，pipeline 经 <code>aigc_tool.model_path()</code> 解析到 <b>v4</b>，故 4 例判定均在 v4 下产出。</li>
+      <li><b>口径区分：</b>受控集（dataset_eval_baseline_v3.json）与跨生成器召回（crossgen_eval.json 58.33%）均为 <b>v3</b> 历史结果；v3/v4 均属有效结果，跨版本对比见各文件标注。</li>
+      <li><b>单测：</b><code>python -m pytest tests -q</code> → <b>11 passed</b>（tests/test_core.py 为 unittest 结构，pytest 可正常收集）。</li>
+    </ul>
+    <div class="disclaimer" style="margin-top:14px">
+      ⚠️ 再次声明：分数非法律结论，高风险需人工复核。
+    </div>
+  </div>
+
+  <div class="footer">
+    BeautyProof 评测透明度页 · 自包含单文件（无外部依赖）· 所有数字源自仓库内 results/*.json 与 docs/*.md · 生成于 2026-09-26 19:25
+  </div>
+
+</div>
+</body>
+</html>

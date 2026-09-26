@@ -5,6 +5,13 @@
       "ground_truth": "clean",
       "expected_risk": "inconclusive",
       "actual_risk": "inconclusive",
+      "key_scores": {
+        "aigc_model_version": "v4",
+        "aigc_model": "beautyproof_aigen_v4",
+        "aigc_score": 0.0,
+        "trufor_score": 0.3503,
+        "trufor_area_ratio": 0.053
+      },
       "reasons": [
         "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 0.3503（<0.5）→ 未发现明显篡改痕迹",
@@ -26,6 +33,13 @@
       "ground_truth": "copy_move",
       "expected_risk": "high_risk",
       "actual_risk": "high_risk",
+      "key_scores": {
+        "aigc_model_version": "v4",
+        "aigc_model": "beautyproof_aigen_v4",
+        "aigc_score": 0.0,
+        "trufor_score": 0.9946,
+        "trufor_area_ratio": 0.0145
+      },
       "reasons": [
         "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 0.9946（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 1.5%"
@@ -47,6 +61,13 @@
       "ground_truth": "splice",
       "expected_risk": "high_risk",
       "actual_risk": "high_risk",
+      "key_scores": {
+        "aigc_model_version": "v4",
+        "aigc_model": "beautyproof_aigen_v4",
+        "aigc_score": 0.0,
+        "trufor_score": 1.0,
+        "trufor_area_ratio": 0.0247
+      },
       "reasons": [
         "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 1.0（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 2.5%"
@@ -67,6 +88,13 @@
       "ground_truth": "text_edit",
       "expected_risk": "suspicious",
       "actual_risk": "suspicious",
+      "key_scores": {
+        "aigc_model_version": "v4",
+        "aigc_model": "beautyproof_aigen_v4",
+        "aigc_score": 0.0,
+        "trufor_score": 0.595,
+        "trufor_area_ratio": 0.0644
+      },
       "reasons": [
         "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 0.595（≥0.5）→ 有明显篡改痕迹；可疑区域约占全图 6.4%"
@@ -87,6 +115,13 @@
       "ground_truth": "clean",
       "expected_risk": "inconclusive",
       "actual_risk": "inconclusive",
+      "key_scores": {
+        "aigc_model_version": "v4",
+        "aigc_model": "beautyproof_aigen_v4",
+        "aigc_score": 0.0,
+        "trufor_score": 0.4113,
+        "trufor_area_ratio": 0.0103
+      },
       "reasons": [
         "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
         "TruFor：篡改分数 0.4113（<0.5）→ 未发现明显篡改痕迹",
@@ -108,6 +143,13 @@
       "ground_truth": "ai_generated",
       "expected_risk": "high_risk",
       "actual_risk": "high_risk",
+      "key_scores": {
+        "aigc_model_version": "v4",
+        "aigc_model": "beautyproof_aigen_v4",
+        "aigc_score": 1.0,
+        "trufor_score": 0.9962,
+        "trufor_area_ratio": 0.0084
+      },
       "reasons": [
         "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
       ],
@@ -121,5 +163,53 @@
       "hit": true,
       "exact": true
     }
-  ]
+  ],
+  "baseline_compare": {
+    "clean_01": {
+      "check": "clean 不误报 (aigc_score < 0.5)",
+      "v4_aigc_score": 0.0,
+      "v3_aigc_score": 0.0,
+      "pass": true
+    },
+    "clean_02_recompressed": {
+      "check": "clean 不误报 (aigc_score < 0.5)",
+      "v4_aigc_score": 0.0,
+      "v3_aigc_score": 0.0,
+      "pass": true
+    },
+    "tampered_01_copy_move": {
+      "check": "篡改召回 (trufor_score >= 0.5)",
+      "v4_trufor_score": 0.9946,
+      "v3_trufor_score": 0.9946,
+      "pass": true
+    },
+    "tampered_02_splice": {
+      "check": "篡改召回 (trufor_score >= 0.5)",
+      "v4_trufor_score": 1.0,
+      "v3_trufor_score": null,
+      "pass": true
+    },
+    "tampered_03_text_edit": {
+      "check": "篡改召回 (trufor_score >= 0.5)",
+      "v4_trufor_score": 0.595,
+      "v3_trufor_score": 0.595,
+      "pass": true
+    },
+    "ai_17": {
+      "check": "ai_17 仍 high_risk",
+      "v4_actual_risk": "high_risk",
+      "v4_aigc_score": 1.0,
+      "v3_actual_risk": "high_risk",
+      "pass": true
+    }
+  },
+  "summary": {
+    "v4_model_loaded": "beautyproof_aigen_v4",
+    "cases_total": 6,
+    "cases_hit": 6,
+    "cases_exact": 6,
+    "regression": false,
+    "issues": [],
+    "conclusion": "v4 与 v3 基线相比无退化：clean 不误报、篡改召回保持、ai_17 仍 high_risk"
+  }
 }
