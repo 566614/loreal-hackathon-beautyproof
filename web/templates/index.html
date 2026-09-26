@@ -181,6 +181,12 @@ button.primary:disabled{opacity:.5;cursor:default}
       </div>
     </div>
 
+    <div class="panel" style="padding:14px 18px;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="primary" id="dlMd">下载报告（Markdown）</button>
+      <button id="copyBtn" style="border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13.5px;padding:9px 18px;border-radius:9px;cursor:pointer">复制结论摘要</button>
+      <span id="copyTip" style="font-size:12.5px;color:var(--green)"></span>
+    </div>
+
     <div class="panel" id="explainPanel" style="display:none;padding:22px 26px">
       <h3 style="margin-bottom:12px"><span class="bar"></span>这段话是给非技术同事看的</h3>
       <div id="exHead" style="font-size:16.5px;font-weight:700;color:var(--ink);margin-bottom:8px">—</div>
@@ -399,6 +405,117 @@ function render(res,fresh){
   }).join("");
 
   $("#result").scrollIntoView({behavior:"smooth",block:"start"});
+  wireExport(res);
+}
+
+/* ---------- 报告导出（Markdown 下载 / 结论复制） ---------- */
+function buildMarkdown(res){
+  const v=res.verdict, r=RISK[v.risk_level]||RISK.inconclusive;
+  const now=new Date().toLocaleString("zh-CN");
+  const L=[];
+  L.push("# BeautyProof 美妆图鉴定报告");
+  L.push("");
+  L.push("> 生成时间："+now);
+  L.push("");
+  L.push("## 一、结论");
+  L.push("");
+  L.push("**风险等级："+r.zh+"（"+r.en+"）**");
+  L.push("");
+  L.push(r.head);
+  L.push("");
+  L.push("## 二、送检信息");
+  L.push("");
+  L.push("- 文件名："+res.image.name);
+  L.push("- 尺寸："+(res.image.width||"?")+"×"+(res.image.height||"?"));
+  L.push("- 体积："+(res.image.size_bytes/1024).toFixed(0)+" KB");
+  L.push("- 鉴定用时："+res.elapsed_seconds+"s");
+  L.push("- 给出证据的工具："+v.tools_used.length+" 件");
+  L.push("");
+  const ex=v.explain;
+  if(ex&&ex.headline){
+    L.push("## 三、人话结论（给非技术同事）");
+    L.push("");
+    L.push("**"+ex.headline+"**");
+    L.push("");
+    L.push(ex.summary);
+    L.push("");
+    L.push("- 建议下一步："+ex.what_to_do);
+    L.push("- 提醒："+ex.caveat);
+    L.push("");
+  }
+  L.push("## 四、各工具证据");
+  L.push("");
+  const meta=res.tool_meta||{};
+  Object.keys(TOOLZH).forEach(k=>{
+    const ev=res.evidence[k];
+    if(!ev)return;
+    const first=(ev.evidence&&ev.evidence[0])||{};
+    const ok=first.available!==false;
+    L.push("### "+TOOLZH[k]+" / "+k);
+    L.push("");
+    L.push("- 状态："+(ok?"已出证据":"未出证据"));
+    L.push("- 观察到："+(ev.observed||"（无）"));
+    if(ev.cannot_prove)L.push("- 不能证明："+ev.cannot_prove);
+    L.push("");
+  });
+  const limits=[];
+  Object.values(res.evidence).forEach(ev=>{if(ev.cannot_prove)limits.push(ev.cannot_prove)});
+  L.push("## 五、边界声明（本系统证明不了什么）");
+  L.push("");
+  if(limits.length)L.push(limits.map(x=>"- "+x).join("\n"));
+  else L.push("- 本次没有工具给出「不能证明什么」的说明。");
+  L.push("");
+  const ag=res.agent;
+  if(ag&&((ag.decisions&&ag.decisions.length)||(ag.actions&&ag.actions.length))){
+    L.push("## 六、Agent 决策过程");
+    L.push("");
+    if(ag.summary)L.push("> "+ag.summary);
+    L.push("");
+    (ag.decisions||[]).forEach(d=>{
+      L.push("- "+(d.action==="skip"?"跳过":"处理")+" "+d.tool+"（规则 "+d.rule+"）："+d.reason);
+    });
+    (ag.actions||[]).forEach(a=>{
+      L.push("- 动作 "+a.action+"（规则 "+a.rule+"）："+a.reason);
+    });
+    L.push("");
+  }
+  L.push("---");
+  L.push("");
+  L.push("> 本报告由 BeautyProof 生成，结论来自算法比对，**不构成法律意义上的鉴定意见**；高风险图必须人工复核。");
+  return L.join("\n");
+}
+
+function wireExport(res){
+  const md=buildMarkdown(res);
+  const base=(res.image.name||"beautyproof_report").replace(/\.[^.]+$/,"");
+  $("#dlMd").onclick=()=>{
+    const blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download=base+".md";
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+  $("#copyBtn").onclick=()=>{
+    const v=res.verdict, r=RISK[v.risk_level]||RISK.inconclusive;
+    const ex=v.explain||{};
+    const summary="【BeautyProof 鉴定结论】"+r.zh+"（"+r.en+"）\n"+r.head+
+      (ex.headline?("\n"+ex.headline+"\n"+ex.summary):"")+
+      "\n（结论来自算法比对，非法律鉴定，高风险须人工复核）";
+    const tip=$("#copyTip");
+    const done=()=>{tip.textContent="已复制到剪贴板 ✓";setTimeout(()=>tip.textContent="",2500)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(summary).then(done).catch(()=>{fallbackCopy(summary);done()});
+    }else{fallbackCopy(summary);done();}
+  };
+}
+
+function fallbackCopy(text){
+  const ta=document.createElement("textarea");
+  ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{document.execCommand("copy")}catch(e){}
+  document.body.removeChild(ta);
 }
 
 function imgCard(title,dataUri){

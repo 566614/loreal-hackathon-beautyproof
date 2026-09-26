@@ -1,0 +1,13 @@
+{
+  "provenance": "本目录图片全部由团队通过 ImageGen 平台于 2026-09-26 自产（team-owned），用于 Web 演示「示例」样本与 AI 类参考素材。",
+  "compliance": "非爬取、非第三方数据集、非品牌/电商图；可完全溯源到团队自有生成行为。",
+  "usage": "仅作 demo 样本与 AI 类参考；明确不进入任何训练池（避免污染 data/ai_cross_native 的零样本 held-out 口径）。",
+  "images": [
+    {"file": "Beauty_product_flatlay__white__2026-09-26T11-46-27.png", "style": "电商产品静物图（白底精华液）", "expected": "ai_generated"},
+    {"file": "Close_up_portrait_of_a_woman_w_2026-09-26T11-46-23.png", "style": "带妆容人像（红唇棚拍）", "expected": "ai_generated"},
+    {"file": "Social_media_selfie_style__hea_2026-09-26T11-46-26.png", "style": "社交媒体滤镜自拍", "expected": "ai_generated"},
+    {"file": "Cyberpunk_neon_makeup_look__fu_2026-09-26T11-46-24.png", "style": "赛博朋克霓虹妆容", "expected": "ai_generated"},
+    {"file": "Skincare_scene__bathroom_windo_2026-09-26T11-46-25.png", "style": "生活感护肤场景（窗边逆光）", "expected": "ai_generated"},
+    {"file": "3D_rendered_floating_cosmetics_2026-09-26T11-46-24.png", "style": "3D 渲染化妆品悬浮", "expected": "ai_generated"}
+  ]
+}

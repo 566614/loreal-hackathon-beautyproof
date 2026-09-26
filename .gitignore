@@ -228,6 +228,11 @@ data/masks/
 data/**/*.png
 data/**/*.jpg
 data/**/*.jpeg
+# 例外：团队自产 AI 演示样本 data/ai_aug/（合规、可溯源、体积很小，约 10MB），
+# 随仓库分发让 Web/离线 demo 开箱即用；绝不进训练池（避免污染零样本 held-out 口径）
+!data/ai_aug/
+!data/ai_aug/*.png
+!data/ai_aug/*.json
 # 模型权重不进仓库：347MB，GitHub 单文件上限 100MB，推上去会失败
 # 需要用 download_aigc_model.py 现场下载（脚本已内置镜像+代理+只下必需文件）
 models/*
@@ -236,6 +241,7 @@ models/*
 !models/beautyproof_aigen/
 !models/beautyproof_aigen_v2/
 !models/beautyproof_aigen_v3/
+!models/beautyproof_aigen_v4/
 
 # TruFor 推理中间产物（每次跑都会自动重建，且是原图副本 + 定位图 npz，不必进仓库）
 outputs/_trufor_in/
