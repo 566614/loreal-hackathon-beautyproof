@@ -277,3 +277,8 @@ outputs/llm_explain_*.json
 # 外部爬取 / 临时探查残留
 outputs/_external_*/
 outputs/_peek/
+# 演示视频录制中间产物（Playwright 录屏 webm + 抽帧目录，单文件即可数百 MB）
+outputs/_video/
+outputs/video_frames/
+# Web 复核队列：人工复核运行时状态，随时长变化，不是交付物
+outputs/review_queue.json
