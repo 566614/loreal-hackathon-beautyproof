@@ -83,15 +83,22 @@ def fake_tools(monkeypatch):
         f = REPO / "outputs" / f"{t}_{stem}.json"
         if f.exists():
             f.unlink()
+    # ⚠️ 报告路径与仓库已提交的报告交付物同名（SAMPLE_IMAGE=clean_01 → report_clean_01.md）。
+    # 只清理「本测试新建」的报告；测试前就存在的文件（如已提交的交付物）测试后必须原样恢复，
+    # 否则每次 pytest 都会把仓库文件删掉、弄脏工作区（2026-09-26 实测踩坑，勿回退）。
+    rf = REPO / "reports" / f"report_{stem}.md"
+    rf_before = rf.read_text(encoding="utf-8") if rf.exists() else None
     yield
-    # 清理本测试产生的证据 / 报告 / 结果，保持仓库干净
+    # 清理本测试产生的证据 / 结果，保持仓库干净
     for t in _TOOL_NAMES + _AUX_NAMES:
         f = REPO / "outputs" / f"{t}_{stem}.json"
         if f.exists():
             f.unlink()
-    rf = REPO / "reports" / f"report_{stem}.md"
-    if rf.exists():
-        rf.unlink()
+    if rf_before is None:
+        if rf.exists():
+            rf.unlink()
+    else:
+        rf.write_text(rf_before, encoding="utf-8")
 
 
 def _run_llm_path(monkeypatch, ollama_patch, verbose=False):
