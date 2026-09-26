@@ -1,0 +1,180 @@
+{
+  "generated_at": "2026-09-26T23:40:36",
+  "model": "beautyproof_aigen_v4",
+  "resolved_model_dir": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v4",
+  "kind": "real",
+  "thresholds": {
+    "positive": 0.6,
+    "high_risk": 0.9
+  },
+  "dirs": {
+    "real_xhs_batch2": {
+      "dir": "data\\real_xhs_batch2",
+      "n": 24,
+      "n_unavailable": 0,
+      "mean_prob": 0.0498,
+      "median_prob": 0.0,
+      "max_prob": 1.0,
+      "n_ge_positive": 1,
+      "n_ge_high": 1,
+      "n_abstain_band": 0,
+      "per_file": [
+        {
+          "file": "Image_1790434980969.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790434987308.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435006937.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435016664.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435031564.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435053157.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435061637.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435068394.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435094271.jpg",
+          "ai_prob": 1.0
+        },
+        {
+          "file": "Image_1790435112872.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435139515.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435149120.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435160860.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435169695.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435176984.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435316822.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435324810.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435333725.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435354734.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435377639.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435406954.jpg",
+          "ai_prob": 0.1961
+        },
+        {
+          "file": "Image_1790435416754.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435455722.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435484988.jpg",
+          "ai_prob": 0.0
+        }
+      ],
+      "unavailable": [],
+      "false_positive_rate_positive": 0.0417,
+      "false_positive_rate_high": 0.0417
+    },
+    "realworld_heldout": {
+      "dir": "data\\realworld_heldout",
+      "n": 10,
+      "n_unavailable": 0,
+      "mean_prob": 0.0979,
+      "median_prob": 0.0,
+      "max_prob": 0.9792,
+      "n_ge_positive": 1,
+      "n_ge_high": 1,
+      "n_abstain_band": 0,
+      "per_file": [
+        {
+          "file": "Image_1790434905472.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435045721.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435082358.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435103363.jpg",
+          "ai_prob": 0.9792
+        },
+        {
+          "file": "Image_1790435343600.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435361528.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435371005.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435411391.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435427813.jpg",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "Image_1790435468506.jpg",
+          "ai_prob": 0.0
+        }
+      ],
+      "unavailable": [],
+      "false_positive_rate_positive": 0.1,
+      "false_positive_rate_high": 0.1
+    }
+  }
+}

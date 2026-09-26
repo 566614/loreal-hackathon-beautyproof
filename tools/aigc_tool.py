@@ -49,7 +49,14 @@ from rule_engine import THRESHOLDS  # 复用规则引擎阈值，避免文案阈
 # v4（数据扩充版）：在 v3 基础上接入域增强(beauty_aug) + 伪标注真实图(data/real_extra) +
 # 上调决策阈值(0.6)与模糊带，真实图误报进一步压低。v4 未训练时权重缺失，model_path()
 # 自动回退到 v3，故置顶安全。
-MODEL_PRIORITY = ["beautyproof_aigen_v4", "beautyproof_aigen_v3", "beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
+# v5（2026-09-26 实验版，未上线）：v4 配方 + 24 张人工标注真实图（真图.zip）。
+# 实测：真实世界误报与 v4 持平（都是 2/34），但 ai_cross_native 零样本召回
+# 66.7%→58.3%（crossgen_11 翻转），且训练集里那张精致自拍仍判 0.9888 ——
+# 各项不优于 v4，故不置顶。教训：24 张混合真实图（仅 1 张精致自拍）不足以
+# 撬动「精致滤镜自拍→AI」的失败模式，反而稀释边界。详见
+# docs/真实世界误报与真图批次实验.md。待补 10-30 张精致自拍风格真实图后重训。
+MODEL_PRIORITY = ["beautyproof_aigen_v4", "beautyproof_aigen_v3",
+                  "beautyproof_aigen_v2", "beautyproof_aigen", "airealnet", "capcheck"]
 
 # 权重文件名（微调模型是 model.pt，通用模型是 safetensors / bin）
 WEIGHT_FILES = ("model.pt", "model.safetensors", "pytorch_model.bin")

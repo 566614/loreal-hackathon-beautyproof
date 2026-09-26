@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-09-26T23:50:21",
+  "model": "beautyproof_aigen_v5",
+  "resolved_model_dir": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v5",
+  "kind": "ai",
+  "thresholds": {
+    "positive": 0.6,
+    "high_risk": 0.9
+  },
+  "dirs": {
+    "ai_cross_native": {
+      "dir": "data\\ai_cross_native",
+      "n": 12,
+      "n_unavailable": 0,
+      "mean_prob": 0.5961,
+      "median_prob": 0.985,
+      "max_prob": 1.0,
+      "n_ge_positive": 7,
+      "n_ge_high": 7,
+      "n_abstain_band": 0,
+      "per_file": [
+        {
+          "file": "crossgen_01.png",
+          "ai_prob": 1.0
+        },
+        {
+          "file": "crossgen_02.png",
+          "ai_prob": 1.0
+        },
+        {
+          "file": "crossgen_03.png",
+          "ai_prob": 0.9998
+        },
+        {
+          "file": "crossgen_04.png",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "crossgen_05.png",
+          "ai_prob": 1.0
+        },
+        {
+          "file": "crossgen_06.png",
+          "ai_prob": 0.9765
+        },
+        {
+          "file": "crossgen_07.png",
+          "ai_prob": 1.0
+        },
+        {
+          "file": "crossgen_08.png",
+          "ai_prob": 0.9936
+        },
+        {
+          "file": "crossgen_09.png",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "crossgen_10.png",
+          "ai_prob": 0.0
+        },
+        {
+          "file": "crossgen_11.png",
+          "ai_prob": 0.1837
+        },
+        {
+          "file": "crossgen_12.png",
+          "ai_prob": 0.0
+        }
+      ],
+      "unavailable": [],
+      "recall_positive": 0.5833,
+      "recall_high": 0.5833
+    }
+  }
+}
