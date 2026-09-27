@@ -1,9 +1,10 @@
 {
   "schema": "beautyproof/closedloop_eval@1",
-  "generated_at": "2026-09-27T22:55:22",
+  "generated_at": "2026-09-28T01:56:15",
   "config": {
     "fast": false,
-    "sample": 1,
+    "sample": null,
+    "from_outputs": true,
     "model_note": "pipeline.analyze 全量 aigc+trufor（非 --fast）",
     "pipeline": "tools/pipeline.analyze()"
   },
@@ -16,17 +17,22 @@
         "credible",
         "inconclusive"
       ],
-      "n": 1,
-      "sampled": true,
+      "n": 2,
+      "n_total": 2,
+      "n_evaluated": 2,
+      "n_not_run": 0,
+      "missing_files": [],
+      "coverage": 1.0,
+      "sampled": false,
       "risk_distribution": {
         "high_risk": 0,
         "suspicious": 0,
         "credible": 0,
-        "inconclusive": 1,
+        "inconclusive": 2,
         "error": 0
       },
       "direction_hit_rate": 1.0,
-      "n_hit": 1,
+      "n_hit": 2,
       "samples": [
         {
           "file": "clean_01.png",
@@ -46,24 +52,440 @@
             "TruFor：篡改分数 0.3503（<0.5）→ 未发现明显篡改痕迹",
             "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
           ]
+        },
+        {
+          "file": "clean_02_recompressed.png",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.4113,
+            "trufor_area_ratio": 0.0103,
+            "trufor_available": true
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.4113（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
         }
       ],
       "note": "受控真图（相机拍/自产实拍）。期望不误报（inconclusive/credible）。"
+    },
+    "tampered": {
+      "dir": "data/tampered",
+      "ground_truth": "tampered",
+      "bucket": "controlled",
+      "expect_risk": [
+        "high_risk",
+        "suspicious"
+      ],
+      "n": 3,
+      "n_total": 3,
+      "n_evaluated": 3,
+      "n_not_run": 0,
+      "missing_files": [],
+      "coverage": 1.0,
+      "sampled": false,
+      "risk_distribution": {
+        "high_risk": 2,
+        "suspicious": 1,
+        "credible": 0,
+        "inconclusive": 0,
+        "error": 0
+      },
+      "direction_hit_rate": 1.0,
+      "n_hit": 3,
+      "samples": [
+        {
+          "file": "tampered_01_copy_move.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9946,
+            "trufor_area_ratio": 0.0145,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.9946（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 1.5%"
+          ]
+        },
+        {
+          "file": "tampered_02_splice.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 1.0,
+            "trufor_area_ratio": 0.0247,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 1.0（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 2.5%"
+          ]
+        },
+        {
+          "file": "tampered_03_text_edit.png",
+          "risk_level": "suspicious",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.595,
+            "trufor_area_ratio": 0.0644,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "标记待人工确认"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.595（≥0.5）→ 有明显篡改痕迹；可疑区域约占全图 6.4%"
+          ]
+        }
+      ],
+      "note": "受控篡改图（copy_move/splice/文字改写）。期望被报警（suspicious/high_risk）。"
+    },
+    "ai": {
+      "dir": "data/ai",
+      "ground_truth": "ai",
+      "bucket": "controlled",
+      "expect_risk": [
+        "high_risk"
+      ],
+      "n": 2,
+      "n_total": 20,
+      "n_evaluated": 2,
+      "n_not_run": 18,
+      "missing_files": [
+        "ai_02.png",
+        "ai_03.png",
+        "ai_04.png",
+        "ai_05.png",
+        "ai_06.png",
+        "ai_07.png",
+        "ai_08.png",
+        "ai_09.png",
+        "ai_10.png",
+        "ai_11.png",
+        "ai_12.png",
+        "ai_13.png",
+        "ai_14.png",
+        "ai_15.png",
+        "ai_16.png",
+        "ai_18.png",
+        "ai_19.png",
+        "ai_20.png"
+      ],
+      "coverage": 0.1,
+      "sampled": false,
+      "risk_distribution": {
+        "high_risk": 2,
+        "suspicious": 0,
+        "credible": 0,
+        "inconclusive": 0,
+        "error": 0
+      },
+      "direction_hit_rate": 1.0,
+      "n_hit": 2,
+      "samples": [
+        {
+          "file": "ai_01.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.8221,
+            "trufor_area_ratio": 0.0046,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列",
+            "分别核实图片来源与文案出处"
+          ],
+          "reasons": [
+            "图文交叉验证：发现硬矛盾 —— 文案称「原相机」「实拍」（上下文 …原相机实拍，无滤镜直出，亲…）；而 AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成。两者只能有一边是真的"
+          ]
+        },
+        {
+          "file": "ai_17.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9962,
+            "trufor_area_ratio": 0.0084,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        }
+      ],
+      "note": "受控 AI 生成图（即梦等本域微调覆盖族）。期望 high_risk（整图 AI 生成）。"
+    },
+    "realworld_heldout": {
+      "dir": "data/realworld_heldout",
+      "ground_truth": "real",
+      "bucket": "heldout_real",
+      "expect_risk": [
+        "credible",
+        "inconclusive"
+      ],
+      "n": 5,
+      "n_total": 10,
+      "n_evaluated": 5,
+      "n_not_run": 5,
+      "missing_files": [
+        "Image_1790435361528.jpg",
+        "Image_1790435371005.jpg",
+        "Image_1790435411391.jpg",
+        "Image_1790435427813.jpg",
+        "Image_1790435468506.jpg"
+      ],
+      "coverage": 0.5,
+      "sampled": false,
+      "risk_distribution": {
+        "high_risk": 1,
+        "suspicious": 0,
+        "credible": 0,
+        "inconclusive": 4,
+        "error": 0
+      },
+      "direction_hit_rate": 0.8,
+      "n_hit": 4,
+      "samples": [
+        {
+          "file": "Image_1790434905472.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3282,
+            "trufor_area_ratio": 0.01,
+            "trufor_available": true,
+            "ela_top_score": 1.313
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3282（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "Image_1790435045721.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.4922,
+            "trufor_area_ratio": 0.0,
+            "trufor_available": true,
+            "ela_top_score": 1.073
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.4922（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "Image_1790435082358.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3351,
+            "trufor_area_ratio": 0.0419,
+            "trufor_available": true,
+            "ela_top_score": 1.154
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3351（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "Image_1790435103363.jpg",
+          "risk_level": "high_risk",
+          "hit": false,
+          "key_scores": {
+            "aigc_score": 0.9792,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.4941,
+            "trufor_area_ratio": 0.0378,
+            "trufor_available": true,
+            "ela_top_score": 1.325
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9792（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "Image_1790435343600.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3539,
+            "trufor_area_ratio": 0.0216,
+            "trufor_available": true,
+            "ela_top_score": 0.802
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3539（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        }
+      ],
+      "note": "真 held-out 真实图（取自真实世界采集，绝不参与训练）。期望不误报；误报率=真实鲁棒性唯一对外口径。"
+    },
+    "ai_cross_native": {
+      "dir": "data/ai_cross_native",
+      "ground_truth": "ai",
+      "bucket": "zero_shot_cross",
+      "expect_risk": [
+        "high_risk"
+      ],
+      "n": 0,
+      "n_total": 12,
+      "n_evaluated": 0,
+      "n_not_run": 12,
+      "missing_files": [
+        "crossgen_01.png",
+        "crossgen_02.png",
+        "crossgen_03.png",
+        "crossgen_04.png",
+        "crossgen_05.png",
+        "crossgen_06.png",
+        "crossgen_07.png",
+        "crossgen_08.png",
+        "crossgen_09.png",
+        "crossgen_10.png",
+        "crossgen_11.png",
+        "crossgen_12.png"
+      ],
+      "coverage": 0.0,
+      "sampled": false,
+      "risk_distribution": {
+        "high_risk": 0,
+        "suspicious": 0,
+        "credible": 0,
+        "inconclusive": 0,
+        "error": 0
+      },
+      "direction_hit_rate": null,
+      "n_hit": 0,
+      "samples": [],
+      "note": "跨生成器零样本集（同生成器族、非 MJ/SD/Flux 本域微调覆盖族）。算零样本召回；能力仅到此族，不夸大泛化。"
     }
   },
-  "false_positive_rate": {},
-  "zero_shot_recall": {},
-  "disposition_distribution": {},
+  "false_positive_rate": {
+    "realworld_heldout": {
+      "n": 5,
+      "false_positive_rate_alarm": 0.2,
+      "false_positive_rate_high_risk": 0.2,
+      "note": "真实图被误判为 suspicious/high_risk 的比例。对外唯一真实鲁棒性口径。"
+    }
+  },
+  "zero_shot_recall": {
+    "ai_cross_native": {
+      "n": 0,
+      "recall_high_risk": null,
+      "recall_alarm": null,
+      "note": "跨生成器零样本：本系统只在同生成器族微调，非 MJ/SD/Flux 族外推仅到此。"
+    }
+  },
+  "disposition_distribution": {
+    "自动进入人工复核队列": 5,
+    "标记待人工确认": 1,
+    "分别核实图片来源与文案出处": 1
+  },
   "summary": {
     "datasets_run": [
-      "clean"
+      "clean",
+      "tampered",
+      "ai",
+      "realworld_heldout",
+      "ai_cross_native"
     ],
-    "total_samples": 1,
+    "total_samples": 12,
     "controlled_direction_hit_rate": 1.0,
-    "controlled_n_hit": 1,
-    "controlled_n": 1,
-    "realworld_false_positive_rate": null,
+    "controlled_n_hit": 7,
+    "controlled_n": 7,
+    "realworld_false_positive_rate": 0.2,
     "ai_cross_zero_shot_recall_high_risk": null,
-    "disposition_kinds": 0
+    "disposition_kinds": 3,
+    "coverage": {
+      "clean": {
+        "n_evaluated": 2,
+        "n_total": 2,
+        "coverage": 1.0
+      },
+      "tampered": {
+        "n_evaluated": 3,
+        "n_total": 3,
+        "coverage": 1.0
+      },
+      "ai": {
+        "n_evaluated": 2,
+        "n_total": 20,
+        "coverage": 0.1
+      },
+      "realworld_heldout": {
+        "n_evaluated": 5,
+        "n_total": 10,
+        "coverage": 0.5
+      },
+      "ai_cross_native": {
+        "n_evaluated": 0,
+        "n_total": 12,
+        "coverage": 0.0
+      }
+    },
+    "full_coverage": false
   }
 }

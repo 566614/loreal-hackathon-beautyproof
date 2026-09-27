@@ -194,11 +194,19 @@ def evaluate_dataset(name, cfg, fast, sample, verbose, from_outputs=False):
     dist = {lv: 0 for lv in RISK_LEVELS}
     dist["error"] = 0
     n_hit = 0
+    missing = []
     for p in imgs:
         print(f"  · {name}/{p.name} ...", end="", flush=True)
         t0 = time.time()
         row = run_one(p, fast, verbose, from_outputs=from_outputs)
         row["hit"] = row["risk_level"] in expect
+        # ⚠️ 没跑到的图（error）绝不能计进指标分母：否则 --from-outputs 只聚合到 1/3
+        # 时，会把「还有 2/3 没跑」显示成「召回 0%」——那是自欺，不是评测。
+        # 正确做法：只统计真正跑过的图，未跑的单独记覆盖度。
+        if row["risk_level"] == "error":
+            missing.append(p.name)
+            print(f" 未跑（不计入指标） {round(time.time()-t0,1)}s", flush=True)
+            continue
         n_hit += int(row["hit"])
         dist[row["risk_level"]] = dist.get(row["risk_level"], 0) + 1
         rows.append(row)
@@ -212,6 +220,11 @@ def evaluate_dataset(name, cfg, fast, sample, verbose, from_outputs=False):
         "bucket": cfg["bucket"],
         "expect_risk": sorted(expect),
         "n": n,
+        "n_total": len(imgs),
+        "n_evaluated": n,
+        "n_not_run": len(missing),
+        "missing_files": missing,
+        "coverage": round(n / len(imgs), 4) if imgs else None,
         "sampled": (sample is not None and not cfg.get("always_full") and len(imgs) >= sample),
         "risk_distribution": dist,
         "direction_hit_rate": round(n_hit / n, 4) if n else None,
@@ -323,6 +336,12 @@ def main():
         "realworld_false_positive_rate": fpr.get("false_positive_rate_alarm"),
         "ai_cross_zero_shot_recall_high_risk": rec.get("recall_high_risk"),
         "disposition_kinds": len(disp),
+        # 覆盖度：每个数据集「目录里有多少张 / 实际跑了多少张」。
+        # 覆盖度 <1 时，本 json 的指标只代表跑过的那部分，不可当作全集结论对外。
+        "coverage": {k: {"n_evaluated": v["n_evaluated"], "n_total": v["n_total"],
+                         "coverage": v["coverage"]}
+                     for k, v in report["datasets"].items()},
+        "full_coverage": all(v["coverage"] == 1 for v in report["datasets"].values()),
     }
 
     out = RESULTS / "closedloop_eval.json"
