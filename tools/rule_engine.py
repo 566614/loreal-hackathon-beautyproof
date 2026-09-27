@@ -74,6 +74,42 @@ TEXT_CLAIM_TRIGGERS_RISK = True
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
 
+# 分级处置 playbook —— 把「风险档位」翻译成「具体该谁、在多久内、做什么」。
+# 这是 Agent 决策闭环的最后一环：规则引擎定完级，下一步不是「给人看个数字」，
+# 而是直接给出可执行的处置动作 + 时限 + 责任人，让审核流程能照着落。
+# 四档必须齐全；新增档位时务必同步补这一项，否则 explain() 会因取不到而 KeyError。
+ACTION_PLAYBOOK = {
+    "high_risk": {
+        # 处置动作：高风险意味着很可能有合成/篡改/伪造痕迹
+        "disposition": "下架 / 冻结并转人工复核",
+        # 建议时限：复核前不得对外发布，避免虚假内容扩散
+        "time_limit": "2 小时内完成人工复核，复核结论出来前不得对外发布",
+        # 责任人角色：谁该拍板
+        "owner_role": "平台审核员（必要时联动品牌方与法务）",
+        # 是否强制人工：高风险必须过人工，不能自动放行
+        "must_human_review": True,
+    },
+    "suspicious": {
+        "disposition": "暂停发布，标记待人工确认",
+        "time_limit": "24 小时内由人工确认或解除标记",
+        "owner_role": "平台审核员 / 品牌方内容运营",
+        "must_human_review": True,
+    },
+    "credible": {
+        "disposition": "放行，留存凭证备查",
+        "time_limit": "正常流转，凭证随内容一并归档留存",
+        "owner_role": "创作者自查 / 品牌方内容运营",
+        "must_human_review": False,
+    },
+    "inconclusive": {
+        "disposition": "谨慎放行（标注「未确证」）/ 索取更强凭证",
+        "time_limit": "如用于对外投放，建议 48 小时内向品牌方索取带 C2PA 凭证的原始原图",
+        "owner_role": "品牌方内容运营 / 创作者自查",
+        "must_human_review": False,
+    },
+}
+
+
 def _first(ev, tool):
     """从证据里取某个工具的第一个证据条目（证据统一是 {tool: {evidence: [item, ...]}}）。"""
     items = (ev.get(tool, {}).get("evidence") or [{}])
@@ -270,6 +306,14 @@ def explain(risk_level, evidence):
     caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
 
+    # 防御性初始化：历史坑是某分支漏设某个字段导致 UnboundLocalError。
+    # 这里先给三个字段默认值，后面分支覆盖；即使哪个分支忘了写也不会崩。
+    headline = ""
+    summary = ""
+    what_to_do = ""
+    # 处置建议条目：四档齐全，缺档位会 KeyError —— 见 ACTION_PLAYBOOK 定义。
+    action_playbook = ACTION_PLAYBOOK[risk_level]
+
     if risk_level == "high_risk":
         if cross_level == "hard":
             headline = "文案和图在互相打架，建议立即复核"
@@ -282,6 +326,7 @@ def explain(risk_level, evidence):
             return {
                 "headline": headline, "summary": summary,
                 "what_to_do": what_to_do, "caveat": caveat,
+                "action_playbook": action_playbook,
             }
         elif aigc_triggered:
             # 整图 AI 生成：这是 TruFor 查不出的盲区，由本域微调的 AIGC 模型兜底
@@ -373,6 +418,7 @@ def explain(risk_level, evidence):
         "summary": summary,
         "what_to_do": what_to_do,
         "caveat": caveat,
+        "action_playbook": action_playbook,
     }
 
 

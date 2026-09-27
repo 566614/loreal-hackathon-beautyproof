@@ -1,0 +1,69 @@
+{
+  "schema": "beautyproof/closedloop_eval@1",
+  "generated_at": "2026-09-27T22:55:22",
+  "config": {
+    "fast": false,
+    "sample": 1,
+    "model_note": "pipeline.analyze 全量 aigc+trufor（非 --fast）",
+    "pipeline": "tools/pipeline.analyze()"
+  },
+  "datasets": {
+    "clean": {
+      "dir": "data/clean",
+      "ground_truth": "clean",
+      "bucket": "controlled",
+      "expect_risk": [
+        "credible",
+        "inconclusive"
+      ],
+      "n": 1,
+      "sampled": true,
+      "risk_distribution": {
+        "high_risk": 0,
+        "suspicious": 0,
+        "credible": 0,
+        "inconclusive": 1,
+        "error": 0
+      },
+      "direction_hit_rate": 1.0,
+      "n_hit": 1,
+      "samples": [
+        {
+          "file": "clean_01.png",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3503,
+            "trufor_area_ratio": 0.053,
+            "trufor_available": true
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3503（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        }
+      ],
+      "note": "受控真图（相机拍/自产实拍）。期望不误报（inconclusive/credible）。"
+    }
+  },
+  "false_positive_rate": {},
+  "zero_shot_recall": {},
+  "disposition_distribution": {},
+  "summary": {
+    "datasets_run": [
+      "clean"
+    ],
+    "total_samples": 1,
+    "controlled_direction_hit_rate": 1.0,
+    "controlled_n_hit": 1,
+    "controlled_n": 1,
+    "realworld_false_positive_rate": null,
+    "ai_cross_zero_shot_recall_high_risk": null,
+    "disposition_kinds": 0
+  }
+}

@@ -25,9 +25,12 @@
     python tools/video_tool.py --input xxx.mp4 --out outputs/analysis_video_xxx.json
     python tools/video_tool.py --input xxx.mp4 --fast          # 跳过深度学习模型，秒级
     python tools/video_tool.py --input xxx.mp4 --max-frames 20 --fps-sample 2.0
+    python tools/video_tool.py --input xxx.mp4 --llm --roundtable  # 逐帧开解读层 / 圆桌复核
 
 产出：
-    outputs/analysis_video_<视频名>.json   视频级聚合结果（frames 里含逐帧判定）
+    outputs/analysis_video_<视频名>.json   视频级聚合结果（frames 里含逐帧判定；
+                                            与图片侧同一套 {tool, source_asset_id,
+                                            observed, cannot_prove} 四件套）
     outputs/video_frames/<视频名>/frame_*.jpg   抽出来的帧（供人工抽查）
     outputs/<tool>_frame_*.json             每帧各自的逐工具证据（沿用统一格式）
 """
@@ -46,6 +49,22 @@ try:
     from rule_engine import RISK_LEVELS
 except Exception:  # noqa: BLE001
     RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
+
+# 视频级证据沿用与图片侧完全一致的四件套格式：
+#   {tool, source_asset_id, observed, cannot_prove, evidence[]}
+# 其中 cannot_prove 是硬要求 —— 抽帧必然有覆盖率上限，必须写在证据里，
+# 不能让「采样帧没问题」被读成「整段视频干净」。
+VIDEO_CANNOT_PROVE_TPL = (
+    "抽帧覆盖率有限：本次只分析了 {sampled}/{total} 帧（覆盖率 {ratio}），"
+    "未抽到的画面（尤其是短于采样间隔、快速闪过的编辑）仍可能含合成/篡改痕迹；"
+    "视频级结论只代表「被采样到的这些帧的情况」，不能证明未被抽到的帧没有问题，"
+    "也不能作为「整段视频干净」的保证。"
+)
+# 单帧层面同样有边界：一帧只代表它被抽到的那一瞬间
+FRAME_CANNOT_PROVE = (
+    "这一帧只代表该时间点被抽到的画面：帧内的判定沿用图像流水线全部阈值与开关，"
+    "但它证明不了相邻帧、也证明不了这段视频的其余部分"
+)
 
 
 # ---------------------------------------------------------------- 抽帧
@@ -151,13 +170,49 @@ def extract_frames(video_path, fps_sample=1.0, max_frames=30, frames_dir=None):
 
 
 # ---------------------------------------------------------------- 逐帧 + 聚合
+def aggregate_risk_level(frame_results, order=None):
+    """把逐帧判定聚合成视频级风险档 —— 规则：任一帧 high_risk → 视频 high_risk。
+
+    ⚠️ 这里踩过坑：RISK_LEVELS 是**按风险从高到低**排的（high_risk 索引 0），
+    所以「取风险最高的那一档」是取**索引最小**的那一档（min），不是 max。
+    早期写成 max —— 结果「1 帧高风险 + 5 帧无法判定」被聚合成"无法判定"，
+    高风险帧明明列在 high_risk_frames 里，视频级结论却是 inconclusive，
+    与文档承诺的「任一帧 high_risk → 视频 high_risk」自相矛盾。现修正为 min。
+
+    error 帧（逐帧分析异常）不参与定级：它们不代表"没问题"，只是没查出来。
+    """
+    order = order or {lvl: i for i, lvl in enumerate(RISK_LEVELS)}
+    valid = [r for r in frame_results if r.get("risk_level") in order]
+    if not valid:
+        return "inconclusive"
+    return min(valid, key=lambda r: order[r["risk_level"]])["risk_level"]
+
+
+def build_coverage(video, sampled):
+    """算抽帧覆盖率 —— 视频级 cannot_prove 的核心数字，必须可核对。
+
+    返回 {sampled, total_frames, coverage_ratio, uncovered_frames}；
+    元数据读不出来（total_frames=0）时覆盖率给 None，绝不编一个好看的数字。
+    """
+    total = video.get("total_frames") or 0
+    return {
+        "sampled": sampled,
+        "total_frames": total,
+        "coverage_ratio": round(sampled / total, 6) if total else None,
+        "uncovered_frames": max(total - sampled, 0) if total else None,
+    }
+
+
 def analyze_video(video_path, fast=False, max_frames=30, fps_sample=1.0,
-                  verbose=True, timeout=900, out_path=None):
+                  verbose=True, timeout=900, out_path=None,
+                  llm=False, roundtable=False):
     """对视频抽帧 → 逐帧跑现有图像流水线 → 聚合视频级判定。
 
     参数：
         fast       True 时跳过 aigc / trufor 两个深度学习模型（秒级出结果，
                    代价是漏掉「整图 AI 生成」和深度学习篡改定位，仅做冒烟/预览用）。
+        llm        True 时逐帧开启大模型「人话解读」层（默认关，需本地 Ollama）。
+        roundtable True 时逐帧开启多 Agent 圆桌交叉复核（默认关，纯结构化、零依赖）。
         out_path   结果 JSON 写哪；默认 outputs/analysis_video_<视频名>.json
 
     返回 dict（视频级分析结果，schema = beautyproof/video-analysis@1）：
@@ -165,6 +220,7 @@ def analyze_video(video_path, fast=False, max_frames=30, fps_sample=1.0,
         verdict.flagged_frames / high_risk_frames 触发判定的帧
         frames[] 逐帧判定（frame_id / timestamp / risk_level / reasons）
         risk_breakdown 各档帧数统计
+        另有与图片侧统一的四件套字段（见下 cannot_prove / source_asset_id）
     """
     import pipeline  # 延迟导入，确保 sys.path 已就绪
 
@@ -186,15 +242,25 @@ def analyze_video(video_path, fast=False, max_frames=30, fps_sample=1.0,
                   f"@ {f['timestamp']}s ---")
         try:
             res = pipeline.analyze(
-                f["path"], fast=fast, verbose=verbose, text=None, timeout=timeout)
+                f["path"], fast=fast, verbose=verbose, text=None, timeout=timeout,
+                llm=llm, roundtable=roundtable)
             v = res["verdict"]
             frame_results.append({
                 "frame_id": f["frame_id"],
                 "timestamp": f["timestamp"],
+                # 与图片侧统一：source_asset_id 就是这一帧的文件名，
+                # 逐工具证据 outputs/<tool>_frame_XXXX.json 里也是同一个 id，可直接对上
+                "source_asset_id": Path(f["path"]).name,
+                "original_idx": f["original_idx"],
                 "risk_level": v["risk_level"],
                 "reasons": v.get("reasons", []),
                 "tools_used": v.get("tools_used", []),
                 "output_file": res.get("_output_file"),
+                "observed": (f"第 {f['timestamp']}s 抽帧（原始第 {f['original_idx']} 帧）"
+                             f"复用图像流水线判为 {v['risk_level']}"
+                             + ("：" + "；".join(v.get("reasons", []))
+                                if v.get("reasons") else "（无详细理由）")),
+                "cannot_prove": FRAME_CANNOT_PROVE,
             })
         except Exception as e:  # noqa: BLE001
             if verbose:
@@ -202,21 +268,21 @@ def analyze_video(video_path, fast=False, max_frames=30, fps_sample=1.0,
             frame_results.append({
                 "frame_id": f["frame_id"],
                 "timestamp": f["timestamp"],
+                "source_asset_id": Path(f["path"]).name,
+                "original_idx": f["original_idx"],
                 "risk_level": "error",
                 "reasons": [f"逐帧分析异常：{type(e).__name__}：{e}"],
                 "tools_used": [],
                 "output_file": None,
+                "observed": f"第 {f['timestamp']}s 抽帧分析失败：{type(e).__name__}：{e}",
+                "cannot_prove": FRAME_CANNOT_PROVE,
             })
 
     # ---------------------------------------------------------- 聚合
     valid = [r for r in frame_results if r["risk_level"] in order]
     errored = [r for r in frame_results if r["risk_level"] == "error"]
 
-    if valid:
-        # 「取最高档」天然满足「任一帧 high_risk → 视频 high_risk」
-        agg_level = max(valid, key=lambda r: order[r["risk_level"]])["risk_level"]
-    else:
-        agg_level = "inconclusive"
+    agg_level = aggregate_risk_level(frame_results, order=order)
 
     high_risk_frames = [r for r in valid if r["risk_level"] == "high_risk"]
     # 触发判定的帧：suspicious 及以上（含 high_risk）
@@ -241,14 +307,44 @@ def analyze_video(video_path, fast=False, max_frames=30, fps_sample=1.0,
     for r in valid:
         risk_breakdown[r["risk_level"]] += 1
 
+    coverage = build_coverage(video, len(meta["frames"]))
+    ratio_txt = (f"{coverage['coverage_ratio'] * 100:.2f}%"
+                 if coverage["coverage_ratio"] is not None else "未知（读不到总帧数）")
+    cannot_prove_txt = VIDEO_CANNOT_PROVE_TPL.format(
+        sampled=coverage["sampled"], total=coverage["total_frames"] or "未知",
+        ratio=ratio_txt)
+    observed_txt = (
+        f"视频《{video['name']}》（{video['duration_seconds']}s / 共 {video['total_frames']} 帧 / "
+        f"{video['fps']}fps）按每 {video['interval']} 帧抽 1 共抽 {len(meta['frames'])} 帧，"
+        f"逐帧复用图像流水线（{'快速预览：跳过 AIGC/TruFor' if fast else '完整含 AIGC/TruFor'}）"
+        f"后聚合为 {agg_level}；"
+        + (f"触发帧 {', '.join(r['frame_id'] for r in flagged)}。" if flagged
+           else "采样帧未触发可疑/高风险判定。")
+    )
+
     result = {
         "schema": "beautyproof/video-analysis@1",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "elapsed_seconds": round(time.time() - t0, 1),
         "mode": "fast" if fast else "full",
+        # 逐帧是否额外开了大模型解读层 / 圆桌复核（与 pipeline 图片侧同名的开关）
+        "llm_enabled": bool(llm),
+        "roundtable_enabled": bool(roundtable),
+        # ---- 与图片侧统一的四件套（不另起一套格式）----
+        "tool": "video",
+        "source_asset_id": video["name"],
+        "observed": observed_txt,
+        "cannot_prove": cannot_prove_txt,
+        # 顶级 risk_level / reasons 与 verdict 内的同值并存：
+        # verdict 是老字段（run_video 与既有文档引用它），顶级这两项是给
+        # 「按统一格式读证据」的下游（报告 / 网页 / 评委抽查）直接取的。
+        "risk_level": agg_level,
+        "reasons": reasons_agg,
         "video": video,
+        "coverage": coverage,
         "sampling": {"fps_sample": fps_sample, "max_frames": max_frames,
-                     "interval": video["interval"], "sampled": len(meta["frames"])},
+                     "interval": video["interval"], "sampled": len(meta["frames"]),
+                     "coverage_ratio": coverage["coverage_ratio"]},
         "verdict": {
             "risk_level": agg_level,
             "reasons": reasons_agg,
@@ -292,12 +388,17 @@ def main(argv=None):
                     help="跳过 aigc/trufor 深度学习模型，秒级出结果（仅预览用）")
     ap.add_argument("--max-frames", type=int, default=30, help="最多抽帧数（默认 30）")
     ap.add_argument("--fps-sample", type=float, default=1.0, help="抽帧采样率，每秒几帧（默认 1.0）")
+    ap.add_argument("--llm", action="store_true",
+                    help="逐帧开启大模型「人话解读」层（需本地 Ollama，默认关）")
+    ap.add_argument("--roundtable", action="store_true",
+                    help="逐帧开启多 Agent 圆桌交叉复核（默认关）")
     args = ap.parse_args(argv)
 
     try:
         res = analyze_video(
             args.input, fast=args.fast, max_frames=args.max_frames,
-            fps_sample=args.fps_sample, verbose=True, out_path=args.out)
+            fps_sample=args.fps_sample, verbose=True, out_path=args.out,
+            llm=args.llm, roundtable=args.roundtable)
     except (FileNotFoundError, RuntimeError) as e:
         print(f"[video_tool] 错误：{e}")
         return 1

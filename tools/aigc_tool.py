@@ -202,10 +202,19 @@ def run_aigc(image_path):
 
 
 def build_evidence(image_path, ai_score, ai_label, available=True):
+    # 记录实际加载的模型版本名（如 beautyproof_aigen_v4），让报告与证据可自证
+    # 用的是哪一版模型 —— 直接修复「报告说旧模型、PPT 说新模型」的口径不一致硬伤。
+    # 在推理时已通过 model_path() 解析到具体目录，这里只回读其目录名，零额外成本。
+    try:
+        _mp = model_path()
+        model_name = Path(_mp).name if _mp else None
+    except Exception:  # noqa: BLE001
+        model_name = None
     if not available:
         return {
             "tool": "aigc",
             "source_asset_id": Path(image_path).name,
+            "model": model_name,
             "observed": "AI 生成检测暂不可用（模型未下载成功 / 加载失败）",
             "cannot_prove": "模型未就绪，无法给出 AI 生成概率；本项按「无法判断」处理，不影响其他工具结论",
             "evidence": [
@@ -226,11 +235,12 @@ def build_evidence(image_path, ai_score, ai_label, available=True):
     return {
         "tool": "aigc",
         "source_asset_id": Path(image_path).name,
+        "model": model_name,
         "observed": f"AI 生成概率 {ai_score}（{verdict}）",
         "cannot_prove": "模型也会误判：分数高不代表一定 AI 生成，分数低也不代表一定真实；"
                         "本项与 TruFor 互补——TruFor 查局部篡改，本项查整图 AI 生成",
         "evidence": [
-            {"aigc_score": ai_score, "label": ai_label, "available": True},
+            {"aigc_score": ai_score, "label": ai_label, "available": True, "model": model_name},
         ],
     }
 

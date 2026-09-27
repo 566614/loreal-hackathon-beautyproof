@@ -118,6 +118,9 @@ def key_facts(tool, ev_list):
             facts.append(f"AI 生成概率：**{score}**（≥0.9 高风险，≥0.8 可疑）")
         if "label" in e:
             facts.append(f"模型标签：{e['label']}")
+        # 自证用的是哪版 AIGC 模型（对抗「报告旧、PPT 新」的口径不一致）
+        if e.get("model"):
+            facts.append(f"检测模型：**{e['model']}**（本域微调，权重仅本地加载，绝不联网）")
     elif tool == "trufor":
         score = e.get("trufor_score")
         if score is None:

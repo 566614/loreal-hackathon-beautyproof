@@ -282,3 +282,9 @@ outputs/_video/
 outputs/video_frames/
 # Web 复核队列：人工复核运行时状态，随时长变化，不是交付物
 outputs/review_queue.json
+# 决策链路逐图导出（与 aigc_*/trufor_* 同类的逐图证据，重跑即重建）
+outputs/decision_trace_*.json
+# 视频/闭环评测的运行日志
+outputs/_*.log
+# 视频抽帧的证据备份（临时目录，重跑可重建）
+_tmp_frame_backup/

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>内容核验过程 · tampered_01_copy_move.png</title>
+<style>
+  :root { --ink:#1f2933; --muted:#6b7280; --line:#e5e7eb; --bg:#f7f8fa; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+         color:var(--ink); background:var(--bg); line-height:1.65; }
+  .wrap { max-width:920px; margin:0 auto; padding:28px 20px 60px; }
+  header { border-bottom:3px solid #c0392b; padding-bottom:14px; margin-bottom:22px; }
+  h1 { font-size:22px; margin:0 0 6px; }
+  .sub { color:var(--muted); font-size:13px; }
+  .block { background:#fff; border:1px solid var(--line); border-radius:10px;
+           padding:18px 20px; margin-bottom:22px; }
+  .block h2 { font-size:16px; margin:0 0 12px; }
+  .risk-badge { display:inline-block; color:#fff; background:#c0392b;
+                 padding:4px 14px; border-radius:20px; font-weight:600; font-size:15px; }
+  .reasons { margin:10px 0 0; padding-left:20px; }
+  .reasons li { margin:4px 0; }
+  .playbook { display:grid; grid-template-columns:120px 1fr; gap:8px 14px; }
+  .playbook .k { color:var(--muted); font-size:13px; }
+  .playbook .v { font-size:14px; }
+  .card { border:1px solid var(--line); border-left:5px solid #cbd5e1;
+          border-radius:8px; padding:14px 16px; margin-bottom:12px; background:#fff; }
+  .card.contrib { border-left-color:#c0392b; }
+  .card-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .step { width:24px; height:24px; border-radius:50%; background:var(--ink); color:#fff;
+          display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
+  .tool { font-weight:600; }
+  .tool code, .ref code { background:#eef1f4; padding:1px 6px; border-radius:4px; font-size:12px; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:12px; }
+  .badge.contrib { background:#fdecea; color:#c0392b; }
+  .badge.aux { background:#eef1f4; color:#6b7280; }
+  .observed { font-size:14px; }
+  .ref { font-size:12px; color:var(--muted); margin-top:4px; }
+  .cannot { font-size:12px; color:#8a6d3b; background:#fdf6e3; border-radius:6px;
+             padding:8px 10px; margin-top:8px; }
+  .facts { margin:8px 0 0; padding-left:18px; font-size:12px; color:#374151; }
+  .muted { color:var(--muted); }
+  footer { color:var(--muted); font-size:12px; text-align:center; margin-top:30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>内容核验过程 · tampered_01_copy_move.png</h1>
+    <div class="sub">BeautyProof 内容核验 Agent · 决策闭环可追溯 · 生成于 2026-09-27T23:01:27</div>
+  </header>
+
+  <div class="block">
+    <h2>最终结论</h2>
+    <span class="risk-badge">高风险（high_risk）</span>
+    <ul class="reasons"><li>AI 生成检测：AI 生成概率 0.0（&lt;0.2）→ 看起来像真实拍摄/人工制作的图</li>
+<li>TruFor：篡改分数 0.9946（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 1.5%</li></ul>
+  </div>
+
+  <div class="block">
+    <h2>处置建议（分级 playbook）</h2>
+    <div class="playbook">
+      <div class="k">处置动作</div><div class="v">下架 / 冻结并转人工复核</div>
+      <div class="k">建议时限</div><div class="v">2 小时内完成人工复核，复核结论出来前不得对外发布</div>
+      <div class="k">责任人角色</div><div class="v">平台审核员（必要时联动品牌方与法务）</div>
+      <div class="k">强制人工</div><div class="v">是（强制人工复核）</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>核验时间线（工具 → 证据 → 档位）</h2>
+    
+        <div class="card aux">
+          <div class="card-head">
+            <span class="step">1</span>
+            <span class="tool">文件指纹 <code>hash</code></span>
+            <span class="badge aux">— 辅助证据（未推动档位）</span>
+          </div>
+          <div class="observed">这张图的内容指纹是 sha256:904f0a7a9e0511438aaa584cfc3ec54d5c90d5bf548ebfaae1a15e13bbd5cc88，文件大小 619761 字节。该指纹未在品牌方已知原图库中命中（库里没有 ≠ 图有问题，很可能只是还没收录这张原图）。</div>
+          <div class="ref">证据文件：<code>outputs/hash_tampered_01_copy_move.json</code></div>
+          <div class="cannot"><b>能力边界：</b>哈希只证明文件的身份，不能证明图片真伪、不能判断是否被篡改</div><ul class="facts"><li>asset_id: sha256:904f0a7a9e0511438aaa584cfc3ec54d5c90d5bf548ebfaae1a15e13bbd5cc88 · size_bytes: 619761 · known_original_hit:  · known_originals_dir: known_originals</li></ul>
+        </div>
+
+        <div class="card aux">
+          <div class="card-head">
+            <span class="step">2</span>
+            <span class="tool">内容凭证 <code>c2pa</code></span>
+            <span class="badge aux">— 辅助证据（未推动档位）</span>
+          </div>
+          <div class="observed">c2patool 没能读出凭证（绝大多数网图都没有凭证，属正常） 未检出 TC260 AIGC 标识（注意：标识可能被截图/转格式/重保存剥离，无标识不代表不是 AI 生成）。</div>
+          <div class="ref">证据文件：<code>outputs/c2pa_tampered_01_copy_move.json</code></div>
+          <div class="cannot"><b>能力边界：</b>没有凭证/标识不等于图片是假的；有凭证也不等于没被恶意编辑过；TC260 标识可能被剥离，缺失时不能反推结论</div><ul class="facts"><li>c2pa_status: missing · detail: c2patool 没能读出凭证（绝大多数网图都没有凭证，属正常） · tc260_aigc:  · tc260_present: False · tc260_is_ai_generated: False</li></ul>
+        </div>
+
+        <div class="card aux">
+          <div class="card-head">
+            <span class="step">3</span>
+            <span class="tool">文字识别 <code>ocr</code></span>
+            <span class="badge aux">— 辅助证据（未推动档位）</span>
+          </div>
+          <div class="observed">在图上一共读出 3 行文字</div>
+          <div class="ref">证据文件：<code>outputs/ocr_tampered_01_copy_move.json</code></div>
+          <div class="cannot"><b>能力边界：</b>OCR 只是抄写员，不能证明文字内容为真，也不能证明图片被篡改</div><ul class="facts"><li>text: @雨弒_ · bbox: [8.0, 637.0, 170.0, 693.0] · confidence: 0.854</li><li>text: 小红 · bbox: [142.0, 639.0, 261.0, 690.0] · confidence: 0.9999</li><li>text: N · bbox: [606.0, 681.0, 719.0, 792.0] · confidence: 0.74</li></ul>
+        </div>
+
+        <div class="card aux">
+          <div class="card-head">
+            <span class="step">4</span>
+            <span class="tool">AI 生成检测 <code>aigc</code></span>
+            <span class="badge aux">— 辅助证据（未推动档位）</span>
+          </div>
+          <div class="observed">AI 生成概率 0.0（模型认为看起来像真实拍摄 / 人工制作的图）</div>
+          <div class="ref">证据文件：<code>outputs/aigc_tampered_01_copy_move.json</code></div>
+          <div class="cannot"><b>能力边界：</b>模型也会误判：分数高不代表一定 AI 生成，分数低也不代表一定真实；本项与 TruFor 互补——TruFor 查局部篡改，本项查整图 AI 生成</div><ul class="facts"><li>aigc_score: 0.0 · label: real · available: True · model: beautyproof_aigen_v4</li></ul>
+        </div>
+
+        <div class="card contrib">
+          <div class="card-head">
+            <span class="step">5</span>
+            <span class="tool">篡改痕迹检测 <code>trufor</code></span>
+            <span class="badge contrib">✓ 直接贡献档位</span>
+          </div>
+          <div class="observed">TruFor 篡改分数 0.9946（篡改痕迹非常明显）；可疑区域约占全图 1.5%，主要集中在画面右下角</div>
+          <div class="ref">证据文件：<code>outputs/trufor_tampered_01_copy_move.json</code></div>
+          <div class="cannot"><b>能力边界：</b>模型也会误判：分数高不代表一定有罪（压缩/滤镜也会留痕），分数低也不代表绝对干净；且 TruFor 只擅长查「局部被人动过手脚」，官方明确说明它查不出「整张完全由 AI 生成的图」</div><ul class="facts"><li>trufor_score: 0.9946 · tampered_area_ratio: 0.0145 · tampered_position: 画面右下角 · available: True</li></ul>
+        </div>
+
+        <div class="card aux">
+          <div class="card-head">
+            <span class="step">6</span>
+            <span class="tool">多 Agent 圆桌复核 <code>roundtable</code></span>
+            <span class="badge aux">— 辅助证据（未推动档位）</span>
+          </div>
+          <div class="observed">多 Agent 圆桌对既有证据的交叉复核</div>
+          <div class="ref">证据文件：<code>outputs/roundtable_tampered_01_copy_move.json</code></div>
+          <div class="cannot"><b>能力边界：</b>圆桌意见为角色复核，不替代规则引擎结论</div><ul class="facts"><li>image_agent: {&#x27;role&#x27;: &#x27;ImageAgent&#x27;, &#x27;scope&#x27;: &#x27;图像取证（指纹/凭证/压缩/AI生成/篡改/文字）&#x27;, &#x27;signals&#x27;: [&#x27;图像侧各工具未给出明确异常信号&#x27;], &#x27;concern&#x27;: None} · text_agent: {&#x27;role&#x27;: &#x27;TextAgent&#x27;, &#x27;scope&#x27;: &#x27;文案合规 + 图文一致性&#x27;, &#x27;signals&#x27;: [&#x27;文案侧未给出明显异常（或无配套文案）&#x27;], &#x27;concern&#x27;: None} · source_agent: {&#x27;role&#x27;: &#x27;SourceAgent&#x27;, &#x27;scope&#x27;: &#x27;来源可信度（指纹 + 凭证）&#x27;, &#x27;signals&#x27;: [&#x27;内容指纹未在已知原图库中命中（可能是新图/二创/外来图）&#x27;, &#x27;无 C2PA 内容凭证（多数网络图如此，本身不构成风险）&#x27;], &#x27;concern&#x27;: &#x27;缺少来源凭证，无法独立证实出处&#x27;} · judge: {&#x27;role&#x27;: &#x27;JudgeAgent&#x27;, &#x27;rule_engine_verdict&#x27;: &#x27;NO_VERDICT&#x27;, &#x27;agrees_with_verdict&#x27;: True, &#x27;consensus&#x27;: &quot;各角色均未发现明确异常，但也都无法独立证实真实——与&#x27;无法判定&#x27;口径一致&quot;, &#x27;open_concerns&#x27;: [&#x27;缺少来源凭证，无法独立证实出处&#x27;], &#x27;recommendation&#x27;: &#x27;可采信，必要时补充来源证据&#x27;}</li></ul>
+        </div>
+  </div>
+
+  <footer>
+    本页由 tools/build_trace_view.py 生成，内联样式、可离线打开；证据文件见各卡片「证据文件」路径。
+  </footer>
+</div>
+</body>
+</html>

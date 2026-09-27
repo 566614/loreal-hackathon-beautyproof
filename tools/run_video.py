@@ -18,6 +18,8 @@ run_video.py —— 视频模态接入「现有证据 / 报告格式」的连接
     python tools/run_video.py --input demo/BeautyProof_演示视频.mp4
     python tools/run_video.py --input xxx.mp4 --fast
     python tools/run_video.py --input xxx.mp4 --max-frames 20 --fps-sample 2.0
+    python tools/run_video.py --input xxx.mp4 --llm --roundtable  # 逐帧解读层 / 圆桌复核
+    python tools/run_video.py --input xxx.mp4 --json-only         # 只出 JSON，不打过程
 """
 import argparse
 import json
@@ -59,11 +61,19 @@ def build_video_report(result):
     lines = []
     lines.append(f"# 视频鉴定报告：{v['name']}")
     lines.append("")
-    lines.append(f"- 检测对象：`{v['name']}`")
+    cov = result.get("coverage") or {}
+    ratio = cov.get("coverage_ratio")
+    ratio_txt = f"{ratio * 100:.2f}%" if isinstance(ratio, (int, float)) else "未知"
+
+    lines.append(f"- 检测对象：`{v['name']}`（source_asset_id：`{result.get('source_asset_id', v['name'])}`）")
     lines.append(f"- 时长：{v['duration_seconds']}s ｜ 总帧数：{v['total_frames']} ｜ 原始 fps：{v['fps']}")
     lines.append(f"- 采样：每 {result['sampling']['interval']} 帧取 1，共抽 "
-                 f"{result['sampling']['sampled']} 帧（上限 {result['sampling']['max_frames']}）")
-    lines.append(f"- 模式：{'快速预览（跳过深度学习模型）' if result['mode'] == 'fast' else '完整（含 AIGC / TruFor）'}")
+                 f"{result['sampling']['sampled']} 帧（上限 {result['sampling']['max_frames']}）"
+                 f" → **抽帧覆盖率 {cov.get('sampled', '?')}/{cov.get('total_frames', '?')}"
+                 f"（{ratio_txt}）**，未抽到的 {cov.get('uncovered_frames', '?')} 帧本次未检测")
+    lines.append(f"- 模式：{'快速预览（跳过深度学习模型）' if result['mode'] == 'fast' else '完整（含 AIGC / TruFor）'}"
+                 + (" + 大模型解读层" if result.get("llm_enabled") else "")
+                 + (" + 多 Agent 圆桌复核" if result.get("roundtable_enabled") else ""))
     lines.append(f"- 参与检测的工具：{len(verdict.get('tools_used', []))} 类（逐帧复用）")
     lines.append(f"- **视频级鉴定结论：{zh_level}（{risk}）**")
     lines.append("")
@@ -85,13 +95,19 @@ def build_video_report(result):
 
     lines.append("## 二、逐帧明细")
     lines.append("")
-    lines.append("| 帧号 | 时间点(s) | 风险等级 | 触发理由摘要 |")
-    lines.append("|------|----------|----------|--------------|")
+    lines.append("| 帧号 | 时间点(s) | 风险等级 | 触发理由摘要 | 该帧证据 JSON |")
+    lines.append("|------|----------|----------|--------------|--------------|")
     for fr in result.get("frames", []):
         lvl = fr["risk_level"]
         z, _ = RISK_TEXT.get(lvl, (lvl, ""))
         reason = "；".join(fr.get("reasons", []))[:60] or "—"
-        lines.append(f"| {fr['frame_id']} | {fr['timestamp']} | {z} | {reason} |")
+        ev = fr.get("output_file")
+        ev_txt = f"`{Path(ev).name}`" if ev else "—"
+        lines.append(f"| {fr['frame_id']} | {fr['timestamp']} | {z} | {reason} | {ev_txt} |")
+    lines.append("")
+    lines.append("每一帧的 `source_asset_id` 就是该帧文件名（`frame_XXXX.jpg`），"
+                 "逐工具证据写在 `outputs/<tool>_frame_XXXX.json`，与图片侧完全同一套格式，"
+                 "可以单独打开核对。")
     lines.append("")
 
     lines.append("## 三、各档统计")
@@ -112,6 +128,9 @@ def build_video_report(result):
 
     lines.append("## 五、能力边界（诚实声明）")
     lines.append("")
+    if result.get("cannot_prove"):
+        lines.append(f"> **本次检测证明不了什么（来自结果 JSON 的 `cannot_prove` 字段）**：{result['cannot_prove']}")
+        lines.append("")
     lines.append("- **抽帧覆盖率**：只分析采样帧，快速闪过（< 采样间隔）的编辑可能漏检；"
                  "对剪辑密集的视频请提高 `--fps-sample` 或 `--max-frames`。")
     lines.append("- **CPU 速度**：full 模式每帧都要加载 AIGC / TruFor 模型，单视频可能需数分钟；"
@@ -132,6 +151,12 @@ def main(argv=None):
     ap.add_argument("--fast", action="store_true", help="跳过深度学习模型（预览）")
     ap.add_argument("--max-frames", type=int, default=30, help="最多抽帧数（默认 30）")
     ap.add_argument("--fps-sample", type=float, default=1.0, help="抽帧采样率（默认 1.0）")
+    ap.add_argument("--llm", action="store_true",
+                    help="逐帧开启大模型「人话解读」层（需本地 Ollama，默认关）")
+    ap.add_argument("--roundtable", action="store_true",
+                    help="逐帧开启多 Agent 圆桌交叉复核（默认关）")
+    ap.add_argument("--json-only", action="store_true",
+                    help="只写 JSON 与报告，不打印逐帧详细过程（与 pipeline 图片侧口径一致）")
     ap.add_argument("--report-only", action="store_true",
                     help="只根据已有的 analysis_video_<名>.json 重新生成报告，不重跑分析")
     args = ap.parse_args(argv)
@@ -147,7 +172,8 @@ def main(argv=None):
         try:
             result = video_tool.analyze_video(
                 args.input, fast=args.fast, max_frames=args.max_frames,
-                fps_sample=args.fps_sample, verbose=True)
+                fps_sample=args.fps_sample, verbose=not args.json_only,
+                llm=args.llm, roundtable=args.roundtable)
         except (FileNotFoundError, RuntimeError) as e:
             print(f"[run_video] 错误：{e}")
             return 1
@@ -157,9 +183,20 @@ def main(argv=None):
     rep_path = REPORT_DIR / f"report_video_{result['video']['stem']}.md"
     rep_path.write_text(report, encoding="utf-8")
 
-    print(f"\n视频级报告：{rep_path}")
-    print(f"聚合结果 JSON：{result.get('_output_file')}")
-    print(f"视频级结论：{result['verdict']['risk_level']}")
+    if args.json_only:
+        # 与 pipeline 图片侧 --json-only 口径一致：只给一行机器可读的摘要
+        print(json.dumps({
+            "video": result["video"]["name"],
+            "risk_level": result["verdict"]["risk_level"],
+            "sampled_frames": (result.get("coverage") or {}).get("sampled"),
+            "coverage_ratio": (result.get("coverage") or {}).get("coverage_ratio"),
+            "json": result.get("_output_file"),
+            "report": str(rep_path),
+        }, ensure_ascii=False))
+    else:
+        print(f"\n视频级报告：{rep_path}")
+        print(f"聚合结果 JSON：{result.get('_output_file')}")
+        print(f"视频级结论：{result['verdict']['risk_level']}")
     return 0
 
 
