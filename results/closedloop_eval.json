@@ -1,6 +1,6 @@
 {
   "schema": "beautyproof/closedloop_eval@1",
-  "generated_at": "2026-09-28T13:23:09",
+  "generated_at": "2026-09-28T20:29:50",
   "config": {
     "fast": false,
     "sample": null,
@@ -17,25 +17,42 @@
         "credible",
         "inconclusive"
       ],
-      "n": 1,
+      "n": 2,
       "n_total": 2,
-      "n_evaluated": 1,
-      "n_not_run": 1,
-      "missing_files": [
-        "clean_01.png"
-      ],
-      "coverage": 0.5,
+      "n_evaluated": 2,
+      "n_not_run": 0,
+      "missing_files": [],
+      "coverage": 1.0,
       "sampled": false,
       "risk_distribution": {
         "high_risk": 0,
         "suspicious": 0,
         "credible": 0,
-        "inconclusive": 1,
+        "inconclusive": 2,
         "error": 0
       },
       "direction_hit_rate": 1.0,
-      "n_hit": 1,
+      "n_hit": 2,
       "samples": [
+        {
+          "file": "clean_01.png",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3503,
+            "trufor_area_ratio": 0.053,
+            "trufor_available": true
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3503（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
         {
           "file": "clean_02_recompressed.png",
           "risk_level": "inconclusive",
@@ -153,41 +170,22 @@
       "expect_risk": [
         "high_risk"
       ],
-      "n": 2,
+      "n": 20,
       "n_total": 20,
-      "n_evaluated": 2,
-      "n_not_run": 18,
-      "missing_files": [
-        "ai_02.png",
-        "ai_03.png",
-        "ai_04.png",
-        "ai_05.png",
-        "ai_06.png",
-        "ai_07.png",
-        "ai_08.png",
-        "ai_09.png",
-        "ai_10.png",
-        "ai_11.png",
-        "ai_12.png",
-        "ai_13.png",
-        "ai_14.png",
-        "ai_15.png",
-        "ai_16.png",
-        "ai_18.png",
-        "ai_19.png",
-        "ai_20.png"
-      ],
-      "coverage": 0.1,
+      "n_evaluated": 20,
+      "n_not_run": 0,
+      "missing_files": [],
+      "coverage": 1.0,
       "sampled": false,
       "risk_distribution": {
-        "high_risk": 2,
+        "high_risk": 20,
         "suspicious": 0,
         "credible": 0,
         "inconclusive": 0,
         "error": 0
       },
       "direction_hit_rate": 1.0,
-      "n_hit": 2,
+      "n_hit": 20,
       "samples": [
         {
           "file": "ai_01.png",
@@ -210,6 +208,292 @@
           ]
         },
         {
+          "file": "ai_02.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.7809,
+            "trufor_area_ratio": 0.005,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_03.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9785,
+            "trufor_area_ratio": 0.0046,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_04.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9999,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9695,
+            "trufor_area_ratio": 0.0089,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9999（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_05.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9752,
+            "trufor_area_ratio": 0.0071,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_06.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9959,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9824,
+            "trufor_area_ratio": 0.0043,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9959（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_07.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.1868,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9885,
+            "trufor_area_ratio": 0.0086,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.1868（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.9885（≥0.9）→ 篡改痕迹非常明显；可疑区域约占全图 0.9%"
+          ]
+        },
+        {
+          "file": "ai_08.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9681,
+            "trufor_area_ratio": 0.0093,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_09.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9988,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9972,
+            "trufor_area_ratio": 0.008,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9988（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_10.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9962,
+            "trufor_area_ratio": 0.0046,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_11.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9984,
+            "trufor_area_ratio": 0.0076,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_12.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9969,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9873,
+            "trufor_area_ratio": 0.009,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9969（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_13.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9999,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9933,
+            "trufor_area_ratio": 0.0083,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9999（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_14.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9858,
+            "trufor_area_ratio": 0.0084,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_15.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9999,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9943,
+            "trufor_area_ratio": 0.0042,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9999（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_16.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.99,
+            "trufor_area_ratio": 0.0083,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
           "file": "ai_17.png",
           "risk_level": "high_risk",
           "hit": true,
@@ -225,7 +509,63 @@
             "自动进入人工复核队列"
           ],
           "reasons": [
-            "图文交叉验证：文案与图像侧结论未发现互相矛盾",
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_18.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9999,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.8723,
+            "trufor_area_ratio": 0.009,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9999（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_19.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9547,
+            "trufor_area_ratio": 0.0085,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "ai_20.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.9465,
+            "trufor_area_ratio": 0.0048,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
             "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
           ]
         }
@@ -240,28 +580,22 @@
         "credible",
         "inconclusive"
       ],
-      "n": 5,
+      "n": 10,
       "n_total": 10,
-      "n_evaluated": 5,
-      "n_not_run": 5,
-      "missing_files": [
-        "Image_1790435361528.jpg",
-        "Image_1790435371005.jpg",
-        "Image_1790435411391.jpg",
-        "Image_1790435427813.jpg",
-        "Image_1790435468506.jpg"
-      ],
-      "coverage": 0.5,
+      "n_evaluated": 10,
+      "n_not_run": 0,
+      "missing_files": [],
+      "coverage": 1.0,
       "sampled": false,
       "risk_distribution": {
         "high_risk": 1,
-        "suspicious": 0,
+        "suspicious": 1,
         "credible": 0,
-        "inconclusive": 4,
+        "inconclusive": 8,
         "error": 0
       },
       "direction_hit_rate": 0.8,
-      "n_hit": 4,
+      "n_hit": 8,
       "samples": [
         {
           "file": "Image_1790434905472.jpg",
@@ -362,6 +696,103 @@
             "TruFor：篡改分数 0.3539（<0.5）→ 未发现明显篡改痕迹",
             "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
           ]
+        },
+        {
+          "file": "Image_1790435361528.jpg",
+          "risk_level": "suspicious",
+          "hit": false,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.8917,
+            "trufor_area_ratio": 0.0,
+            "trufor_available": true,
+            "ela_top_score": 1.473
+          },
+          "dispositions": [
+            "标记待人工确认"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.8917（≥0.5）→ 有明显篡改痕迹；可疑区域约占全图 0.0%"
+          ]
+        },
+        {
+          "file": "Image_1790435371005.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false,
+            "ela_top_score": 1.05
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor 检测：模型未部署/未返回分数，本项无法判断，已跳过",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "Image_1790435411391.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3613,
+            "trufor_area_ratio": 0.0548,
+            "trufor_available": true,
+            "ela_top_score": 1.725
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3613（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "Image_1790435427813.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.2028,
+            "trufor_area_ratio": 0.0463,
+            "trufor_available": true,
+            "ela_top_score": 1.029
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.2028（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "Image_1790435468506.jpg",
+          "risk_level": "inconclusive",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false,
+            "ela_top_score": 1.263
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor 检测：模型未部署/未返回分数，本项无法判断，已跳过",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
         }
       ],
       "note": "真 held-out 真实图（取自真实世界采集，绝不参与训练）。期望不误报；误报率=真实鲁棒性唯一对外口径。"
@@ -373,58 +804,258 @@
       "expect_risk": [
         "high_risk"
       ],
-      "n": 0,
+      "n": 12,
       "n_total": 12,
-      "n_evaluated": 0,
-      "n_not_run": 12,
-      "missing_files": [
-        "crossgen_01.png",
-        "crossgen_02.png",
-        "crossgen_03.png",
-        "crossgen_04.png",
-        "crossgen_05.png",
-        "crossgen_06.png",
-        "crossgen_07.png",
-        "crossgen_08.png",
-        "crossgen_09.png",
-        "crossgen_10.png",
-        "crossgen_11.png",
-        "crossgen_12.png"
-      ],
-      "coverage": 0.0,
+      "n_evaluated": 12,
+      "n_not_run": 0,
+      "missing_files": [],
+      "coverage": 1.0,
       "sampled": false,
       "risk_distribution": {
-        "high_risk": 0,
+        "high_risk": 8,
         "suspicious": 0,
         "credible": 0,
-        "inconclusive": 0,
+        "inconclusive": 4,
         "error": 0
       },
-      "direction_hit_rate": null,
-      "n_hit": 0,
-      "samples": [],
+      "direction_hit_rate": 0.6667,
+      "n_hit": 8,
+      "samples": [
+        {
+          "file": "crossgen_01.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.0816,
+            "trufor_area_ratio": 0.0197,
+            "trufor_available": true
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_02.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9994,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9994（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_03.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_04.png",
+          "risk_level": "inconclusive",
+          "hit": false,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.1335,
+            "trufor_area_ratio": 0.0238,
+            "trufor_available": true
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.1335（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "crossgen_05.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_06.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 0.9996,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.9996（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_07.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_08.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_09.png",
+          "risk_level": "inconclusive",
+          "hit": false,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor 检测：模型未部署/未返回分数，本项无法判断，已跳过",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "crossgen_10.png",
+          "risk_level": "inconclusive",
+          "hit": false,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.1544,
+            "trufor_area_ratio": 0.0468,
+            "trufor_available": true
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.1544（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        },
+        {
+          "file": "crossgen_11.png",
+          "risk_level": "high_risk",
+          "hit": true,
+          "key_scores": {
+            "aigc_score": 1.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_available": false
+          },
+          "dispositions": [
+            "自动进入人工复核队列"
+          ],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 1.0（≥0.9）→ 极可能是整图由 AI 生成的图"
+          ]
+        },
+        {
+          "file": "crossgen_12.png",
+          "risk_level": "inconclusive",
+          "hit": false,
+          "key_scores": {
+            "aigc_score": 0.0,
+            "aigc_model": "beautyproof_aigen_v4",
+            "aigc_available": true,
+            "trufor_score": 0.3936,
+            "trufor_area_ratio": 0.0589,
+            "trufor_available": true
+          },
+          "dispositions": [],
+          "reasons": [
+            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
+            "TruFor：篡改分数 0.3936（<0.5）→ 未发现明显篡改痕迹",
+            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
+          ]
+        }
+      ],
       "note": "跨生成器零样本集（同生成器族、非 MJ/SD/Flux 本域微调覆盖族）。算零样本召回；能力仅到此族，不夸大泛化。"
     }
   },
   "false_positive_rate": {
     "realworld_heldout": {
-      "n": 5,
+      "n": 10,
       "false_positive_rate_alarm": 0.2,
-      "false_positive_rate_high_risk": 0.2,
+      "false_positive_rate_high_risk": 0.1,
       "note": "真实图被误判为 suspicious/high_risk 的比例。对外唯一真实鲁棒性口径。"
     }
   },
   "zero_shot_recall": {
     "ai_cross_native": {
-      "n": 0,
-      "recall_high_risk": null,
-      "recall_alarm": null,
+      "n": 12,
+      "recall_high_risk": 0.6667,
+      "recall_alarm": 0.6667,
       "note": "跨生成器零样本：本系统只在同生成器族微调，非 MJ/SD/Flux 族外推仅到此。"
     }
   },
   "disposition_distribution": {
-    "自动进入人工复核队列": 5,
-    "标记待人工确认": 1,
+    "自动进入人工复核队列": 31,
+    "标记待人工确认": 2,
     "分别核实图片来源与文案出处": 1
   },
   "summary": {
@@ -435,19 +1066,19 @@
       "realworld_heldout",
       "ai_cross_native"
     ],
-    "total_samples": 11,
+    "total_samples": 47,
     "controlled_direction_hit_rate": 1.0,
-    "controlled_n_hit": 6,
-    "controlled_n": 6,
+    "controlled_n_hit": 25,
+    "controlled_n": 25,
     "controlled_is_link_check_only": true,
     "realworld_false_positive_rate": 0.2,
-    "ai_cross_zero_shot_recall_high_risk": null,
+    "ai_cross_zero_shot_recall_high_risk": 0.6667,
     "disposition_kinds": 3,
     "coverage": {
       "clean": {
-        "n_evaluated": 1,
+        "n_evaluated": 2,
         "n_total": 2,
-        "coverage": 0.5
+        "coverage": 1.0
       },
       "tampered": {
         "n_evaluated": 3,
@@ -455,23 +1086,23 @@
         "coverage": 1.0
       },
       "ai": {
-        "n_evaluated": 2,
+        "n_evaluated": 20,
         "n_total": 20,
-        "coverage": 0.1
+        "coverage": 1.0
       },
       "realworld_heldout": {
-        "n_evaluated": 5,
+        "n_evaluated": 10,
         "n_total": 10,
-        "coverage": 0.5
+        "coverage": 1.0
       },
       "ai_cross_native": {
-        "n_evaluated": 0,
+        "n_evaluated": 12,
         "n_total": 12,
-        "coverage": 0.0
+        "coverage": 1.0
       }
     },
-    "full_coverage": false,
-    "gate_passed": false
+    "full_coverage": true,
+    "gate_passed": true
   },
   "error_cases": {
     "false_positives_real": [
@@ -487,9 +1118,69 @@
           "trufor_available": true,
           "ela_top_score": 1.325
         }
+      },
+      {
+        "file": "Image_1790435361528.jpg",
+        "risk_level": "suspicious",
+        "key_scores": {
+          "aigc_score": 0.0,
+          "aigc_model": "beautyproof_aigen_v4",
+          "aigc_available": true,
+          "trufor_score": 0.8917,
+          "trufor_area_ratio": 0.0,
+          "trufor_available": true,
+          "ela_top_score": 1.473
+        }
       }
     ],
-    "missed_ai_cross": [],
+    "missed_ai_cross": [
+      {
+        "file": "crossgen_04.png",
+        "risk_level": "inconclusive",
+        "key_scores": {
+          "aigc_score": 0.0,
+          "aigc_model": "beautyproof_aigen_v4",
+          "aigc_available": true,
+          "trufor_score": 0.1335,
+          "trufor_area_ratio": 0.0238,
+          "trufor_available": true
+        }
+      },
+      {
+        "file": "crossgen_09.png",
+        "risk_level": "inconclusive",
+        "key_scores": {
+          "aigc_score": 0.0,
+          "aigc_model": "beautyproof_aigen_v4",
+          "aigc_available": true,
+          "trufor_available": false
+        }
+      },
+      {
+        "file": "crossgen_10.png",
+        "risk_level": "inconclusive",
+        "key_scores": {
+          "aigc_score": 0.0,
+          "aigc_model": "beautyproof_aigen_v4",
+          "aigc_available": true,
+          "trufor_score": 0.1544,
+          "trufor_area_ratio": 0.0468,
+          "trufor_available": true
+        }
+      },
+      {
+        "file": "crossgen_12.png",
+        "risk_level": "inconclusive",
+        "key_scores": {
+          "aigc_score": 0.0,
+          "aigc_model": "beautyproof_aigen_v4",
+          "aigc_available": true,
+          "trufor_score": 0.3936,
+          "trufor_area_ratio": 0.0589,
+          "trufor_available": true
+        }
+      }
+    ],
     "tamper_misses": {
       "copy_move": [],
       "splice": [],
