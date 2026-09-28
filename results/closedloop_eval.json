@@ -1,6 +1,6 @@
 {
   "schema": "beautyproof/closedloop_eval@1",
-  "generated_at": "2026-09-28T01:56:15",
+  "generated_at": "2026-09-28T13:23:09",
   "config": {
     "fast": false,
     "sample": null,
@@ -17,42 +17,25 @@
         "credible",
         "inconclusive"
       ],
-      "n": 2,
+      "n": 1,
       "n_total": 2,
-      "n_evaluated": 2,
-      "n_not_run": 0,
-      "missing_files": [],
-      "coverage": 1.0,
+      "n_evaluated": 1,
+      "n_not_run": 1,
+      "missing_files": [
+        "clean_01.png"
+      ],
+      "coverage": 0.5,
       "sampled": false,
       "risk_distribution": {
         "high_risk": 0,
         "suspicious": 0,
         "credible": 0,
-        "inconclusive": 2,
+        "inconclusive": 1,
         "error": 0
       },
       "direction_hit_rate": 1.0,
-      "n_hit": 2,
+      "n_hit": 1,
       "samples": [
-        {
-          "file": "clean_01.png",
-          "risk_level": "inconclusive",
-          "hit": true,
-          "key_scores": {
-            "aigc_score": 0.0,
-            "aigc_model": "beautyproof_aigen_v4",
-            "aigc_available": true,
-            "trufor_score": 0.3503,
-            "trufor_area_ratio": 0.053,
-            "trufor_available": true
-          },
-          "dispositions": [],
-          "reasons": [
-            "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
-            "TruFor：篡改分数 0.3503（<0.5）→ 未发现明显篡改痕迹",
-            "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）"
-          ]
-        },
         {
           "file": "clean_02_recompressed.png",
           "risk_level": "inconclusive",
@@ -452,18 +435,19 @@
       "realworld_heldout",
       "ai_cross_native"
     ],
-    "total_samples": 12,
+    "total_samples": 11,
     "controlled_direction_hit_rate": 1.0,
-    "controlled_n_hit": 7,
-    "controlled_n": 7,
+    "controlled_n_hit": 6,
+    "controlled_n": 6,
+    "controlled_is_link_check_only": true,
     "realworld_false_positive_rate": 0.2,
     "ai_cross_zero_shot_recall_high_risk": null,
     "disposition_kinds": 3,
     "coverage": {
       "clean": {
-        "n_evaluated": 2,
+        "n_evaluated": 1,
         "n_total": 2,
-        "coverage": 1.0
+        "coverage": 0.5
       },
       "tampered": {
         "n_evaluated": 3,
@@ -486,6 +470,47 @@
         "coverage": 0.0
       }
     },
-    "full_coverage": false
+    "full_coverage": false,
+    "gate_passed": false
+  },
+  "error_cases": {
+    "false_positives_real": [
+      {
+        "file": "Image_1790435103363.jpg",
+        "risk_level": "high_risk",
+        "key_scores": {
+          "aigc_score": 0.9792,
+          "aigc_model": "beautyproof_aigen_v4",
+          "aigc_available": true,
+          "trufor_score": 0.4941,
+          "trufor_area_ratio": 0.0378,
+          "trufor_available": true,
+          "ela_top_score": 1.325
+        }
+      }
+    ],
+    "missed_ai_cross": [],
+    "tamper_misses": {
+      "copy_move": [],
+      "splice": [],
+      "text_edit": []
+    }
+  },
+  "tamper_recall_by_type": {
+    "copy_move": {
+      "n": 1,
+      "recall_alarm": 1.0,
+      "missed_files": []
+    },
+    "splice": {
+      "n": 1,
+      "recall_alarm": 1.0,
+      "missed_files": []
+    },
+    "text_edit": {
+      "n": 1,
+      "recall_alarm": 1.0,
+      "missed_files": []
+    }
   }
 }

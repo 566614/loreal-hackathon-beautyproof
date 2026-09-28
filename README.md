@@ -505,3 +505,21 @@ v3 之后，把「真实世界误报」和「跨生成器泛化」两块短板�
 
 阮佳瑶（产品定义 / 素材 / 答辩）× AI 搭档（流水线与模型工程）。
 详细开发日志见 `learning/` 与各工具源码注释。
+
+## Reviewer 审查落地（issue #1：chengming11100614-tech）
+
+针对「凭证判定 / 评测口径 / 模型泛化 / 干净环境复现」四条建议，已落地：
+
+- **P0 凭证判定**：`c2pa_tool.judge()` 不再「非空输出即判 present」——必须解析到真实 manifest；
+  状态拆为 `missing / error / present_unverified / present_verified`，并标记 `declares_ai_generated`。
+  `rule_engine` 仅当 `present_verified` 且非 AI 声明时才升 `credible`；AI 声明转 `suspicious`，
+  未经验证的凭证一律保留「待核验」，绝不自动判可信。回归测试见 `tests/test_c2pa_judgment.py`。
+- **P0 正式评测**：`tools/make_formal_manifest.py` 生成冻结清单 `data/formal_eval_manifest.json`
+  （47 样本、7 个 source_group，同源隔离）；`run_dataset_closedloop.py` 新增错误案例显式报告
+  （真实误报 / 跨生成器漏检 / 篡改按类型召回）+ `--require-full-coverage` 覆盖度门槛。
+  详见 `docs/正式评测与待核验声明.md`。
+- **P1 模型迭代**：`train_aigen_v5.py` 由「按图随机拆分」改为「按来源组拆分」（`group_split`），
+  杜绝同源变体跨 train/val 泄漏；跨生成器集整体留作 held-out，不进训练。
+- **P1 干净复现**：`make_dataset.py` 底图改为仓库内回退 + 合成兜底，不再依赖私人路径；
+  `c2pa_tool.py` 经 `find_c2patool()`（env/PATH/常见路径）跨平台定位；
+  CI 新增 `e2e-smoke` 作业（`tests/test_e2e_smoke.py`，仅标准库，真实调用工具脚本验证核心链路）。

@@ -86,6 +86,26 @@ jobs:
       - name: 核心单测（rule_engine / planner / validator）
         run: python tests/test_core.py -v
 
+  # ---------------------------------------------------------------- ②b 端到端冒烟（每次 push/PR）
+  e2e-smoke:
+    name: e2e-smoke（stdlib-only 端到端冒烟，不装重型依赖）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7.0.1
+
+      - name: 准备 Python 3.13
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.13"
+
+      # reviewer P1：干净环境也能跑的最小端到端 —— 只依赖标准库，
+      # 真实调用 c2pa_tool / rule_engine 脚本，验证「无凭证绝不误判可信」「凭证门禁正确」。
+      # 重型模型（aigc/trufor/ocr）不在此作业，改由手动 deps-smoke 覆盖。
+      - name: 端到端冒烟：核心决策链路
+        run: python tests/test_e2e_smoke.py -v
+
   # ---------------------------------------------------------------- ③ 依赖冒烟（手动）
   deps-smoke:
     name: deps-smoke（完整依赖导入冒烟，仅手动触发）

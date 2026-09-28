@@ -24,7 +24,13 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 REPO = Path(__file__).resolve().parent.parent
+# reviewer P1：旧逻辑写死仓库外的私人路径 ../my-beautyproof-practice/assets/post.jpg，
+# 新用户克隆本仓库后跑不通。改为三级回退：
+#   ① 仓库内 data/raw/base.png（优先，干净克隆若已自带则直接用）
+#   ② 开发者机器上的私人 post.jpg（兼容旧环境，存在才用）
+#   ③ 都没有 → 生成一张合成底图（仅用于链路/CI 跑通，非真实评测数据），并打印告警
 BASE_SRC = REPO.parent / "my-beautyproof-practice" / "assets" / "post.jpg"
+REPO_LOCAL_BASE = REPO / "data" / "raw" / "base.png"
 RAW_DIR = REPO / "data" / "raw"
 CLEAN_DIR = REPO / "data" / "clean"
 TAMP_DIR = REPO / "data" / "tampered"
@@ -46,12 +52,44 @@ def load_font(size=28):
     return ImageFont.load_default()
 
 
+def _make_synthetic_base(size=(900, 1200)):
+    """生成合成底图（仅用于干净环境/CI 跑通链路；不是真实评测样本）。
+
+    一张柔和渐变 + 居中随机色块，保证 copy_move/splice/text_edit 能造出可检测的篡改痕迹。
+    """
+    arr = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+    for y in range(size[1]):
+        t = y / size[1]
+        arr[y, :, 0] = int(210 - 120 * t)   # R
+        arr[y, :, 1] = int(180 - 60 * t)     # G
+        arr[y, :, 2] = int(160 + 40 * t)     # B
+    # 随机几个柔和色块，模拟「皮肤/背景」区域，供 copy_move 取样
+    rng = np.random.default_rng(20260928)
+    for _ in range(6):
+        cx, cy = rng.integers(0, size[0]), rng.integers(0, size[1])
+        s = rng.integers(60, 160)
+        col = rng.integers(120, 240, size=3)
+        y0, y1 = max(0, cy - s // 2), min(size[1], cy + s // 2)
+        x0, x1 = max(0, cx - s // 2), min(size[0], cx + s // 2)
+        arr[y0:y1, x0:x1] = col
+    return Image.fromarray(arr).convert("RGB")
+
+
 def make_base():
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    dst = RAW_DIR / "base.png"
-    if not dst.exists():
+    dst = REPO_LOCAL_BASE
+    if dst.exists():
+        return Image.open(dst).convert("RGB")
+    if BASE_SRC.exists():
         shutil.copyfile(BASE_SRC, dst)
-    return Image.open(dst).convert("RGB")
+        print(f"  (使用开发者机器底图 {BASE_SRC} → {dst})")
+        return Image.open(dst).convert("RGB")
+    # 干净克隆且无可读底图：生成合成底图，保证整条链路可跑通（非真实评测数据）
+    base = _make_synthetic_base()
+    base.save(dst)
+    print("  ⚠ 未找到真实底图，已生成「合成底图」data/raw/base.png 仅供链路/CI 跑通；"
+          "真实评测请用团队自产美妆原图替换它。")
+    return base
 
 
 def add_copy_move(img):

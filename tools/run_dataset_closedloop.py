@@ -246,6 +246,12 @@ def main():
     ap.add_argument("--from-outputs", action="store_true",
                     help="不重跑 pipeline，直接读已落盘的 outputs/analysis_<stem>.json 聚合"
                          "（用于分批跑完 analyze 后生成闭环报告，避免重复触发批量删除保护）")
+    ap.add_argument("--manifest", default=str(REPO / "data" / "formal_eval_manifest.json"),
+                    help="冻结的正式评测清单（data/formal_eval_manifest.json），"
+                         "用于校验本次运行覆盖的是固定测试集")
+    ap.add_argument("--require-full-coverage", action="store_true",
+                    help="覆盖度 <1.0 时标记 gate_passed=false 并以非零码退出"
+                         "（reviewer P0-2：正式评测必须 100% 覆盖、结果可重生成）")
     args = ap.parse_args()
 
     RESULTS.mkdir(exist_ok=True)
@@ -320,6 +326,47 @@ def main():
                 disp[d] = disp.get(d, 0) + 1
     report["disposition_distribution"] = disp
 
+    # ---- 错误案例（reviewer P0-2：报告要展示错例，不只给平均分）----
+    error_cases = {"false_positives_real": [], "missed_ai_cross": [], "tamper_misses": {}}
+    tamper_recall_by_type = {}
+    for name, ds in report["datasets"].items():
+        if ds["bucket"] == "heldout_real":
+            for r in ds["samples"]:
+                if r["risk_level"] in ALARM:
+                    error_cases["false_positives_real"].append({
+                        "file": r["file"], "risk_level": r["risk_level"],
+                        "key_scores": r.get("key_scores", {}),
+                    })
+        if ds["bucket"] == "zero_shot_cross":
+            for r in ds["samples"]:
+                if r["risk_level"] != "high_risk":
+                    error_cases["missed_ai_cross"].append({
+                        "file": r["file"], "risk_level": r["risk_level"],
+                        "key_scores": r.get("key_scores", {}),
+                    })
+        if ds["bucket"] == "controlled" and ds["ground_truth"] == "tampered":
+            # 按篡改子类型算召回
+            by_type = {}
+            for r in ds["samples"]:
+                ttype = "other"
+                for t in ("copy_move", "splice", "text_edit"):
+                    if t in r["file"]:
+                        ttype = t
+                by_type.setdefault(ttype, {"n": 0, "hit": 0, "miss": []})
+                by_type[ttype]["n"] += 1
+                if r["risk_level"] in ALARM:
+                    by_type[ttype]["hit"] += 1
+                else:
+                    by_type[ttype]["miss"].append(r["file"])
+            for t, v in by_type.items():
+                tamper_recall_by_type[t] = {
+                    "n": v["n"], "recall_alarm": round(v["hit"] / v["n"], 4) if v["n"] else None,
+                    "missed_files": v["miss"],
+                }
+                error_cases["tamper_misses"][t] = v["miss"]
+    report["error_cases"] = error_cases
+    report["tamper_recall_by_type"] = tamper_recall_by_type
+
     # 汇总
     total = sum(ds["n"] for ds in report["datasets"].values())
     controlled = [ds for ds in report["datasets"].values() if ds["bucket"] == "controlled"]
@@ -327,12 +374,15 @@ def main():
     n_ctrl = sum(ds["n"] for ds in controlled)
     fpr = report["false_positive_rate"].get("realworld_heldout", {})
     rec = report["zero_shot_recall"].get("ai_cross_native", {})
+    full_coverage = all((v["coverage"] == 1.0 if v["coverage"] is not None else False)
+                        for v in report["datasets"].values())
     report["summary"] = {
         "datasets_run": list(report["datasets"].keys()),
         "total_samples": total,
         "controlled_direction_hit_rate": round(n_ctrl_hit / n_ctrl, 4) if n_ctrl else None,
         "controlled_n_hit": n_ctrl_hit,
         "controlled_n": n_ctrl,
+        "controlled_is_link_check_only": True,
         "realworld_false_positive_rate": fpr.get("false_positive_rate_alarm"),
         "ai_cross_zero_shot_recall_high_risk": rec.get("recall_high_risk"),
         "disposition_kinds": len(disp),
@@ -341,7 +391,9 @@ def main():
         "coverage": {k: {"n_evaluated": v["n_evaluated"], "n_total": v["n_total"],
                          "coverage": v["coverage"]}
                      for k, v in report["datasets"].items()},
-        "full_coverage": all(v["coverage"] == 1 for v in report["datasets"].values()),
+        "full_coverage": full_coverage,
+        # reviewer P0-2 验收门槛：正式评测必须 100% 覆盖、结果可重生成
+        "gate_passed": full_coverage,
     }
 
     out = RESULTS / "closedloop_eval.json"
@@ -359,7 +411,21 @@ def main():
         print(f"  跨生成器零样本召回(high_risk)={rec.get('recall_high_risk')} "
               f"(alarm={rec.get('recall_alarm')})", flush=True)
     print(f"  处置建议分布={disp}", flush=True)
+    print(f"  篡改召回(按类型)={tamper_recall_by_type}", flush=True)
+    if error_cases["false_positives_real"]:
+        print(f"  ⚠ 真实误报样本: {[x['file'] for x in error_cases['false_positives_real']]}", flush=True)
+    if error_cases["missed_ai_cross"]:
+        print(f"  ⚠ 跨生成器漏检样本: {[x['file'] for x in error_cases['missed_ai_cross']]}", flush=True)
+    if error_cases["tamper_misses"]:
+        print(f"  ⚠ 篡改漏检(按类型): {error_cases['tamper_misses']}", flush=True)
     print(f"\n  已写 {out}", flush=True)
+
+    # 覆盖度门槛：reviewer P0-2 要求正式评测必须 100% 覆盖
+    if args.require_full_coverage and not full_coverage:
+        print("\n❌ gate_passed=false：存在未运行样本，正式评测覆盖度不足 100%。"
+              "请在本机用 tools/run_dataset_closedloop.py（非 --fast）跑完所有数据集后再提交。",
+              flush=True)
+        return 2
     return 0
 
 

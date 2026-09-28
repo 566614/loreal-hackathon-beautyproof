@@ -252,13 +252,32 @@ def judge(evidence):
                 f"ELA：最可疑区域误差 {regions[0]['ela_score']}（≥{THRESHOLDS['ela_region_score']}）→ 有局部篡改痕迹")
             return "suspicious", reasons
 
-    # 信号4：C2PA 有凭证 —— 编辑历史可查
+    # 信号4：C2PA / TC260 凭证 —— 来源可追溯，但必须「验证通过」才提升可信度
+    # （reviewer P0：旧逻辑把 present 直接升 credible，是「非空字符串即可信」的误判；
+    #  现在只有 verified 且非 AI 声明的凭证才升 credible；AI 声明反而要标可疑。）
     c2pa = evidence.get("c2pa")
     if c2pa:
-        status = c2pa.get("evidence", [{}])[0].get("c2pa_status")
-        if status == "present":
-            reasons.append("C2PA：图片带有内容凭证，编辑历史可查 → 可信度较高")
+        e0 = c2pa.get("evidence", [{}])[0]
+        status = e0.get("c2pa_status")
+        verified = e0.get("c2pa_verified", False)
+        declares_ai = e0.get("c2pa_declares_ai_generated", False)
+
+        if declares_ai:
+            # 生成器自声明 AI 生成：这是「是 AI 生成」的强证据，绝不是「来源可信」
+            reasons.append(
+                "C2PA/TC260：凭证或标识显示该内容由 AI 生成（生成器自声明），"
+                "属 AI 生成证据，不提升来源可信度，转交人工确认")
+            return "suspicious", reasons
+
+        if status in ("present", "present_verified", "present_unverified") and verified:
+            reasons.append("C2PA：凭证存在且通过验证，编辑历史可查 → 来源可信度较高")
             return "credible", reasons
+
+        if status == "present_unverified":
+            reasons.append(
+                "C2PA：图片带有内容凭证，但本环境无法验证签名/声明，"
+                "保留为待核验（不自动判可信）")
+        # status == "missing" / "error"：无凭证，不处理，继续走 inconclusive
 
     reasons.append(
         "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）")

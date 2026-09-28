@@ -49,6 +49,31 @@ def build_pairs_v5():
     return ai_jimeng, ai_cross, real_xhs, real_old, real_extra, real_batch2
 
 
+def group_split(files, val_ratio, rng):
+    """按「来源组」整体拆分 train/val（reviewer P1：避免同源变体跨 train/val 泄漏）。
+
+    同目录下（如 real_xhs / real_xhs_batch2 / real / clean / tampered）的图片视为同一来源组，
+    整组进入 train 或整组进入 val，绝不把同一组的图片拆开分到两边。
+    组内顺序由 rng 打乱，保证可复现。
+    """
+    groups = {}
+    for f in files:
+        groups.setdefault(Path(f).parent.name, []).append(f)
+    group_names = sorted(groups.keys())
+    rng.shuffle(group_names)
+    train, val = [], []
+    val_target = val_ratio * len(files)
+    val_count = 0
+    for g in group_names:
+        gfiles = groups[g]
+        if val_count < val_target:
+            val.extend(gfiles)
+            val_count += len(gfiles)
+        else:
+            train.extend(gfiles)
+    return train, val
+
+
 def main():
     import torch
     import torch.nn as nn
@@ -68,10 +93,15 @@ def main():
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 跨生成器：验证份整体留作干净 held-out，不进训练
+    # 跨生成器：整体留作干净 held-out，绝不进训练（reviewer P1：避免把跨生成器样本
+    # 同时放进训练又拿它当零样本召回，那会虚高召回率）。
     aj_tr, aj_val = split(ai_jimeng, VAL_RATIO, rng)
-    ac_tr, ac_val = split(ai_cross, VAL_RATIO, rng)
-    re_tr, re_val = split(real_all, VAL_RATIO, rng)
+    ac_tr, ac_val = [], list(ai_cross)
+
+    # 真实类：改「按图随机拆分」为「按来源组拆分」（reviewer P1）。
+    # 同目录（real_xhs / real_xhs_batch2 / real / clean / tampered / real_extra）
+    # 视为同一来源组，整组进 train 或整组进 val，杜绝同源变体跨集合泄漏。
+    re_tr, re_val = group_split(real_all, VAL_RATIO, rng)
 
     ai_tr = aj_tr + ac_tr
     ai_val = aj_val + ac_val

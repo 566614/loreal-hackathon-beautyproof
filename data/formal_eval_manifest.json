@@ -1,0 +1,557 @@
+{
+  "schema": "beautyproof/formal_eval_manifest@1",
+  "purpose": "冻结的正式评测清单：测什么先固定、同源变体不跨集合泄漏；受控集仅作链路检查，真实鲁棒性只看 realworld_heldout 误报率，跨生成器泛化只看 ai_cross_native 零样本召回。",
+  "groups": {
+    "real__original": 2,
+    "tampered__copy_move": 1,
+    "tampered__splice": 1,
+    "tampered__text_edit": 1,
+    "ai__jimeng": 20,
+    "real__web_zip": 10,
+    "ai_cross__native": 12
+  },
+  "samples": [
+    {
+      "id": "clean_01",
+      "file": "data/clean/clean_01.png",
+      "bucket": "controlled",
+      "source_group": "real__original",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "clean_02_recompressed",
+      "file": "data/clean/clean_02_recompressed.png",
+      "bucket": "controlled",
+      "source_group": "real__original",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "tampered_01_copy_move",
+      "file": "data/tampered/tampered_01_copy_move.png",
+      "bucket": "controlled",
+      "source_group": "tampered__copy_move",
+      "ground_truth": "tampered",
+      "expected_risk": [
+        "suspicious",
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "tampered_02_splice",
+      "file": "data/tampered/tampered_02_splice.png",
+      "bucket": "controlled",
+      "source_group": "tampered__splice",
+      "ground_truth": "tampered",
+      "expected_risk": [
+        "suspicious",
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "tampered_03_text_edit",
+      "file": "data/tampered/tampered_03_text_edit.png",
+      "bucket": "controlled",
+      "source_group": "tampered__text_edit",
+      "ground_truth": "tampered",
+      "expected_risk": [
+        "suspicious",
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_01",
+      "file": "data/ai/ai_01.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_02",
+      "file": "data/ai/ai_02.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_03",
+      "file": "data/ai/ai_03.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_04",
+      "file": "data/ai/ai_04.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_05",
+      "file": "data/ai/ai_05.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_06",
+      "file": "data/ai/ai_06.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_07",
+      "file": "data/ai/ai_07.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_08",
+      "file": "data/ai/ai_08.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_09",
+      "file": "data/ai/ai_09.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_10",
+      "file": "data/ai/ai_10.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_11",
+      "file": "data/ai/ai_11.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_12",
+      "file": "data/ai/ai_12.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_13",
+      "file": "data/ai/ai_13.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_14",
+      "file": "data/ai/ai_14.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_15",
+      "file": "data/ai/ai_15.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_16",
+      "file": "data/ai/ai_16.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_17",
+      "file": "data/ai/ai_17.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_18",
+      "file": "data/ai/ai_18.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_19",
+      "file": "data/ai/ai_19.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "ai_20",
+      "file": "data/ai/ai_20.png",
+      "bucket": "controlled",
+      "source_group": "ai__jimeng",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790434905472",
+      "file": "data/realworld_heldout/Image_1790434905472.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435045721",
+      "file": "data/realworld_heldout/Image_1790435045721.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435082358",
+      "file": "data/realworld_heldout/Image_1790435082358.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435103363",
+      "file": "data/realworld_heldout/Image_1790435103363.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435343600",
+      "file": "data/realworld_heldout/Image_1790435343600.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435361528",
+      "file": "data/realworld_heldout/Image_1790435361528.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435371005",
+      "file": "data/realworld_heldout/Image_1790435371005.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435411391",
+      "file": "data/realworld_heldout/Image_1790435411391.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435427813",
+      "file": "data/realworld_heldout/Image_1790435427813.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "Image_1790435468506",
+      "file": "data/realworld_heldout/Image_1790435468506.jpg",
+      "bucket": "heldout_real",
+      "source_group": "real__web_zip",
+      "ground_truth": "real",
+      "expected_risk": [
+        "inconclusive",
+        "credible"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_01",
+      "file": "data/ai_cross_native/crossgen_01.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_02",
+      "file": "data/ai_cross_native/crossgen_02.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_03",
+      "file": "data/ai_cross_native/crossgen_03.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_04",
+      "file": "data/ai_cross_native/crossgen_04.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_05",
+      "file": "data/ai_cross_native/crossgen_05.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_06",
+      "file": "data/ai_cross_native/crossgen_06.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_07",
+      "file": "data/ai_cross_native/crossgen_07.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_08",
+      "file": "data/ai_cross_native/crossgen_08.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_09",
+      "file": "data/ai_cross_native/crossgen_09.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_10",
+      "file": "data/ai_cross_native/crossgen_10.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_11",
+      "file": "data/ai_cross_native/crossgen_11.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    },
+    {
+      "id": "crossgen_12",
+      "file": "data/ai_cross_native/crossgen_12.png",
+      "bucket": "zero_shot_cross",
+      "source_group": "ai_cross__native",
+      "ground_truth": "ai",
+      "expected_risk": [
+        "high_risk"
+      ],
+      "in_training": false
+    }
+  ],
+  "notes": {
+    "controlled_is_link_check_only": true,
+    "real_robustness_only_from": "realworld_heldout",
+    "cross_generalization_only_from": "ai_cross_native",
+    "never_trained": [
+      "realworld_heldout",
+      "ai_cross_native"
+    ]
+  },
+  "n_total": 47
+}

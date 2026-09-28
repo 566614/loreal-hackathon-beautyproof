@@ -53,10 +53,28 @@ class TestRuleEngine(unittest.TestCase):
         risk, _ = rule_engine.judge(ev_trufor(0.95))
         self.assertEqual(risk, "high_risk")
 
-    def test_credible_c2pa(self):
-        ev = {"c2pa": {"evidence": [{"c2pa_status": "present"}]}}
-        risk, _ = rule_engine.judge(ev)
+    def test_credible_c2pa_only_when_verified(self):
+        # reviewer P0：present（未验证）不得直接升 credible
+        ev_unverified = {"c2pa": {"evidence": [{"c2pa_status": "present_unverified",
+                                                "c2pa_verified": False,
+                                                "c2pa_declares_ai_generated": False}]}}
+        risk, reasons = rule_engine.judge(ev_unverified)
+        self.assertEqual(risk, "inconclusive")
+        # 只有 verified 才升 credible
+        ev_verified = {"c2pa": {"evidence": [{"c2pa_status": "present_verified",
+                                             "c2pa_verified": True,
+                                             "c2pa_declares_ai_generated": False}]}}
+        risk, _ = rule_engine.judge(ev_verified)
         self.assertEqual(risk, "credible")
+
+    def test_c2pa_declares_ai_is_suspicious_not_credible(self):
+        # 生成器自声明 AI 生成：转可疑，绝不判可信
+        ev = {"c2pa": {"evidence": [{"c2pa_status": "present_verified",
+                                     "c2pa_verified": True,
+                                     "c2pa_declares_ai_generated": True}]}}
+        risk, reasons = rule_engine.judge(ev)
+        self.assertEqual(risk, "suspicious")
+        self.assertTrue(any("AI 生成" in r for r in reasons))
 
     def test_inconclusive_empty(self):
         risk, reasons = rule_engine.judge({})
