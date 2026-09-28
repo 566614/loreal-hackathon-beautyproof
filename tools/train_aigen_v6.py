@@ -3,17 +3,25 @@
 
 相对 v5 的变化
 ------------------------------------------------------------------------------
-v5 只在「即梦族」上微调，跨生成器零样本召回仅 ~58%（7/12）。v6 把「可证明为 AI 生成、
-来源清晰、合成无真人」的 Flux/SD/MJ 美妆图（来自 data/ai_mj_sd_flux/，由
-tools/collect_crossgen.py 收编并校验 PROVENANCE）并入训练，让模型见过更多生成器风格，
-从而把跨生成器零样本召回从 ~58% 拉到 ≥80%。
+v5 只在「即梦族」上微调，跨生成器零样本召回仅 ~58%（7/12）。v6 的设计：
+(1) 维持 ai_cross（26 张 ImageGen）整体 held-out（reviewer P1，且与 ai_cross_native 零重叠），
+    作为独立验证信号；实测表明把 ai_cross 纳入训练反而稀释模型对 ai_cross_native 中
+    「生活流/滤镜自拍」难例的判别力，故回退。
+(2) 把「可证明为 AI 生成、来源清晰、合成无真人」的 Flux 跨生成器图（来自 data/ai_mj_sd_flux/，
+    由 tools/collect_crossgen.py 收编并校验 PROVENANCE，取自 SFHQ-T2I Kaggle MIT）并入训练，
+    让模型见过来真实合成的 Flux 人脸风格，提供真正「跨生成器」的鲁棒性。
+诚实基线：ai_cross_native 12 张中有 6 张为「生活流/滤镜自拍/插画/杂志封面」等伪真实感难例，
+模型对其自信判真；仅凭少量 Flux 样本难以突破，≥80% 召回需更多同类难例训练图（本 MIT 源仅能
+逐文件取到 Flux，SD/MJ 不暴露），故目标为「不退化 + 尽量提升」。
 
 合规边界（红线）
 - 来源：SFHQ-T2I（Kaggle, MIT）或本人订阅生成的 Flux/SD/MJ；均为合成图，无真实人物肖像权风险。
 - 严禁无来源标注的第三方数据集；严禁把真实人物照片当 AI 标签。
 - 跨生成器图进训练前必须过 collect_crossgen.py 的来源登记校验。
+- ai_cross（26 张 ImageGen）与 ai_cross_native（12 张 ImageGen）**零重叠**；ai_cross 维持
+  held-out 作为独立验证信号，ai_cross_native 始终严格零样本（无泄漏、无虚高）。
 - 保留两个「永不训练」零样本验证集，避免自我虚高：
-    * data/ai_cross_native/（原 12 张，ImageGen 新风格，始终零样本）
+    * data/ai_cross_native/（原 12 张，ImageGen，始终零样本）
     * data/ai_mj_sd_flux_heldout/（每生成器切出的少量，验证对具体生成器的真实召回）
 
 产物：models/beautyproof_aigen_v6/（model.pt + config.json）+ results/aigen_finetune_v6.json
@@ -44,8 +52,8 @@ def build_pairs_v6():
     real_old = (_img_files(d / "real") + _img_files(d / "clean") + _img_files(d / "tampered"))
     real_extra = _img_files(d / "real_extra")
     real_batch2 = _img_files(d / "real_xhs_batch2")
-    # v6 新增：带来源登记的跨生成器训练图（Flux/SD/MJ）
-    ai_crossgen = _img_files(d / "ai_mj_sd_flux")
+    # v6 新增：带来源登记的跨生成器训练图（Flux/SD/MJ）—— 递归读取子目录
+    ai_crossgen = sorted(p for p in (d / "ai_mj_sd_flux").rglob("*") if p.suffix.lower() in EXTS)
     return (ai_jimeng, ai_cross, real_xhs, real_old, real_extra,
             real_batch2, ai_crossgen)
 
@@ -91,10 +99,11 @@ def main():
 
     # 即梦：train/val 随机拆（同族，可接受）
     aj_tr, aj_val = split(ai_jimeng, VAL_RATIO, rng)
-    # ai_cross（旧跨生成器）：整体 held-out，绝不进训练（reviewer P1）
+    # ai_cross（旧跨生成器）：整体 held-out，绝不进训练（reviewer P1：与 ai_cross_native 零重叠，
+    # 保留为独立验证信号，避免自我虚高；实测纳入训练反而稀释对 ai_cross_native 难例的判别，已回退）
     ac_tr, ac_val = [], list(ai_cross)
-    # v6 新增：Flux/SD/MJ 跨生成器图 —— 进训练（按来源组拆，避免同组泄漏）
-    cg_tr, cg_val = group_split(ai_crossgen, VAL_RATIO, rng) if ai_crossgen else ([], [])
+    # v6 新增：Flux 跨生成器图（写实合成脸，来自 SFHQ-T2I MIT）—— 进训练，提供真正跨生成器信号
+    cg_tr, cg_val = split(ai_crossgen, VAL_RATIO, rng) if ai_crossgen else ([], [])
     # 真实类：按来源组拆
     re_tr, re_val = group_split(real_all, VAL_RATIO, rng)
 

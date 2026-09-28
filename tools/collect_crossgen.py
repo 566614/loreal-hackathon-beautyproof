@@ -62,6 +62,8 @@ def main():
     total_train = total_held = 0
     for g in GENERATORS:
         sd = staging / g
+        if not sd.exists():
+            continue
         imgs = sorted(p for p in sd.iterdir() if p.suffix.lower() in EXTS)
         if not imgs:
             continue
