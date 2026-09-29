@@ -1,0 +1,593 @@
+{
+  "schema": "beautyproof/v7_compare@1",
+  "single_variable": "v7 = v4 配方 + real_filter_selfie train 段 20 张（唯一变量）；全部冻结集不参与 v7 训练",
+  "promotion_rule": "filter_selfie_heldout 改善 且 realworld_heldout high_risk 误报不升 且 ai_cross_native 召回不降 且 controlled_ai 召回不降",
+  "sets": {
+    "realworld_heldout": {
+      "kind": "real",
+      "v4": {
+        "n": 10,
+        "n_unavailable": 0,
+        "mean": 0.0979,
+        "max": 0.9792,
+        "n_ge_high": 1,
+        "n_ge_pos": 1,
+        "fp_rate_high": 0.1,
+        "fp_rate_pos": 0.1
+      },
+      "v7": {
+        "n": 10,
+        "n_unavailable": 0,
+        "mean": 0.1024,
+        "max": 0.9471,
+        "n_ge_high": 1,
+        "n_ge_pos": 1,
+        "fp_rate_high": 0.1,
+        "fp_rate_pos": 0.1
+      },
+      "delta_fp_high": 0.0
+    },
+    "filter_selfie_heldout": {
+      "kind": "real",
+      "v4": {
+        "n": 10,
+        "n_unavailable": 0,
+        "mean": 0.2463,
+        "max": 0.9842,
+        "n_ge_high": 2,
+        "n_ge_pos": 2,
+        "fp_rate_high": 0.2,
+        "fp_rate_pos": 0.2
+      },
+      "v7": {
+        "n": 10,
+        "n_unavailable": 0,
+        "mean": 0.1,
+        "max": 0.9398,
+        "n_ge_high": 1,
+        "n_ge_pos": 1,
+        "fp_rate_high": 0.1,
+        "fp_rate_pos": 0.1
+      },
+      "delta_fp_high": -0.1
+    },
+    "ai_cross_native": {
+      "kind": "ai",
+      "v4": {
+        "n": 12,
+        "n_unavailable": 0,
+        "mean": 0.6666,
+        "max": 1.0,
+        "n_ge_high": 8,
+        "n_ge_pos": 8,
+        "recall_high": 0.6667,
+        "recall_pos": 0.6667
+      },
+      "v7": {
+        "n": 12,
+        "n_unavailable": 0,
+        "mean": 0.4459,
+        "max": 1.0,
+        "n_ge_high": 4,
+        "n_ge_pos": 5,
+        "recall_high": 0.3333,
+        "recall_pos": 0.4167
+      },
+      "delta_recall_high": -0.3334
+    },
+    "controlled_ai": {
+      "kind": "ai",
+      "v4": {
+        "n": 20,
+        "n_unavailable": 0,
+        "mean": 0.9589,
+        "max": 1.0,
+        "n_ge_high": 19,
+        "n_ge_pos": 19,
+        "recall_high": 0.95,
+        "recall_pos": 0.95
+      },
+      "v7": {
+        "n": 20,
+        "n_unavailable": 0,
+        "mean": 0.9833,
+        "max": 1.0,
+        "n_ge_high": 19,
+        "n_ge_pos": 20,
+        "recall_high": 0.95,
+        "recall_pos": 1.0
+      },
+      "delta_recall_high": 0.0
+    },
+    "controlled_clean": {
+      "kind": "real",
+      "v4": {
+        "n": 2,
+        "n_unavailable": 0,
+        "mean": 0.0,
+        "max": 0.0,
+        "n_ge_high": 0,
+        "n_ge_pos": 0,
+        "fp_rate_high": 0.0,
+        "fp_rate_pos": 0.0
+      },
+      "v7": {
+        "n": 2,
+        "n_unavailable": 0,
+        "mean": 0.0,
+        "max": 0.0,
+        "n_ge_high": 0,
+        "n_ge_pos": 0,
+        "fp_rate_high": 0.0,
+        "fp_rate_pos": 0.0
+      },
+      "delta_fp_high": 0
+    }
+  },
+  "promotion_checks": {
+    "filter_selfie_improved": true,
+    "realworld_fp_not_worse": true,
+    "crossgen_not_worse": false,
+    "controlled_ai_not_worse": true,
+    "all_pass": false
+  },
+  "decision": "KEEP_V4：不满足晋升口径，v7 仅诚实归档（参照 v5/v6 先例）",
+  "per_file": {
+    "beautyproof_aigen_v4": {
+      "realworld_heldout": [
+        {
+          "file": "Image_1790434905472.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435045721.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435082358.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435103363.jpg",
+          "score": 0.9792
+        },
+        {
+          "file": "Image_1790435343600.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435361528.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435371005.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435411391.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435427813.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435468506.jpg",
+          "score": 0.0
+        }
+      ],
+      "filter_selfie_heldout": [
+        {
+          "file": "fs_02.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_04.jpg",
+          "score": 0.9842
+        },
+        {
+          "file": "fs_06.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_11.jpg",
+          "score": 0.9154
+        },
+        {
+          "file": "fs_18.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_19.jpg",
+          "score": 0.2927
+        },
+        {
+          "file": "fs_21.jpg",
+          "score": 0.0049
+        },
+        {
+          "file": "fs_23.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_25.jpg",
+          "score": 0.0327
+        },
+        {
+          "file": "fs_26.jpg",
+          "score": 0.2331
+        }
+      ],
+      "ai_cross_native": [
+        {
+          "file": "crossgen_01.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_02.png",
+          "score": 0.9994
+        },
+        {
+          "file": "crossgen_03.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_04.png",
+          "score": 0.0
+        },
+        {
+          "file": "crossgen_05.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_06.png",
+          "score": 0.9996
+        },
+        {
+          "file": "crossgen_07.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_08.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_09.png",
+          "score": 0.0
+        },
+        {
+          "file": "crossgen_10.png",
+          "score": 0.0
+        },
+        {
+          "file": "crossgen_11.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_12.png",
+          "score": 0.0
+        }
+      ],
+      "controlled_ai": [
+        {
+          "file": "ai_01.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_02.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_03.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_04.png",
+          "score": 0.9999
+        },
+        {
+          "file": "ai_05.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_06.png",
+          "score": 0.9959
+        },
+        {
+          "file": "ai_07.png",
+          "score": 0.1868
+        },
+        {
+          "file": "ai_08.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_09.png",
+          "score": 0.9988
+        },
+        {
+          "file": "ai_10.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_11.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_12.png",
+          "score": 0.9969
+        },
+        {
+          "file": "ai_13.png",
+          "score": 0.9999
+        },
+        {
+          "file": "ai_14.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_15.png",
+          "score": 0.9999
+        },
+        {
+          "file": "ai_16.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_17.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_18.png",
+          "score": 0.9999
+        },
+        {
+          "file": "ai_19.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_20.png",
+          "score": 1.0
+        }
+      ],
+      "controlled_clean": [
+        {
+          "file": "clean_01.png",
+          "score": 0.0
+        },
+        {
+          "file": "clean_02_recompressed.png",
+          "score": 0.0
+        }
+      ]
+    },
+    "beautyproof_aigen_v7": {
+      "realworld_heldout": [
+        {
+          "file": "Image_1790434905472.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435045721.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435082358.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435103363.jpg",
+          "score": 0.0001
+        },
+        {
+          "file": "Image_1790435343600.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435361528.jpg",
+          "score": 0.9471
+        },
+        {
+          "file": "Image_1790435371005.jpg",
+          "score": 0.0749
+        },
+        {
+          "file": "Image_1790435411391.jpg",
+          "score": 0.0004
+        },
+        {
+          "file": "Image_1790435427813.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "Image_1790435468506.jpg",
+          "score": 0.0015
+        }
+      ],
+      "filter_selfie_heldout": [
+        {
+          "file": "fs_02.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_04.jpg",
+          "score": 0.041
+        },
+        {
+          "file": "fs_06.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_11.jpg",
+          "score": 0.9398
+        },
+        {
+          "file": "fs_18.jpg",
+          "score": 0.0001
+        },
+        {
+          "file": "fs_19.jpg",
+          "score": 0.0011
+        },
+        {
+          "file": "fs_21.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_23.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_25.jpg",
+          "score": 0.0
+        },
+        {
+          "file": "fs_26.jpg",
+          "score": 0.0176
+        }
+      ],
+      "ai_cross_native": [
+        {
+          "file": "crossgen_01.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_02.png",
+          "score": 0.9994
+        },
+        {
+          "file": "crossgen_03.png",
+          "score": 0.0
+        },
+        {
+          "file": "crossgen_04.png",
+          "score": 0.0
+        },
+        {
+          "file": "crossgen_05.png",
+          "score": 1.0
+        },
+        {
+          "file": "crossgen_06.png",
+          "score": 0.4554
+        },
+        {
+          "file": "crossgen_07.png",
+          "score": 0.9997
+        },
+        {
+          "file": "crossgen_08.png",
+          "score": 0.0629
+        },
+        {
+          "file": "crossgen_09.png",
+          "score": 0.006
+        },
+        {
+          "file": "crossgen_10.png",
+          "score": 0.0
+        },
+        {
+          "file": "crossgen_11.png",
+          "score": 0.8247
+        },
+        {
+          "file": "crossgen_12.png",
+          "score": 0.0027
+        }
+      ],
+      "controlled_ai": [
+        {
+          "file": "ai_01.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_02.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_03.png",
+          "score": 0.9989
+        },
+        {
+          "file": "ai_04.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_05.png",
+          "score": 0.6704
+        },
+        {
+          "file": "ai_06.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_07.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_08.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_09.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_10.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_11.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_12.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_13.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_14.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_15.png",
+          "score": 0.9977
+        },
+        {
+          "file": "ai_16.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_17.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_18.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_19.png",
+          "score": 1.0
+        },
+        {
+          "file": "ai_20.png",
+          "score": 0.9996
+        }
+      ],
+      "controlled_clean": [
+        {
+          "file": "clean_01.png",
+          "score": 0.0
+        },
+        {
+          "file": "clean_02_recompressed.png",
+          "score": 0.0
+        }
+      ]
+    }
+  }
+}

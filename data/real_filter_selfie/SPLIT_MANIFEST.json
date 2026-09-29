@@ -1,0 +1,42 @@
+{
+ "schema": "beautyproof/real_filter_selfie_split@1",
+ "frozen_at": "2026-09-29",
+ "seed": 20260929,
+ "rule": "训练前冻结；heldout 永不参与任何训练/调参，仅作误报评测",
+ "train": [
+  "fs_01.jpg",
+  "fs_03.jpg",
+  "fs_05.jpg",
+  "fs_07.jpg",
+  "fs_08.jpg",
+  "fs_09.jpg",
+  "fs_10.jpg",
+  "fs_12.jpg",
+  "fs_13.jpg",
+  "fs_14.jpg",
+  "fs_15.jpg",
+  "fs_16.jpg",
+  "fs_17.jpg",
+  "fs_20.jpg",
+  "fs_22.jpg",
+  "fs_24.jpg",
+  "fs_27.jpg",
+  "fs_28.jpg",
+  "fs_29.jpg",
+  "fs_30.jpg"
+ ],
+ "heldout_never_train": [
+  "fs_02.jpg",
+  "fs_04.jpg",
+  "fs_06.jpg",
+  "fs_11.jpg",
+  "fs_18.jpg",
+  "fs_19.jpg",
+  "fs_21.jpg",
+  "fs_23.jpg",
+  "fs_25.jpg",
+  "fs_26.jpg"
+ ],
+ "n_train": 20,
+ "n_heldout": 10
+}

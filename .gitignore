@@ -291,3 +291,6 @@ _tmp_frame_backup/
 
 # 跨生成器素材获取用的临时元数据/日志（Kaggle CSV 12MB+、训练日志，不入库）
 data/_meta/
+
+# HEIC 原件仅本地留证（体积大，不入库）
+data/real_filter_selfie/_heic_originals/
