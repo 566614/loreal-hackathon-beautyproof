@@ -43,10 +43,10 @@ def image_agent(ev):
     ela = _first(ev, "ela")
 
     aigc_score = aigc.get("aigc_score")
-    if aigc_score is not None and aigc_score >= THRESHOLDS["aigc_high_risk"]:
+    if aigc_score is not None and aigc_score >= THRESHOLDS["aigc_hard_high"]:
         signals.append(f"AI 生成检测给出 {aigc_score}，强烈指向整图由 AI 生成")
-    elif aigc_score is not None and aigc_score >= THRESHOLDS["aigc_suspicious"]:
-        signals.append(f"AI 生成检测 {aigc_score}，疑似 AI 生成")
+    elif aigc_score is not None and aigc_score >= THRESHOLDS["aigc_high_risk"]:
+        signals.append(f"AI 生成检测 {aigc_score}，疑似 AI 生成（落在 0.9~0.99 灰带，需人工复核确认）")
 
     tru_score = tru.get("trufor_score")
     if tru_score is not None and tru_score >= THRESHOLDS["trufor_high"]:

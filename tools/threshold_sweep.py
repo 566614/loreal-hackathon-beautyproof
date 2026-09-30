@@ -38,9 +38,9 @@ OUT = REPO / "results" / "threshold_sweep_v4.json"
 try:
     import rule_engine
     BASELINE_HIGH = rule_engine.THRESHOLDS["aigc_high_risk"]
-    BASELINE_SUSP = rule_engine.THRESHOLDS["aigc_suspicious"]
+    BASELINE_HARD = rule_engine.THRESHOLDS["aigc_hard_high"]
 except Exception:
-    BASELINE_HIGH, BASELINE_SUSP = 0.9, 0.8
+    BASELINE_HIGH, BASELINE_HARD = 0.9, 0.99
 
 REAL_SET = "realworld_heldout"
 AI_SET = "ai_cross_native"
@@ -188,7 +188,7 @@ def main():
         },
         "thresholds": {
             "aigc_high_risk": BASELINE_HIGH,
-            "aigc_suspicious": BASELINE_SUSP,
+            "aigc_hard_high": BASELINE_HARD,
         },
         "run_command": "python tools/threshold_sweep.py",
         "baseline_at_high_risk": base,

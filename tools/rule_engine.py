@@ -27,12 +27,18 @@ import sys
 from pathlib import Path
 
 THRESHOLDS = {
-    "aigc_high_risk": 0.9,       # AI 生成概率 ≥ 这个 → 高风险（整图 AI 生成）
-    "aigc_suspicious": 0.8,      # AI 生成概率 ≥ 这个 → 可疑
-    # 弃权下界（2026-09-25 v2 模型实测标定）：
-    # v2 真实类中位数 0.000 / AI 类中位数 1.000，落在 [0.2, 0.8) 的仅 2/109（1.8%）。
-    # 这段区间模型自己也没把握，就不硬判，只说"本项拿不准"，交给 TruFor 等后续信号。
-    "aigc_abstain": 0.2,         # AI 生成概率落在 [0.2, 0.8) → 本项弃权，不硬判
+    # AIGC（整图 AI 生成检测）三档阈值 —— 2026-09-29 灰带重构：
+    #   aigc_hard_high  极可能是整图 AI 生成，仅此高置信区才由 AIGC 单独自动定级 high_risk（可下架）。
+    #   aigc_high_risk  灰带下限：分数落在 [0.9, 0.99) → 疑似 AI 生成但非极高，
+    #                     只定级 suspicious（转人工复核，不自动下架），避免把高滤镜真实自拍误伤。
+    #   aigc_abstain    分数落在 [0.2, 0.9) → 本项模型拿不准，弃权，不硬判，交其他证据/人工。
+    # 实测依据（results/v7_eval.json，生产模型 v4 在冻结集上的分数）：
+    #   真实图误报（realworld_heldout + filter_selfie_heldout）全部落在 0.9154~0.9842（灰带内）；
+    #   被模型捕获的 AI 图（controlled_ai / ai_cross_native）最小为 0.9959（全在 hard_high 之上）。
+    #   灰带 [0.9, 0.99) 把真实误报从「自动下架」降级为「人工复核」，且不丢失任何已捕获 AI 图。
+    "aigc_hard_high": 0.99,      # AI 生成概率 ≥ 这个 → high_risk（仅此极高风险区才自动定级）
+    "aigc_high_risk": 0.9,       # AI 生成概率 ≥ 这个但 < aigc_hard_high → 灰带：suspicious（人工复核，不自动下架）
+    "aigc_abstain": 0.2,         # AI 生成概率落在 [0.2, 0.9) → 本项弃权，不硬判
     "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑
     # TruFor 阈值（已在本批素材上校准）
     "trufor_high": 0.9,          # 篡改分数 ≥ 这个 → 高风险
@@ -46,11 +52,14 @@ THRESHOLDS = {
 
 # AIGC 信号是否参与自动定级 —— 默认开启。
 # 早期用的 sdxl-detector 在本批素材上零区分度（真实图 0.9571 vs 篡改图 0.9621），
-# 因此长期关闭。2026-09-23 换成区分度更好的模型（AIRealNet / capcheck 二选一），
-# 在真实照片上分数明显低于 AI 生成图，故重新启用：
-#   AI 生成概率 ≥ aigc_high_risk(0.9)   → high_risk（整图 AI 生成，TruFor 查不出，靠它兜底）
-#   AI 生成概率 ≥ aigc_suspicious(0.8) → suspicious
-# 仍保留「分数不是事实」的边界声明，高风险必人工复核。
+# 因此长期关闭。2026-09-23 换成区分度更好的本域微调模型，在真实照片上分数明显低于 AI 生成图，
+# 故重新启用。2026-09-29 灰带重构后分三档（见 THRESHOLDS 注释）：
+#   AI 生成概率 ≥ aigc_hard_high(0.99) → high_risk（极可能是整图 AI 生成，TruFor 查不出，靠它兜底）
+#   AI 生成概率 ∈ [aigc_high_risk(0.9), aigc_hard_high) → suspicious（灰带，疑似但非极高，转人工复核，不自动下架）
+#   AI 生成概率 ∈ [aigc_abstain(0.2), aigc_high_risk) → 弃权（本项不硬判，交 TruFor / 人工）
+# 灰带的关键作用：真实滤镜自拍常被误判到 0.9~0.99 区间，直接判 high_risk 会误伤（自动下架真实图）；
+# 而模型真正捕获的 AI 图几乎都在 0.99 以上，所以把灰带单独拆出来只升到 suspicious，既不丢 AI 召回、又压住误伤。
+# 仍保留「分数不是事实」的边界声明，high_risk / suspicious 都必人工复核。
 AIGC_TRIGGERS_RISK = True
 
 # TruFor 信号是否参与自动定级 —— 默认开启。
@@ -162,6 +171,7 @@ def judge(evidence):
 
     # 信号1：AI 生成图检测 —— 判断是不是整张由 AI 生成（TruFor 查不出的盲区，靠它兜底）
     aigc = evidence.get("aigc")
+    aigc_gray_flag = False  # 标记 AIGC 落在灰带 [0.9, 0.99)：疑似但非极高，最终最多升 suspicious
     if aigc:
         items = aigc.get("evidence", [])
         first = items[0] if items else {}
@@ -173,22 +183,25 @@ def judge(evidence):
             else:
                 reasons.append("AI 生成检测：本次推理未返回分数，本项无法判断，已跳过")
         elif AIGC_TRIGGERS_RISK:
-            if score >= THRESHOLDS["aigc_high_risk"]:
+            if score >= THRESHOLDS["aigc_hard_high"]:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_high_risk']}）→ "
+                    f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_hard_high']}）→ "
                     f"极可能是整图由 AI 生成的图")
                 return "high_risk", reasons
-            elif score >= THRESHOLDS["aigc_suspicious"]:
+            elif score >= THRESHOLDS["aigc_high_risk"]:
+                # 灰带：疑似 AI 生成但非极高（真实滤镜自拍常落此区间），不 return，
+                # 留待 TruFor / 图文交叉 / C2PA 等其它信号 corroborate；若无强信号则最终升 suspicious。
+                aigc_gray_flag = True
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_suspicious']}）→ "
-                    f"疑似整图由 AI 生成，建议人工核对")
-                return "suspicious", reasons
+                    f"AI 生成检测：AI 生成概率 {score} 落在高分区但未到极高 "
+                    f"[{THRESHOLDS['aigc_high_risk']}, {THRESHOLDS['aigc_hard_high']}) → "
+                    f"疑似整图 AI 生成，但不单独定性为高风险；需其它证据 corroborate 或人工复核")
             elif score >= THRESHOLDS["aigc_abstain"]:
                 # 弃权区：不硬判，也不 return —— 让 TruFor 等后续信号继续参与定级。
                 # 直接 return 会跳过 TruFor（我们最鲁棒的那部分），所以这里只记理由。
                 reasons.append(
                     f"AI 生成检测：AI 生成概率 {score} 落在不确定区间 "
-                    f"[{THRESHOLDS['aigc_abstain']}, {THRESHOLDS['aigc_suspicious']}) → "
+                    f"[{THRESHOLDS['aigc_abstain']}, {THRESHOLDS['aigc_high_risk']}) → "
                     f"本项模型拿不准，不做判定，交由其他证据与人工复核")
             else:
                 reasons.append(
@@ -279,6 +292,14 @@ def judge(evidence):
                 "保留为待核验（不自动判可信）")
         # status == "missing" / "error"：无凭证，不处理，继续走 inconclusive
 
+    # AIGC 灰带收口：若 AIGC 落在 [0.9, 0.99) 且其它信号都未升级，则定为 suspicious（转人工复核）
+    # 而非 high_risk（自动下架）—— 直接压住「高滤镜真实自拍」被误判为自动下架的误伤；
+    # 同时不丢失任何已被模型捕获的 AI 图（它们均 ≥0.995，走上面的 hard_high 分支已是 high_risk）。
+    if aigc_gray_flag:
+        reasons.append(
+            "综合其他工具无强信号，AIGC 灰带提示转为「可疑 / 待人工复核」，不自动下架")
+        return "suspicious", reasons
+
     reasons.append(
         "现有工具未发现明确篡改信号，但也不能证明一定真实（多数网图本就无可查凭证）")
     return "inconclusive", reasons
@@ -320,7 +341,10 @@ def explain(risk_level, evidence):
     aigc = _first(evidence, "aigc")
     aigc_score = aigc.get("aigc_score")
     aigc_ready = bool(aigc.get("available", True)) and aigc_score is not None
-    aigc_triggered = aigc_ready and aigc_score >= THRESHOLDS["aigc_high_risk"]
+    # high_risk 由 AIGC 触发，仅当分数达到 hard_high（≥0.99）—— 与 judge() 一致
+    aigc_triggered = aigc_ready and aigc_score >= THRESHOLDS["aigc_hard_high"]
+    # 灰带：分数落在 [0.9, 0.99)，疑似但非极高（高滤镜真实自拍也常落此区间）
+    aigc_gray = aigc_ready and THRESHOLDS["aigc_high_risk"] <= aigc_score < THRESHOLDS["aigc_hard_high"]
 
     caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
@@ -408,6 +432,13 @@ def explain(risk_level, evidence):
                 summary += f"，且主要集中在{pos}。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
             else:
                 summary += "。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
+        elif aigc_gray:
+            headline = "AI 生成检测偏高但未到极高，建议人工复核"
+            summary = (f"AI 生成检测给出 {aigc_score}（落在 0.9~0.99 不确定区间），"
+                       "单独不足以判定为整图 AI 生成：高滤镜真实自拍也可能落在此区间。"
+                       "建议人工结合原图来源与 TruFor 篡改热力图复核后再决定处置。")
+            what_to_do = ("标记待人工确认，复核前暂缓对外发布；"
+                          "若品牌方能提供带 C2PA 凭证的原始原图，则可排除。")
         else:
             headline = "有可疑信号，建议人工核对"
             summary = "有取证信号提示这张图可能被动过，但强度不足以直接定性。"

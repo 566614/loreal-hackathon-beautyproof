@@ -222,10 +222,12 @@ def build_evidence(image_path, ai_score, ai_label, available=True):
             ],
         }
     # 措辞保持中性：新模型在本素材上确实能区分真实图与 AI 图，但仍强调「分数不是事实」。
-    if ai_score >= THRESHOLDS["aigc_high_risk"]:
-        verdict = f"模型给出的 AI 生成概率很高（≥{THRESHOLDS['aigc_high_risk']}），结合其他工具，很可能是整图由 AI 生成的图"
-    elif ai_score >= THRESHOLDS["aigc_suspicious"]:
-        verdict = f"有部分 AI 生成的迹象（≥{THRESHOLDS['aigc_suspicious']}），建议人工复核"
+    # 与 rule_engine 灰带一致：≥0.99 才称「极高（很可能是整图 AI）」，0.9~0.99 只称「偏高、疑似、需复核」。
+    if ai_score >= THRESHOLDS["aigc_hard_high"]:
+        verdict = f"模型给出的 AI 生成概率极高（≥{THRESHOLDS['aigc_hard_high']}），结合其他工具，很可能是整图由 AI 生成的图"
+    elif ai_score >= THRESHOLDS["aigc_high_risk"]:
+        verdict = (f"AI 生成概率偏高（{THRESHOLDS['aigc_high_risk']}~{THRESHOLDS['aigc_hard_high']}），"
+                   "疑似整图 AI 生成，但处于不确定区间，需结合 TruFor 等其他证据与人工复核，避免把高滤镜真实自拍误判")
     elif ai_score >= AI_POSITIVE_THRESHOLD:
         verdict = "AI 生成概率中等偏高，无法单独定性，需结合其他工具与人工复核"
     elif ai_score >= AI_INCONCLUSIVE_LOW:

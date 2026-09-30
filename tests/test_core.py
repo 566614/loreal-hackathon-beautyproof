@@ -36,18 +36,40 @@ def ev_trufor(score, ratio=0.1):
 
 class TestRuleEngine(unittest.TestCase):
     def test_high_risk_aigc(self):
-        risk, reasons = rule_engine.judge(ev_aigc(0.99))
+        risk, reasons = rule_engine.judge(ev_aigc(0.999))
         self.assertEqual(risk, "high_risk")
         self.assertTrue(any("AI 生成" in r for r in reasons))
 
-    def test_suspicious_aigc(self):
-        risk, _ = rule_engine.judge(ev_aigc(0.85))
+    def test_gray_band_aigc_suspicious_not_high_risk(self):
+        # 灰带 [0.9, 0.99)：疑似但不自动下架 —— 高滤镜真实自拍常落此区间，
+        # 只能升 suspicious（人工复核），绝不能 high_risk（自动下架）
+        risk, _ = rule_engine.judge(ev_aigc(0.95))
+        self.assertEqual(risk, "suspicious")
+        self.assertNotEqual(risk, "high_risk")
+        # 边界紧贴 hard_high 之下仍属灰带
+        risk, _ = rule_engine.judge(ev_aigc(0.9899))
         self.assertEqual(risk, "suspicious")
 
     def test_abstain_aigc(self):
-        # 弃权区：不 return，继续让 TruFor 等参与
+        # 弃权区 [0.2, 0.9)：不硬判，也不因 AIGC 单独升 suspicious
         risk, reasons = rule_engine.judge(ev_aigc(0.5))
-        self.assertIn(risk, ("inconclusive", "suspicious", "credible"))
+        self.assertEqual(risk, "inconclusive")
+        risk, _ = rule_engine.judge(ev_aigc(0.85))
+        self.assertEqual(risk, "inconclusive")
+
+    def test_hard_high_boundary(self):
+        # ≥ 0.99（hard_high）才允许 AIGC 单独触发 high_risk
+        risk, _ = rule_engine.judge(ev_aigc(0.99))
+        self.assertEqual(risk, "high_risk")
+
+    def test_gray_band_plus_trufor_corroboration_is_high_risk(self):
+        # 灰带 + TruFor 强信号 corroborate → 仍应 high_risk（两个信号都硬）
+        ev = {"aigc": {"evidence": [{"aigc_score": 0.95, "available": True}]},
+              "trufor": {"evidence": [{"trufor_score": 0.95,
+                                       "tampered_area_ratio": 0.1,
+                                       "available": True}]}}
+        risk, _ = rule_engine.judge(ev)
+        self.assertEqual(risk, "high_risk")
 
     def test_high_risk_trufor(self):
         risk, _ = rule_engine.judge(ev_trufor(0.95))
