@@ -1,0 +1,113 @@
+{
+  "generated_at": "2026-10-03",
+  "model_file": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v4",
+  "pin_assertion": "MODEL_PRIORITY 被 pin 为 ['beautyproof_aigen_v4'] 并断言 model_path() 解析结果含 v4",
+  "inference_entrypoint": "aigc_tool.run_aigc 直接调用（未走 pipeline --fast）",
+  "aigc_line": 0.9,
+  "ai_sets": {
+    "n": 50,
+    "model_only": 43,
+    "model_only_rate": 0.86,
+    "ai_label_hits": 45,
+    "ai_label_rate": 0.9,
+    "system_hits": 50,
+    "system_rate": 1.0
+  },
+  "real_sets": {
+    "n": 30,
+    "ai_label_false_positives": 0,
+    "ai_label_fp_rate": 0.0
+  },
+  "per_dataset": {
+    "ai_cross_native2": {
+      "dir": "data/ai_cross_native2",
+      "label": "ai",
+      "n_total": 12,
+      "n_evaluated": 12,
+      "missing_files": [],
+      "model_only_hits": 9,
+      "ai_label_hits": 11,
+      "rescued_by_label": [
+        "crossgen2_02.png",
+        "crossgen2_05.png",
+        "crossgen2_12.png"
+      ],
+      "n_rescued": 3,
+      "system_hits": 12,
+      "model_only_rate": 0.75,
+      "ai_label_rate": 0.9167,
+      "system_rate": 1.0,
+      "desc": "2026-10-02 新生成的 12 张全新风格 AI 图（held-out，模型没见过）"
+    },
+    "ai_cross_native": {
+      "dir": "data/ai_cross_native",
+      "label": "ai",
+      "n_total": 12,
+      "n_evaluated": 12,
+      "missing_files": [],
+      "model_only_hits": 8,
+      "ai_label_hits": 8,
+      "rescued_by_label": [
+        "crossgen_04.png",
+        "crossgen_09.png",
+        "crossgen_10.png",
+        "crossgen_12.png"
+      ],
+      "n_rescued": 4,
+      "system_hits": 12,
+      "model_only_rate": 0.6667,
+      "ai_label_rate": 0.6667,
+      "system_rate": 1.0,
+      "desc": "2026-09-26 生成的 12 张 AI 图（held-out，模型没见过）"
+    },
+    "ai_cross": {
+      "dir": "data/ai_cross",
+      "label": "ai",
+      "n_total": 26,
+      "n_evaluated": 26,
+      "missing_files": [],
+      "model_only_hits": 26,
+      "ai_label_hits": 26,
+      "rescued_by_label": [],
+      "n_rescued": 0,
+      "system_hits": 26,
+      "model_only_rate": 1.0,
+      "ai_label_rate": 1.0,
+      "system_rate": 1.0,
+      "desc": "跨生成器 held-out 集（即梦/平台风格）"
+    },
+    "realworld_heldout": {
+      "dir": "data/realworld_heldout",
+      "label": "real",
+      "n_total": 10,
+      "n_evaluated": 10,
+      "missing_files": [],
+      "model_only_hits": 0,
+      "ai_label_hits": 0,
+      "rescued_by_label": [],
+      "n_rescued": 0,
+      "system_hits": 0,
+      "model_only_rate": 0.0,
+      "ai_label_rate": 0.0,
+      "system_rate": 0.0,
+      "desc": "真实图 held-out 10 张（按 seed 20260926 切出，**永不进训练**）"
+    },
+    "real_xhs": {
+      "dir": "data/real_xhs",
+      "label": "real",
+      "n_total": 20,
+      "n_evaluated": 20,
+      "missing_files": [],
+      "model_only_hits": 0,
+      "ai_label_hits": 0,
+      "rescued_by_label": [],
+      "n_rescued": 0,
+      "system_hits": 0,
+      "model_only_rate": 0.0,
+      "ai_label_rate": 0.0,
+      "system_rate": 0.0,
+      "desc": "小红书真实精修美妆图（训练用过的类，只用来确认标识层不乱判）"
+    }
+  },
+  "interpretation": "标识层只在图上确实带「AI生成/AI绘制」等可见标识时生效：它把一部分模型盲区救回来，但覆盖率取决于图上有没有标识（见 ai_label_rate），对洗掉标识的 AI 图无效；真实图上的误报数见 real_sets.ai_label_false_positives。两者必须一起讲，不能只报好看的那个。"
+}

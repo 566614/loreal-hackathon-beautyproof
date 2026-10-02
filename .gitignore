@@ -302,3 +302,18 @@ data/real_filter_selfie/_heic_originals/
 docs/_snapshot_/
 docs/_snapshot_commercial/
 data/official/
+
+# 推送兜底脚本的临时清单（Git Data API 用，跑完即弃）
+_files.json
+_files.txt
+_b.json
+_t.json
+_c.json
+_r.json
+_push_remote_sha.txt
+
+# 评测集图片打包（体积大，走 Release 附件或按 MANIFEST 重新生成）
+outputs/ai_cross_native2_images.zip
+
+# 本地工具目录
+.local/

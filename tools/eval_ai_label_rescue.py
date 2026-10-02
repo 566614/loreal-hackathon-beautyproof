@@ -32,6 +32,8 @@ import aigc_tool  # noqa: E402
 PIN = ["beautyproof_aigen_v4"]
 IMG_EXT = {".png", ".jpg", ".jpeg", ".webp"}
 AIGC_LINE = 0.9  # 与 rule_engine.THRESHOLDS["aigc_high_risk"] 对齐：≥ 此判"模型认为整图 AI"
+# 快速复核时限制每集张数（None = 全跑）；限制会如实写进 n_total/n_evaluated
+LIMIT = {"real_xhs": 20}
 
 DATASETS = [
     ("ai_cross_native2", "data/ai_cross_native2", "ai",
@@ -57,20 +59,24 @@ def pin_model():
     return str(mp)
 
 
-def eval_dir(rel_dir, label):
+def eval_dir(rel_dir, label, skip_aigc=False, limit=None):
+    """skip_aigc: 真实图数据集只需要「标识层会不会乱判」，不必再跑一遍模型（省一半时间）。
+    limit: 只取前 N 张（用于快速复核；会写进 n_total/n_evaluated，不隐瞒）。"""
     d = REPO / rel_dir
     if not d.exists():
         return {"dir": rel_dir, "n_total": 0, "n_evaluated": 0, "missing_files": ["<目录不存在>"], "rows": []}
+    files = [f for f in sorted(d.iterdir()) if f.suffix.lower() in IMG_EXT]
+    if limit:
+        files = files[:limit]
     rows, missing = [], []
-    for f in sorted(d.iterdir()):
-        if f.suffix.lower() not in IMG_EXT:
-            continue
+    for f in files:
         row = {"file": f.name, "aigc_score": None, "ai_label": None, "label_text": None,
                "label_conf": None, "error": None}
-        try:
-            row["aigc_score"] = float(aigc_tool.run_aigc(str(f))[0])
-        except Exception as e:                      # 单张失败不中断整批
-            row["error"] = f"aigc:{type(e).__name__}"
+        if not skip_aigc:
+            try:
+                row["aigc_score"] = float(aigc_tool.run_aigc(str(f))[0])
+            except Exception as e:                  # 单张失败不中断整批
+                row["error"] = f"aigc:{type(e).__name__}"
         try:
             ev = ai_label_tool.run(str(f))
             e0 = ev["evidence"][0]
@@ -80,7 +86,7 @@ def eval_dir(rel_dir, label):
             row["label_conf"] = bh.get("confidence")
         except Exception as e:
             row["error"] = (row["error"] or "") + f"|ai_label:{type(e).__name__}"
-        if row["aigc_score"] is None and row["ai_label"] is None:
+        if row["ai_label"] is None and row["aigc_score"] is None:
             missing.append(f.name)
             continue
         rows.append(row)
@@ -90,6 +96,7 @@ def eval_dir(rel_dir, label):
 
     n = len(rows)
     model_hits = sum(1 for r in rows if (r["aigc_score"] or 0) >= AIGC_LINE)
+    # system_hits 在 skip_aigc 时只反映标识层（真实集只用它看误报）
     label_hits = sum(1 for r in rows if r["ai_label"])
     rescued = [r["file"] for r in rows
                if r["ai_label"] and (r["aigc_score"] or 0) < AIGC_LINE]
@@ -116,7 +123,7 @@ def main():
     results = {}
     for key, rel, label, desc in DATASETS:
         print(f"[{key}] {desc}", flush=True)
-        r = eval_dir(rel, label)
+        r = eval_dir(rel, label, skip_aigc=(label == "real"), limit=LIMIT.get(key))
         r["desc"] = desc
         results[key] = r
         print(f"  -> model {r['model_only_hits']}/{r['n_evaluated']} | "

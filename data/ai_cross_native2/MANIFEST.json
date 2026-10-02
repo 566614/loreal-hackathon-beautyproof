@@ -123,5 +123,6 @@
       "generated_at": "2026-10-02",
       "in_train_split": false
     }
-  ]
+  ],
+  "repo_note": "图片本身不入库（.gitignore 的 data/**/*.png 规则），本 MANIFEST 记录每张图的 prompt / 风格标签 / 生成方式，任何人用同样的 prompt 重新生成即可复现该评测集；已生成的文件可从 Release 附件或本地 data/ai_cross_native2/ 取。"
 }
