@@ -1,0 +1,62 @@
+{
+  "schema": "beautyproof/trace_eval@1",
+  "data_provenance": "团队自建合成（无第三方数据集、无真实平台评论/笔记采集）。OCR 行按真实小红书图上常见的水印形态构造（形如 @账号名_小红书），用于验证比对逻辑。",
+  "disclaimer": "⚠️ 边界：合成数据只能证明「比对逻辑能跑通且方向正确」，不能当真实场景准确率。更重要的是本工具的结论本身也只到「需核实素材授权」——发现第三方水印不等于认定盗图（博主截图自己的笔记、品牌转载投稿图、平台素材库、二次创作已获授权，四种情况都会产生水印）。",
+  "n_cases": 5,
+  "direction_hit": 5,
+  "direction_rate": 1.0,
+  "rows": [
+    {
+      "id": "tr_01_watermark_vs_official",
+      "expected": "high_risk",
+      "got": "high_risk",
+      "hit": true,
+      "findings": [
+        "水印与来源声称矛盾"
+      ],
+      "watermarks": [
+        "@雨弑_小红书"
+      ]
+    },
+    {
+      "id": "tr_02_brand_not_on_image",
+      "expected": "suspicious",
+      "got": "suspicious",
+      "hit": true,
+      "findings": [
+        "文案品类与图上不一致"
+      ],
+      "watermarks": []
+    },
+    {
+      "id": "tr_03_consistent_own_post",
+      "expected": "credible",
+      "got": "credible",
+      "hit": true,
+      "findings": [],
+      "watermarks": [
+        "@雨弑_小红书"
+      ]
+    },
+    {
+      "id": "tr_04_no_watermark_no_claim",
+      "expected": "credible",
+      "got": "credible",
+      "hit": true,
+      "findings": [],
+      "watermarks": []
+    },
+    {
+      "id": "tr_05_own_shot_with_watermark",
+      "expected": "suspicious",
+      "got": "suspicious",
+      "hit": true,
+      "findings": [
+        "水印与「实拍」声称并存（需注意，非必然矛盾）"
+      ],
+      "watermarks": [
+        "@小李_小红书"
+      ]
+    }
+  ]
+}
