@@ -776,5 +776,13 @@
     "tampered_position": "画面右下角",
     "heatmap": "jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_heat.png",
     "overlay": "jimeng-2026-09-16-5713-一瓶粉底液产品静物，玻璃瓶身，柔光棚拍，高清_trufor_overlay.png"
+  },
+  "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\real_filter_selfie\\fs_11.jpg": {
+    "available": true,
+    "trufor_score": 0.3098,
+    "tampered_area_ratio": 0.022,
+    "tampered_position": "画面上部",
+    "heatmap": "fs_11_trufor_heat.png",
+    "overlay": "fs_11_trufor_overlay.png"
   }
 }

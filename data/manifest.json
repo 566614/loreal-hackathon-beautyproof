@@ -56,6 +56,10 @@
       "ground_truth": "ai_generated",
       "expected_risk": "high_risk",
       "note": "即梦生成的整图 AI 美妆图。这张是 AIGC 微调模型的验证集成员（未参与训练），放进来是为了证明模型是泛化而非死记；AIGC 检测分 1.0 → high_risk"
+    },
+    {
+      "path": "C:/Users/Lenovo/WorkBuddy/黑客松/loreal-hackathon-beautyproof/data/real_filter_selfie/fs_11.jpg",
+      "note": "灰带决策案例：真实滤镜自拍，AI 分数 0.9154 落 [0.9,0.99) → 判可疑/人工复核，不自动下架（2026-09-30 灰带策略）"
     }
   ]
 }

@@ -79,8 +79,14 @@ def _fake_run_tool(script, image_path, timeout=900):
 def fake_tools(monkeypatch):
     monkeypatch.setattr(pipeline, "run_tool", _fake_run_tool)
     stem = SAMPLE_IMAGE.stem
+    # ⚠️ 同 report 的坑（2026-10-02 实测踩坑，勿回退）：outputs/{tool}_{stem}.json 也是入库交付物
+    # —— demo/index.html 正是由 outputs/analysis_*.json 生成的（见 tools/build_demo.py）。
+    # 这里原本无条件 unlink，导致跑一次 pytest 就把 analysis_clean_01.json 删掉、
+    # 重建 demo 时样本从 7 掉回 6。修法与 reports 同一套：先快照、只删本次新建的、收尾原样恢复。
+    ev_before = {}
     for t in _TOOL_NAMES + _AUX_NAMES:
         f = REPO / "outputs" / f"{t}_{stem}.json"
+        ev_before[t] = f.read_bytes() if f.exists() else None
         if f.exists():
             f.unlink()
     # ⚠️ 报告路径与仓库已提交的报告交付物同名（SAMPLE_IMAGE=clean_01 → report_clean_01.md）。
@@ -90,11 +96,15 @@ def fake_tools(monkeypatch):
     rf = REPO / "reports" / f"report_{stem}.md"
     rf_before = rf.read_bytes() if rf.exists() else None
     yield
-    # 清理本测试产生的证据 / 结果，保持仓库干净
+    # 清理本测试产生的证据 / 结果，保持仓库干净；测试前就存在的证据文件原样恢复（勿回退）
     for t in _TOOL_NAMES + _AUX_NAMES:
         f = REPO / "outputs" / f"{t}_{stem}.json"
-        if f.exists():
-            f.unlink()
+        prev = ev_before.get(t)
+        if prev is None:
+            if f.exists():
+                f.unlink()
+        else:
+            f.write_bytes(prev)
     if rf_before is None:
         if rf.exists():
             rf.unlink()
