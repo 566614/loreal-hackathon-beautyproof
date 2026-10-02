@@ -1,0 +1,102 @@
+{
+  "tag": "inline",
+  "image_stem": "ai_17",
+  "image_path": "data\\ai\\ai_17.png",
+  "text": "这款精华我用了两周，能治疗痘痘肌，还能消炎抗菌。原相机实拍无滤镜。",
+  "image_side_ready": true,
+  "aigc_score": 1.0,
+  "verdict": "suspicious",
+  "headline": "文案与配图出现 2 处硬矛盾，建议人工复核（不直接定性）",
+  "claims_high": [],
+  "claims_medium": [],
+  "contradictions_hard": [
+    {
+      "type": "实拍宣称与AI生成判定冲突",
+      "severity": "hard",
+      "text_side": "文案称「原相机」「实拍」（上下文 …痘肌，还能消炎抗菌。原相机实拍无滤镜。…）",
+      "image_side": "AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成",
+      "why": "相机拍出来的图和 AI 画出来的图，只能是其一是真。文案声称真实拍摄，与图像侧结论直接不相容"
+    },
+    {
+      "type": "无修图宣称与篡改判定冲突",
+      "severity": "hard",
+      "text_side": "文案称「无滤镜」（上下文 …消炎抗菌。原相机实拍无滤镜。…）",
+      "image_side": "篡改检测给出 0.9962（≥0.9），有明显篡改痕迹",
+      "why": "文案声称未做后期，图像侧却检出明显篡改痕迹，两者不相容"
+    }
+  ],
+  "contradictions_medium": [
+    {
+      "type": "亲身体验宣称与AI生成判定冲突",
+      "severity": "medium",
+      "text_side": "文案称「我用了」（上下文 …这款精华我用了两周，能治疗痘痘肌，…）",
+      "image_side": "AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成",
+      "why": "若图是 AI 生成的，则文案描述的亲身试用过程缺乏真实画面支撑；注意也可能是用真实体验配了 AI 示意图"
+    }
+  ],
+  "negated": [],
+  "text_style": {},
+  "crossmodal_evidence": {
+    "tool": "crossmodal",
+    "source_asset_id": "ai_17",
+    "observed": "发现 3 处图文矛盾（硬矛盾 2 处、中矛盾 1 处）。最硬的一条：文案称「原相机」「实拍」（上下文 …痘肌，还能消炎抗菌。原相机实拍无滤镜。…），而 AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成。",
+    "cannot_prove": "图文冲突只能说明两边说法不相容，不能判定是谁在造假；数字不一致也可能是改稿手滑或图上另有说明，必须人工核对",
+    "evidence": [
+      {
+        "contradictions": [
+          {
+            "type": "实拍宣称与AI生成判定冲突",
+            "severity": "hard",
+            "text_side": "文案称「原相机」「实拍」（上下文 …痘肌，还能消炎抗菌。原相机实拍无滤镜。…）",
+            "image_side": "AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成",
+            "why": "相机拍出来的图和 AI 画出来的图，只能是其一是真。文案声称真实拍摄，与图像侧结论直接不相容"
+          },
+          {
+            "type": "亲身体验宣称与AI生成判定冲突",
+            "severity": "medium",
+            "text_side": "文案称「我用了」（上下文 …这款精华我用了两周，能治疗痘痘肌，…）",
+            "image_side": "AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成",
+            "why": "若图是 AI 生成的，则文案描述的亲身试用过程缺乏真实画面支撑；注意也可能是用真实体验配了 AI 示意图"
+          },
+          {
+            "type": "无修图宣称与篡改判定冲突",
+            "severity": "hard",
+            "text_side": "文案称「无滤镜」（上下文 …消炎抗菌。原相机实拍无滤镜。…）",
+            "image_side": "篡改检测给出 0.9962（≥0.9），有明显篡改痕迹",
+            "why": "文案声称未做后期，图像侧却检出明显篡改痕迹，两者不相容"
+          }
+        ],
+        "hard_count": 2,
+        "medium_count": 1,
+        "conflict_level": "hard",
+        "text_preview": "这款精华我用了两周，能治疗痘痘肌，还能消炎抗菌。原相机实拍无滤镜。",
+        "image_tools_present": [
+          "aigc",
+          "ocr",
+          "trufor"
+        ],
+        "negated_markers": [],
+        "calibrated": false
+      }
+    ]
+  },
+  "cannot_prove": [
+    "文本侧不做模糊语义理解，只认词典能命中硬规则",
+    "图像侧证据未就绪时不回答图文问题（不硬凑结论）",
+    "本结论不是司法鉴定，高风险必须人工复核"
+  ],
+  "evidence": [
+    {
+      "tool": "text",
+      "observed": "命中高风险宣称 0 条 / 中风险 0 条"
+    },
+    {
+      "tool": "crossmodal",
+      "observed": "硬矛盾 2 处 / 中矛盾 1 处"
+    },
+    {
+      "tool": "image_side",
+      "observed": "AIGC 分数 1.0"
+    }
+  ]
+}

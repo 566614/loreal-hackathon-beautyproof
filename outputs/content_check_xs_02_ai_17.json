@@ -1,0 +1,73 @@
+{
+  "tag": "xs_02",
+  "image_stem": "ai_17",
+  "image_path": "data\\ai\\ai_17.png",
+  "text": "SUKUI LABO 小红帽色修面部精华 参考价¥229。前段时间这个小红帽的风还挺大，据说修复泛红和痘印的效果不错，我本身就有痘印的困扰，试了惊喜地发现还不错！质地水水的，流动性很好，吸收之后有存在感但不黏腻，也不紧绷，用了之后新生的痘痘第二天起床发现居然瘪下去了，脸颊的泛红也有淡去。它的包装也挺有意思，一盒里有三小支，每支10ml，旅游出差方便携带。看了一下成分，油橄榄叶提取物和母菊花提取物有舒缓消炎的功效，对付红色的痘印不错，甘牛至叶提取物能天然抑菌和增强肌肤屏障，玫瑰红景天根提取物还能抗糖。",
+  "image_side_ready": true,
+  "aigc_score": null,
+  "verdict": "inconclusive",
+  "headline": "有轻微不一致，需结合其他证据",
+  "claims_high": [],
+  "claims_medium": [],
+  "contradictions_hard": [],
+  "contradictions_medium": [
+    {
+      "type": "亲身体验宣称与AI生成判定冲突",
+      "severity": "medium",
+      "text_side": "文案称「用了之后」（上下文 …但不黏腻，也不紧绷，用了之后新生的痘痘第二天起床…）",
+      "image_side": "AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成",
+      "why": "若图是 AI 生成的，则文案描述的亲身试用过程缺乏真实画面支撑；注意也可能是用真实体验配了 AI 示意图"
+    }
+  ],
+  "negated": [],
+  "text_style": {},
+  "crossmodal_evidence": {
+    "tool": "crossmodal",
+    "source_asset_id": "ai_17",
+    "observed": "发现 1 处图文数字/口径不一致：文案称「用了之后」（上下文 …但不黏腻，也不紧绷，用了之后新生的痘痘第二天起床…），AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成。",
+    "cannot_prove": "图文冲突只能说明两边说法不相容，不能判定是谁在造假；数字不一致也可能是改稿手滑或图上另有说明，必须人工核对",
+    "evidence": [
+      {
+        "contradictions": [
+          {
+            "type": "亲身体验宣称与AI生成判定冲突",
+            "severity": "medium",
+            "text_side": "文案称「用了之后」（上下文 …但不黏腻，也不紧绷，用了之后新生的痘痘第二天起床…）",
+            "image_side": "AI 生成检测给出 1.0（≥0.9），判定整图由 AI 生成",
+            "why": "若图是 AI 生成的，则文案描述的亲身试用过程缺乏真实画面支撑；注意也可能是用真实体验配了 AI 示意图"
+          }
+        ],
+        "hard_count": 0,
+        "medium_count": 1,
+        "conflict_level": "medium",
+        "text_preview": "SUKUI LABO 小红帽色修面部精华 参考价¥229。前段时间这个小红帽的风还挺大，据说修复泛红和痘印的效果不错，我本身就有痘印的困扰，试了惊喜地发现还不错…",
+        "image_tools_present": [
+          "aigc",
+          "ocr",
+          "trufor"
+        ],
+        "negated_markers": [],
+        "calibrated": false
+      }
+    ]
+  },
+  "cannot_prove": [
+    "文本侧不做模糊语义理解，只认词典能命中硬规则",
+    "图像侧证据未就绪时不回答图文问题（不硬凑结论）",
+    "本结论不是司法鉴定，高风险必须人工复核"
+  ],
+  "evidence": [
+    {
+      "tool": "text",
+      "observed": "命中高风险宣称 0 条 / 中风险 0 条"
+    },
+    {
+      "tool": "crossmodal",
+      "observed": "硬矛盾 0 处 / 中矛盾 1 处"
+    },
+    {
+      "tool": "image_side",
+      "observed": "图像侧证据已加载但未暴露 AIGC 分数"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>BeautyProof · 种草内容核验</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1b1d21;--sub:#666;--line:#e4e7eb;
+        --green:#1e9e62;--orange:#e08e0b;--blue:#2563eb;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;font-size:15px;line-height:1.7}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:24px;margin:0 0 6px}
+  .lead{color:var(--sub);margin:0 0 22px;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .card h2{font-size:15px;margin:0 0 12px;color:var(--sub);font-weight:600}
+  textarea,select{width:100%;font:inherit;color:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  textarea{min-height:190px;resize:vertical;line-height:1.75}
+  .row{display:flex;gap:10px;margin-top:10px}
+  button{flex:1;background:var(--blue);color:#fff;border:0;border-radius:8px;padding:11px 14px;font:inherit;cursor:pointer}
+  button:disabled{filter:grayscale(.6);cursor:progress}
+  .pickup{color:var(--blue);cursor:pointer;text-decoration:underline}
+  #out{margin-top:18px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;color:#fff}
+  .b-credible{background:var(--green)}.b-suspicious{background:var(--orange)}.b-inconclusive{background:#8a8f98}
+  .verdict{font-size:19px;font-weight:700;margin:0 0 10px}
+  .ev{border-top:1px dashed var(--line);margin-top:12px;padding-top:10px}
+  .ev div{font-size:14px;padding:3px 0}
+  .ev b{color:var(--ink)}
+  .hint{font-size:13px;color:var(--sub);margin-top:10px}
+  .warn{color:#c0392b}
+  ol{pl:20px;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>种草内容核验 · BeautyProof</h1>
+  <p class="lead">左边贴一段种草文案，右边选一张配图，点核验 —— 系统会同时看<strong>文案说了什么</strong>、
+      <strong>图上证据说了什么</strong>，再让两边<strong>对质</strong>。结论只给线索，不给"造假"判决书。</p>
+  <div class="grid">
+    <div class="card">
+      <h2>① 贴入种草文案</h2>
+      <div id="pickPosts"></div>
+      <div id="pickCases" style="margin-top:8px"></div>
+      <textarea id="text" placeholder="把小红书/笔记正文整段贴进来……"></textarea>
+    </div>
+    <div class="card">
+      <h2>② 选一张配图（图文交叉验证需要）</h2>
+      <select id="imgSel"></select>
+      <div class="hint">只列出跑过完整流水线、有图像侧证据的样本。</div>
+      <div class="row"><button id="go" type="button">开始核验</button></div>
+      <div class="hint">核验顺序：文本侧查违禁宣称 → 图像侧看 AIGC / TruFor → 图文对质找矛盾 → 出结论</div>
+    </div>
+  </div>
+  <div id="out"></div>
+</div>
+<script>
+const SAMPLES = {{ samples|tojson }};
+const POSTS = {{ posts|tojson }};
+const CASES = {{ cases|tojson }};
+function fillPickers(sel, list){
+  const box = document.querySelector(sel);
+  if(!list.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '快选：' + list.map(function(p){
+    return '<span class="pickup" data-id="'+p.id+'">'+p.head+'</span>';
+  }).join('　');
+  box.querySelectorAll('.pickup').forEach(function(el){
+    el.addEventListener('click', function(){
+      const hit = list.find(function(x){return x.id===el.dataset.id;});
+      if(hit){ document.getElementById('text').value = hit.text; }
+    });
+  });
+}
+fillPickers('#pickPosts', POSTS);
+fillPickers('#pickCases', CASES);
+SAMPLES.forEach(function(s){
+  const o = document.createElement('option');
+  o.value = s.img; o.textContent = s.id + (s.label ? '（'+s.label+'）' : '');
+  document.getElementById('imgSel').appendChild(o);
+});
+const BADGE = {credible:'b-credible', suspicious:'b-suspicious', inconclusive:'b-inconclusive'};
+const TXT   = {credible:'可信', suspicious:'可疑 · 建议人工复核', inconclusive:'存疑 · 证据不足'};
+document.getElementById('go').addEventListener('click', function(){
+  const btn = this;
+  const text = (document.getElementById('text').value||'').trim();
+  const img  = document.getElementById('imgSel').value;
+  const out  = document.getElementById('out');
+  if(!text){ out.innerHTML = '<div class="card warn">先贴一段文案</div>'; return; }
+  btn.disabled = true; btn.textContent = '核验中……'; out.innerHTML = '';
+  fetch('/check', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({text:text, image:img, tag:'web'})})
+  .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+  .then(function(res){
+    if(!res.ok){ out.innerHTML = '<div class="card warn">出错：'+res.j.error+'</div>'; return; }
+    const j = res.j;
+    let h = '<div class="card">';
+    h += '<span class="badge '+(BADGE[j.verdict]||'b-inconclusive')+'">'+TXT[j.verdict]+'</span>';
+    h += '<p class="verdict" style="margin-top:10px">'+j.headline+'</p>';
+    if(j.aigc_score !== null && j.aigc_score !== undefined){
+      h += '<div class="ev"><div>图像侧 AIGC 分数：<b>'+j.aigc_score+'</b></div></div>';
+    }
+    if(j.contradictions_hard && j.contradictions_hard.length){
+      h += '<div class="ev"><b>硬矛盾（文案 vs 配图对不上）</b><ol>';
+      j.contradictions_hard.forEach(function(c){ h += '<li>'+c.description+' <span style="color:#888">'+(c.evidence||'')+'</span></li>'; });
+      h += '</ol></div>';
+    }
+    if(j.contradictions_medium && j.contradictions_medium.length){
+      h += '<div class="ev"><b>中矛盾（数字/量纲对不上）</b><ol>';
+      j.contradictions_medium.forEach(function(c){ h += '<li>'+c.description+' <span style="color:#888">'+(c.evidence||'')+'</span></li>'; });
+      h += '</ol></div>';
+    }
+    if(j.claims_high && j.claims_high.length){
+      h += '<div class="ev"><b>文案里命中的高风险宣称</b><ol>';
+      j.claims_high.forEach(function(c){ h += '<li>'+c.text+' —— '+c.reason+'</li>'; });
+      h += '</ol></div>';
+    }
+    if(j.claims_medium && j.claims_medium.length){
+      h += '<div class="ev"><b>中风险表述（绝对化/效果承诺）</b><ol>';
+      j.claims_medium.forEach(function(c){ h += '<li>'+c.text+' —— '+c.reason+'</li>'; });
+      h += '</ol></div>';
+    }
+    h += '<div class="ev"><b>这套系统不会替你定的事</b><div>'+j.cannot_prove.join('；')+'。</div></div>';
+    h += '</div>';
+    out.innerHTML = h;
+  })
+  .catch(function(e){ out.innerHTML = '<div class="card warn">网络错误：'+e+'</div>'; })
+  .finally(function(){ btn.disabled = false; btn.textContent = '开始核验'; });
+});
+</script>
+</body>
+</html>

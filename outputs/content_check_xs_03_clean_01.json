@@ -1,0 +1,57 @@
+{
+  "tag": "xs_03",
+  "image_stem": "clean_01",
+  "image_path": "data\\clean\\clean_01.png",
+  "text": "本人很信奉一个原则：五位数的面霜，四位数的精华，都不如三位数的防晒！所以我一年四季都会乖乖涂防晒，Dr.g 这款防晒已加入夏天回购清单。上脸会觉得有点油，成膜有一点点慢，但会变成清爽的哑光质地，本混油皮这个季节用着不油不干。防水也是真的，夏天大太阳下狂奔回公司，流了一吨汗也没流白汗。氧化锌+二氧化钛的经典组合，纯物理防晒，会泛白但不严重，还额外添加了神经酰胺等保湿成分，整体比较温和，无香精、酒精。",
+  "image_side_ready": true,
+  "aigc_score": null,
+  "verdict": "credible",
+  "headline": "未发现硬性风险线索，整体可信",
+  "claims_high": [],
+  "claims_medium": [],
+  "contradictions_hard": [],
+  "contradictions_medium": [],
+  "negated": [],
+  "text_style": {},
+  "crossmodal_evidence": {
+    "tool": "crossmodal",
+    "source_asset_id": "clean_01",
+    "observed": "文案与图像侧结论未发现互相矛盾之处。",
+    "cannot_prove": "图文冲突只能说明两边说法不相容，不能判定是谁在造假；数字不一致也可能是改稿手滑或图上另有说明，必须人工核对",
+    "evidence": [
+      {
+        "contradictions": [],
+        "hard_count": 0,
+        "medium_count": 0,
+        "conflict_level": "none",
+        "text_preview": "本人很信奉一个原则：五位数的面霜，四位数的精华，都不如三位数的防晒！所以我一年四季都会乖乖涂防晒，Dr.g 这款防晒已加入夏天回购清单。上脸会觉得有点油，成膜有…",
+        "image_tools_present": [
+          "aigc",
+          "ocr",
+          "trufor"
+        ],
+        "negated_markers": [],
+        "calibrated": false
+      }
+    ]
+  },
+  "cannot_prove": [
+    "文本侧不做模糊语义理解，只认词典能命中硬规则",
+    "图像侧证据未就绪时不回答图文问题（不硬凑结论）",
+    "本结论不是司法鉴定，高风险必须人工复核"
+  ],
+  "evidence": [
+    {
+      "tool": "text",
+      "observed": "命中高风险宣称 0 条 / 中风险 0 条"
+    },
+    {
+      "tool": "crossmodal",
+      "observed": "硬矛盾 0 处 / 中矛盾 0 处"
+    },
+    {
+      "tool": "image_side",
+      "observed": "图像侧证据未就绪（请先跑 pipeline 生成 outputs/analysis_<stem>.json）"
+    }
+  ]
+}
