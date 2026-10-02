@@ -1,0 +1,347 @@
+{
+  "generated_at": "2026-10-02T23:12:17",
+  "model_file": "beautyproof_aigen_v4",
+  "model_dir": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\models\\beautyproof_aigen_v4",
+  "model_priority_pinned": [
+    "beautyproof_aigen_v4"
+  ],
+  "pin_assertion": "aigc_tool.MODEL_PRIORITY 被临时设为 [beautyproof_aigen_v4] 并断言 model_path() 解析结果含 v4",
+  "inference_entrypoint": "aigc_tool.run_aigc(path) 直接调用（未走 pipeline --fast）",
+  "thresholds": {
+    "recall_line_0.9": 0.9,
+    "hard_high_line_0.99": 0.99,
+    "positive_line_0.6": 0.6,
+    "note": "recall_at_0.9 为主指标（aigc_high_risk 灰带线，召回即召回）；recall_at_0.99 为自动定级线；recall_at_0.5 为宽松口径"
+  },
+  "train_split": false,
+  "train_split_note": "ai_cross_native2 为 held-out 评测集，未参与任何训练",
+  "current_batch": {
+    "label": "ai_cross_native2 (2026-10-02 新生成12张)",
+    "dir": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai_cross_native2",
+    "n_total": 12,
+    "n_evaluated": 12,
+    "missing_files": [],
+    "thresholds_used": {
+      "recall_line": 0.9,
+      "hard_high_line": 0.99,
+      "loose_line": 0.5,
+      "positive_line": 0.6
+    },
+    "recall_at_0.9": 0.75,
+    "recall_at_0.99": 0.6667,
+    "recall_at_0.5": 0.75,
+    "recall_at_positive": 0.75,
+    "n_detected_at_0.9": 9,
+    "n_detected_at_0.99": 8,
+    "n_detected_at_0.5": 9,
+    "mean_prob": 0.7451,
+    "median_prob": 0.9985,
+    "min_prob": 0.0,
+    "max_prob": 1.0,
+    "misses": [
+      {
+        "id": "crossgen2_02",
+        "style_tag": "伪真实感生活流/镜前自拍",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_05",
+        "style_tag": "直播/截图流",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_12",
+        "style_tag": "生活场景/咖啡店桌面",
+        "ai_prob": 0.0
+      }
+    ],
+    "misses_at_0.5": [
+      {
+        "id": "crossgen2_02",
+        "style_tag": "伪真实感生活流/镜前自拍",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_05",
+        "style_tag": "直播/截图流",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_12",
+        "style_tag": "生活场景/咖啡店桌面",
+        "ai_prob": 0.0
+      }
+    ],
+    "misses_at_0.99": [
+      {
+        "id": "crossgen2_02",
+        "style_tag": "伪真实感生活流/镜前自拍",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_05",
+        "style_tag": "直播/截图流",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_06",
+        "style_tag": "直播/截图流/电商详情页",
+        "ai_prob": 0.9467
+      },
+      {
+        "id": "crossgen2_12",
+        "style_tag": "生活场景/咖啡店桌面",
+        "ai_prob": 0.0
+      }
+    ],
+    "per_image": [
+      {
+        "id": "crossgen2_01",
+        "file": "crossgen2_01.png",
+        "style_tag": "伪真实感生活流/手机自拍",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen2_02",
+        "file": "crossgen2_02.png",
+        "style_tag": "伪真实感生活流/镜前自拍",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_03",
+        "file": "crossgen2_03.png",
+        "style_tag": "伪真实感生活流/居家平铺",
+        "ai_prob": 0.9987
+      },
+      {
+        "id": "crossgen2_04",
+        "file": "crossgen2_04.png",
+        "style_tag": "伪真实感生活流/敷脸特写",
+        "ai_prob": 0.9978
+      },
+      {
+        "id": "crossgen2_05",
+        "file": "crossgen2_05.png",
+        "style_tag": "直播/截图流",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen2_06",
+        "file": "crossgen2_06.png",
+        "style_tag": "直播/截图流/电商详情页",
+        "ai_prob": 0.9467
+      },
+      {
+        "id": "crossgen2_07",
+        "file": "crossgen2_07.png",
+        "style_tag": "非人主体/3D 渲染静物",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen2_08",
+        "file": "crossgen2_08.png",
+        "style_tag": "非人主体/成分瓶微距",
+        "ai_prob": 0.9999
+      },
+      {
+        "id": "crossgen2_09",
+        "file": "crossgen2_09.png",
+        "style_tag": "非人主体/质地微距",
+        "ai_prob": 0.9999
+      },
+      {
+        "id": "crossgen2_10",
+        "file": "crossgen2_10.png",
+        "style_tag": "编辑/杂志流/封面排版",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen2_11",
+        "file": "crossgen2_11.png",
+        "style_tag": "编辑/杂志流/硬光大片",
+        "ai_prob": 0.9982
+      },
+      {
+        "id": "crossgen2_12",
+        "file": "crossgen2_12.png",
+        "style_tag": "生活场景/咖啡店桌面",
+        "ai_prob": 0.0
+      }
+    ]
+  },
+  "previous_batch": {
+    "label": "ai_cross_native (上一批 12 张，同口径对照)",
+    "dir": "C:\\Users\\Lenovo\\WorkBuddy\\黑客松\\loreal-hackathon-beautyproof\\data\\ai_cross_native",
+    "n_total": 12,
+    "n_evaluated": 12,
+    "missing_files": [],
+    "thresholds_used": {
+      "recall_line": 0.9,
+      "hard_high_line": 0.99,
+      "loose_line": 0.5,
+      "positive_line": 0.6
+    },
+    "recall_at_0.9": 0.6667,
+    "recall_at_0.99": 0.6667,
+    "recall_at_0.5": 0.6667,
+    "recall_at_positive": 0.6667,
+    "n_detected_at_0.9": 8,
+    "n_detected_at_0.99": 8,
+    "n_detected_at_0.5": 8,
+    "mean_prob": 0.6666,
+    "median_prob": 0.9998,
+    "min_prob": 0.0,
+    "max_prob": 1.0,
+    "misses": [
+      {
+        "id": "crossgen_04",
+        "style_tag": "美妆品牌海报（渐变背景悬浮口红）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_09",
+        "style_tag": "3D 渲染化妆品悬浮场景",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_10",
+        "style_tag": "电商直播截图风（简陋灯光+直播美颜）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_12",
+        "style_tag": "生活感护肤场景（浴室窗边逆光）",
+        "ai_prob": 0.0
+      }
+    ],
+    "misses_at_0.5": [
+      {
+        "id": "crossgen_04",
+        "style_tag": "美妆品牌海报（渐变背景悬浮口红）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_09",
+        "style_tag": "3D 渲染化妆品悬浮场景",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_10",
+        "style_tag": "电商直播截图风（简陋灯光+直播美颜）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_12",
+        "style_tag": "生活感护肤场景（浴室窗边逆光）",
+        "ai_prob": 0.0
+      }
+    ],
+    "misses_at_0.99": [
+      {
+        "id": "crossgen_04",
+        "style_tag": "美妆品牌海报（渐变背景悬浮口红）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_09",
+        "style_tag": "3D 渲染化妆品悬浮场景",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_10",
+        "style_tag": "电商直播截图风（简陋灯光+直播美颜）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_12",
+        "style_tag": "生活感护肤场景（浴室窗边逆光）",
+        "ai_prob": 0.0
+      }
+    ],
+    "per_image": [
+      {
+        "id": "crossgen_01",
+        "file": "crossgen_01.png",
+        "style_tag": "电商产品静物图（白底精华液）",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen_02",
+        "file": "crossgen_02.png",
+        "style_tag": "带妆容人像（红唇棚拍模特）",
+        "ai_prob": 0.9994
+      },
+      {
+        "id": "crossgen_03",
+        "file": "crossgen_03.png",
+        "style_tag": "社交媒体滤镜自拍（贴纸+磨皮滤镜）",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen_04",
+        "file": "crossgen_04.png",
+        "style_tag": "美妆品牌海报（渐变背景悬浮口红）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_05",
+        "file": "crossgen_05.png",
+        "style_tag": "磨皮精修人像（无毛孔玻璃肌特写）",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen_06",
+        "file": "crossgen_06.png",
+        "style_tag": "复古胶片感（90年代港风颗粒色调）",
+        "ai_prob": 0.9996
+      },
+      {
+        "id": "crossgen_07",
+        "file": "crossgen_07.png",
+        "style_tag": "赛博朋克霓虹妆容",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen_08",
+        "file": "crossgen_08.png",
+        "style_tag": "水彩插画美妆广告",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen_09",
+        "file": "crossgen_09.png",
+        "style_tag": "3D 渲染化妆品悬浮场景",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_10",
+        "file": "crossgen_10.png",
+        "style_tag": "电商直播截图风（简陋灯光+直播美颜）",
+        "ai_prob": 0.0
+      },
+      {
+        "id": "crossgen_11",
+        "file": "crossgen_11.png",
+        "style_tag": "时尚杂志封面风（硬光金属眼妆）",
+        "ai_prob": 1.0
+      },
+      {
+        "id": "crossgen_12",
+        "file": "crossgen_12.png",
+        "style_tag": "生活感护肤场景（浴室窗边逆光）",
+        "ai_prob": 0.0
+      }
+    ]
+  },
+  "comparison": {
+    "new_recall_at_0.9": 0.75,
+    "prev_recall_at_0.9": 0.6667,
+    "delta_recall_at_0.9": 0.0833,
+    "new_recall_at_0.99": 0.6667,
+    "prev_recall_at_0.99": 0.6667,
+    "new_recall_at_0.5": 0.75,
+    "prev_recall_at_0.5": 0.6667,
+    "new_miss_count": 3,
+    "prev_miss_count": 4
+  }
+}

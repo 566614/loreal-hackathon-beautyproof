@@ -228,7 +228,7 @@ textbox(s, Inches(0.92), Inches(2.75), Inches(11.5), Inches(0.7),
 textbox(s, Inches(0.92), Inches(3.6), Inches(11.5), Inches(0.5),
         "欧莱雅第二届美妆科技黑客松 · 赛题 2「信任守护师」", size=16, color=LIGHT)
 textbox(s, Inches(0.92), Inches(4.25), Inches(11.5), Inches(0.5),
-        "8 件工具 · 三条独立证据轴 · 双检测器级联 94.7% / 自动下架误伤 0 · 108 项测试",
+        "9 件工具 · 三条独立证据轴 · 双检测器级联 94.7% / 自动下架误伤 0 · 139 项测试",
         size=15, color=GOLD)
 textbox(s, Inches(0.92), Inches(5.75), Inches(11.5), Inches(0.5),
         "团队：BeautyProof Team（阮 / liying856 / AI 工程）  ·  2026-10", size=14, color=MUTE)
@@ -240,7 +240,7 @@ textbox(s, Inches(0.6), Inches(1.95), Inches(12.1), Inches(1.1),
         "面向美妆垂域的「多模态取证台」——一张图（或一段评论、一次跨平台比对）进去，\n一份普通人看得懂、法务能引用、平台可执行的信任结论出来。",
         size=19, bold=True, color=INK, spacing=1.3)
 bullets(s, Inches(0.6), Inches(3.35), Inches(7.6), Inches(3.4), [
-    "不是黑箱打分：8 件工具各出独立证据 → 规则引擎定四档 → 解释层翻译成人话。",
+    "不是黑箱打分：9 件工具各出独立证据 → 规则引擎定四档 → 解释层翻译成人话。",
     "三条证据轴：生成轴（AIGC×频域）/ 篡改轴（ELA×TruFor）/ 内容溯源轴（OCR×文案×图文×跨平台）。",
     "纯 CPU 可跑、开源可复现、训练数据 100% 团队自产；已上线在线 Demo。",
 ])
@@ -279,7 +279,7 @@ s = new()
 header(s, "赛题要的四件事，我们逐条交卷", "天池 532496 · 硬任务对照表")
 add_table(s, [
     ["赛题硬性要求", "BeautyProof 实现", "证据文件"],
-    ["① 多模态检测方案（图+文并列）", "8 件工具：看图 5 件（hash/c2pa/ela/spectral/trufor/aigc）+ 读字 2 件（ocr/text）+ 跨模态 1 件", "tools/pipeline.py"],
+    ["① 多模态检测方案（图+文并列）", "9 件工具：像素与频域 4 件（hash/c2pa/ela/spectral）+ 生成检测 1 件（aigc 本域微调）+ 篡改定位 1 件（trufor）+ 读字 2 件（ocr / ai_label 可见AI标识）+ 文案与图文交叉 1 件（text/crossmodal）", "tools/pipeline.py"],
     ["② 可解释判定依据", "四段式人话报告 + 法条出处 + 处罚区间 + 每条工具写明「不能证明什么」", "tools/rule_engine.py"],
     ["③ 构建 Agent（识别→预警→建议）", "planner 波次调度 + ACTION_PLAYBOOK 四档处置 + 决策留痕（decision_trace）", "tools/planner.py / rule_engine.py"],
     ["④ 数据集展示完整闭环", "合成集 + 冻结池 + 工具消融 + 级联评测 + 三场景评测，共 5 份可复现 JSON", "results/*.json"],
@@ -292,7 +292,7 @@ callout(s, Inches(0.5), Inches(6.4), Inches(12.3), Inches(0.75),
 # ================================================================ Slide 5 · 架构全景
 s = new()
 header(s, "系统架构：证据链 → 规则 → 人话", "一张图看懂全流程")
-labels = ["输入\n图 / 文 / 评论", "8 件取证工具", "统一证据\n格式", "规则引擎\n四档判定", "人话报告\n+可审计留痕"]
+labels = ["输入\n图 / 文 / 评论", "9 件取证工具", "统一证据\n格式", "规则引擎\n四档判定", "人话报告\n+可审计留痕"]
 caps = ["图 / 图文帖 / 评论区", "hash·c2pa·spectral\nela·ocr·aigc\ntrufor·text·crossmodal",
         "{tool, observed,\ncannot_prove, evidence[]}", "high / suspicious /\ncredible / inconclusive",
         "结论·依据·说不清·\n建议（四段式）"]
@@ -318,9 +318,9 @@ callout(s, Inches(0.5), Inches(5.6), Inches(12.3), Inches(1.0),
         "关键设计：所有工具共享同一套证据格式 → 可组合、可审计；规则引擎是「法官」，大模型只是「翻译官」，绝不下结论、越界措辞被 validator 拦截。",
         fill=PANEL, barcolor=GOLD, size=15)
 
-# ================================================================ Slide 6 · 八工具与三轴互补
+# ================================================================ Slide 6 · 九工具与三轴互补
 s = new()
-header(s, "八件工具，分三条轴——不是堆料", "核心架构论点（本轮升级重点）")
+header(s, "九件工具，分三条轴——不是堆料", "核心架构论点（本轮升级重点）")
 card(s, Inches(0.5), Inches(2.0), Inches(3.95), Inches(2.35),
      "① 生成轴 · AIGC × 频域",
      "aigc：本域微调 MobileNetV3（17MB）\nspectral：FFT 高频能量 / 谱平坦度 /\n方位角异常 / 残差峰度\n\n管「整张就是 AI 画的」",
@@ -343,7 +343,7 @@ add_table(s, [
 ], Inches(0.5), Inches(4.7), Inches(12.3), Inches(2.4), body_size=12.5, head_size=12.5,
     col_w=[0.19, 0.11, 0.11, 0.11, 0.11, 0.37])
 callout(s, Inches(0.5), Inches(4.55), Inches(12.3), Inches(0.75),
-        "左右两轴对彼此的失效场景完全沉默——这是取舍的结果，不是巧合。当作「我用了 8 个工具」讲，评委只会记成工具堆料；当作「三条轴互相补位」讲，才是架构贡献。",
+        "左右两轴对彼此的失效场景完全沉默——这是取舍的结果，不是巧合。当作「我用了 9 个工具」讲，评委只会记成工具堆料；当作「三条轴互相补位」讲，才是架构贡献。",
         fill=PANEL, barcolor=GOLD, size=13.5)
 
 # ================================================================ Slide 7 · 双检测器级联
@@ -395,7 +395,7 @@ s = new()
 header(s, "亮点 3 · 三个官方场景全覆盖 + 官方点名加分项", "功能完整性")
 card(s, Inches(0.5), Inches(2.0), Inches(3.95), Inches(2.5),
      "① 种草内容核验",
-     "8 工具图文流水线 + 合规法条引擎。\n6 段真实种草文案实测：\n1 段命中违禁宣称 /\n4 段需核对特妆注册证 / 1 段干净",
+     "9 工具图文流水线 + 合规法条引擎。\n6 段真实种草文案实测：\n1 段命中违禁宣称 /\n4 段需核对特妆注册证 / 1 段干净",
      foot="tools/content_check.py", accent=GOLD)
 card(s, Inches(4.66), Inches(2.0), Inches(3.95), Inches(2.5),
      "② 评论区真实性核验",
@@ -503,12 +503,33 @@ callout(s, Inches(6.75), Inches(6.15), Inches(6.05), Inches(1.1),
         "纪律：不满足晋升口径就不晋升。\nv5 / v7 的负面结果写进\nresults/v7_eval.json 与模型迭代实验记录。",
         fill=PANEL2, barcolor=ROSE, color=LIGHT, size=14)
 
+# ================================================================ Slide 13b · 可见AI标识层
+s = new()
+header(s, "亮点 3 · 模型盲区 → 标识层救回：系统不必有盲区", "方法严谨性 + 技术创新（第九件工具 ai_label）")
+add_table(s, [
+    ["环节", "发生了什么", "数字"],
+    ["① 模型层", "12 张全新风格零样本，模型只抓到 9 张；3 张直接输出 0.0 —— 判成「相机实拍」", "9 / 12 = 75%"],
+    ["② 图上自证", "3 张漏检图右下角都带平台自动打的「AI生成」标识，OCR 抄写置信度 0.95 ~ 0.995", "3 / 3 命中"],
+    ["③ 系统层", "端到端重跑：inconclusive → high_risk，理由写进报告（标识文字 + 坐标 + 置信度）", "12 / 12 = 100%"],
+], Inches(0.5), Inches(1.95), Inches(12.3), Inches(2.5), body_size=13, head_size=13.5,
+    col_w=[0.13, 0.63, 0.24])
+callout(s, Inches(0.5), Inches(4.75), Inches(6.0), Inches(1.15),
+        "为什么能单独定 high_risk：\n它不是「某个分数偏高」，而是图上自证 ——\n相机直出的真实照片不会有这种字样。",
+        fill=PANEL, barcolor=GOLD, size=13.5)
+callout(s, Inches(6.75), Inches(4.75), Inches(6.05), Inches(1.15),
+        "边际成本 1.7 秒：复用 ocr_tool 已落盘的\n文本行做二次分析，不重跑 PaddleOCR ——\n这是「工具编排有价值」的具体例子。",
+        fill=PANEL2, barcolor=GREEN, color=LIGHT, size=13.5)
+bullets(s, Inches(0.55), Inches(6.1), Inches(12.2), Inches(1.2), [
+    "诚实边界：标识可被伪造/贴图；洗掉标识再发布的 AI 图本工具发现不了 —— 标识层是补偿，不是替代，那类图仍靠 AIGC + 频域 + TruFor。",
+    "评测协议：新图只做 held-out、绝不进训练；跑前 pin 住 v4 并断言解析目录名；未跑/缺图记 missing_files 不进分母（results/ai_label_rescue.json）。",
+], size=12.5)
+
 # ================================================================ Slide 14 · 诚实边界
 s = new()
 header(s, "我们主动声明的边界 —— 不回避短板", "把短板写进报告，才是可信度来源")
 card(s, Inches(0.5), Inches(2.0), Inches(3.95), Inches(2.2),
      "跨生成器泛化未彻底解决",
-     "v4 在已知风格 held-out 上召回 100%，\n但对 12 张全新风格 ImageGen 直出图\n只有 66.7%。\n\n对策：频域做生成器无关兜底 +\n此类风格默认转人工复核。",
+     "v4 在已知风格 held-out 上召回 100%，\n对 12 张全新风格直出图只有 75%。\n\n对策：频域做生成器无关兜底 +\n第九件工具读可见 AI 标识（救回 3/3），\n仍漏的默认转人工复核。",
      accent=ROSE, body_size=12.5, foot_size=11.5)
 card(s, Inches(4.66), Inches(2.0), Inches(3.95), Inches(2.2),
      "评论区 / 溯源是自建合成集",
@@ -573,7 +594,7 @@ card(s, Inches(7.1), Inches(2.0), Inches(5.7), Inches(2.05),
      accent=GREEN, body_size=12, foot_size=11.5)
 card(s, Inches(7.1), Inches(4.25), Inches(5.7), Inches(2.05),
      "可验证性",
-     "108 项 pytest 全过（含 41 项本轮新增回归）\n5 份评测 JSON 全部落盘可复现\n评测脚本启动即 pin 模型 + 断言目录名\n标定协议：冻结池 seed 对半切，CAL 拟合 / TEST 只评测",
+     "139 项 pytest 全过（本轮新增 25 项标识层回归）\n5 份评测 JSON 全部落盘可复现\n评测脚本启动即 pin 模型 + 断言目录名\n标定协议：冻结池 seed 对半切，CAL 拟合 / TEST 只评测",
      accent=GREEN, body_size=12, foot_size=11.5)
 
 # ================================================================ Slide 17 · 5+5 自评（真实版）
@@ -585,7 +606,7 @@ add_table(s, [
     ["项目·SUSTAINABLE", "全开源 + 自产数据 + 冻结池评测协议可持续", "4/5", "未做 GitHub Release，扣 1"],
     ["项目·INCLUSIVE", "保护辨别力最弱的消费者；公益侧免费 API", "4/5", "缺真人用户访谈与可用性测试记录，扣 1"],
     ["项目·FEASIBLE", "纯 CPU 可跑、线上 Demo 200、三形态交付已上线", "5/5", "-"],
-    ["项目·SCALABLE", "三形态具备；跨生成器 66.7%、真实标注集缺失", "3/5", "明显扣分点，不粉饰"],
+    ["项目·SCALABLE", "三形态具备；跨生成器模型层 75%（标识层补 3/3）、真实标注集缺失", "3/5", "明显扣分点，不粉饰"],
     ["团队·JUDGMENT", "消融表定架构、级联阈值、KEEP_V4 晋升纪律", "4/5", "阈值来源是自研冻结池，外部口径待补，扣 1"],
     ["团队·RESILIENCE", "66%→1.4%；主动归档 v5/v7 负面结果；推送通道绕通", "5/5", "-"],
     ["团队·AMBITION", "美妆信任基础设施，而非一次性 detector", "4/5", "生态合作尚无实质进展，扣 1"],
@@ -634,7 +655,7 @@ textbox(s, Inches(0.9), Inches(2.2), Inches(11.5), Inches(1.1),
 textbox(s, Inches(0.92), Inches(3.7), Inches(11.5), Inches(0.6),
         "BeautyProof —— 美妆内容信任守护师", size=20, color=ROSE)
 textbox(s, Inches(0.92), Inches(5.0), Inches(11.5), Inches(0.9),
-        "三条独立证据轴 · 双检测器级联 94.7% / 自动下架误伤 0 · 108 项测试 · 全开源可复现",
+        "三条独立证据轴 · 双检测器级联 94.7% / 自动下架误伤 0 · 139 项测试 · 全开源可复现",
         size=15, color=LIGHT)
 textbox(s, Inches(0.92), Inches(5.45), Inches(11.5), Inches(0.5),
         "在线 Demo：https://beautyproof-demo.app.workbuddy.host/   ·   仓库：github.com/566614/loreal-hackathon-beautyproof",

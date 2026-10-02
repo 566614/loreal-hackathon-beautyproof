@@ -105,7 +105,7 @@
   <!-- ========== 02 取证 ========== -->
   <section class="scene" data-name="02 取证">
     <div class="kicker">STEP 02 · 取证</div>
-    <h2>八件工具，各出一份证据</h2>
+    <h2>九件工具，各出一份证据</h2>
     <div class="tools" id="tools">
       <div class="tool"><span class="dot"></span>hash · 图片指纹</div>
       <div class="tool"><span class="dot"></span>c2pa · 出生证</div>
@@ -115,8 +115,9 @@
       <div class="tool"><span class="dot"></span>aigc · 整图AI(本域)</div>
       <div class="tool"><span class="dot"></span>trufor · 篡改热力图</div>
       <div class="tool"><span class="dot"></span>text / crossmodal · 图文</div>
+      <div class="tool"><span class="dot"></span>ai_label · 可见AI标识</div>
     </div>
-    <div class="sub" style="margin-top:20px">统一证据格式 <code style="color:#c8a24b">{tool, observed, cannot_prove, evidence[]}</code> —— 可组合、可审计。<br>注意最后两行：<span class="bad"> ela 对「整图 AI 生成」基本无反应</span>，所以本轮我们加了第 8 件——<span class="gold">频域工具</span>。</div>
+    <div class="sub" style="margin-top:20px">统一证据格式 <code style="color:#c8a24b">{tool, observed, cannot_prove, evidence[]}</code> —— 可组合、可审计。<br>ela 对「整图 AI 生成」基本无反应 → 第 8 件补了<span class="gold">频域</span>；模型在全新风格上仍会掉 → 第 9 件补了<span class="gold">可见 AI 标识</span>（直接读图上有没有「AI生成」水印，<b style="color:#5fd08a">复用 OCR 结果，只多花 1.7 秒</b>）。</div>
   </section>
 
   <!-- ========== 03 三轴互补 ========== -->
@@ -223,6 +224,30 @@
     <div class="sub" style="margin-top:12px">我们还<span class="bad">主动归档了两个失败的模型</span>：v5 加了新人标真实图，跨生成器召回反而从 66.7% 掉到 58.3%；v7 加了 20 张滤镜自拍，滤镜误报倒是从 2/10 降到 1/10，但跨生成器召回掉到 33.3% —— 两个都不满足晋升口径，<span class="gold">生产模型继续用 v4</span>。</div>
   </section>
 
+  <!-- ========== 09b 标识层救回 ========== -->
+  <section class="scene" data-name="09 模型盲区 → 标识层救回">
+    <div class="kicker">STEP 09 · 2026-10-02 新增 · 第九件工具</div>
+    <h2>模型有盲区，<span class="gold">系统不必有</span></h2>
+    <div class="axes">
+      <div class="axis" style="border-top-color:#ff7a90">
+        <div class="t">① 模型判：真实</div>
+        <div class="m">全新风格零样本 12 张，模型只抓到 9 张。<br>3 张<span class="bad">直接输出 0.0</span> —— 判成「相机实拍」。<br>风格：镜前自拍 / 直播截图 / 咖啡店场景</div>
+        <div class="z">看起来越像照片，模型越被骗</div>
+      </div>
+      <div class="axis" style="border-top-color:#5fd08a">
+        <div class="t">② 图上自证：AI生成</div>
+        <div class="m">这 3 张图右下角<span class="good">都带平台自动打的「AI生成」标识</span>。<br>OCR 抄写置信度 <b class="good">0.95 ~ 0.995</b>，坐标可给。<br>相机直出的真实照片不会有这种字样。</div>
+        <div class="z">不是"某个分数偏高"，是图上自己承认</div>
+      </div>
+      <div class="axis" style="border-top-color:#c8a24b">
+        <div class="t">③ 系统判：high_risk</div>
+        <div class="m">端到端跑通：<b class="gold">inconclusive → high_risk</b>。<br>理由写进报告：图上明确标注，模型分数再低也不改变。<br>边际成本 <b class="good">1.7 秒</b>（复用 OCR，不重跑模型）。</div>
+        <div class="z">两条腿：模型抓"像不像"，标识抓"有没有自证"</div>
+      </div>
+    </div>
+    <div class="sub" style="margin-top:16px"><span class="bad">诚实边界</span>：标识可被伪造/贴图；<b>洗掉标识再发的 AI 图本工具发现不了</b>，那类图仍只能靠 AIGC 模型 + 频域 + TruFor。标识层是补偿，不是替代。</div>
+  </section>
+
   <!-- ========== 09 边界 ========== -->
   <section class="scene" data-name="09 诚实边界">
     <div class="kicker">STEP 09 · 可信度来源 · 我们主动说的短板</div>
@@ -230,7 +255,7 @@
     <div class="axes">
       <div class="axis" style="border-top-color:#ff7a90">
         <div class="t">跨生成器泛化没彻底解决</div>
-        <div class="m">v4 在「已知风格」held-out 上召回 100%，但对 12 张全新风格的 ImageGen 直出图只有 66.7%。<br><b style="color:#5fd08a">对策：频域做生成器无关兜底 + 此类风格默认转人工。</b></div>
+        <div class="m">v4 在「已知风格」held-out 上召回 100%，对 12 张全新风格直出图只有 75%（旧批 66.7%）。<br><b style="color:#5fd08a">对策：频域做生成器无关兜底 + 第九件工具读可见 AI 标识；仍漏的默认转人工。</b></div>
       </div>
       <div class="axis" style="border-top-color:#ff7a90">
         <div class="t">评论区 / 溯源是自建合成集</div>
@@ -248,7 +273,7 @@
   <section class="scene" data-name="10 结尾">
     <div class="kicker">BEAUTYPROOF</div>
     <h1>让每一张美妆图<br><span class="accent">都经得起追问</span></h1>
-    <div class="sub">108 项测试 · 8 件工具 · 三条独立证据轴 · 双检测器级联 94.7% / 误伤 0<br>纯 CPU 可跑、全开源、数据自产 —— 欢迎评委实测在线 Demo。</div>
+    <div class="sub">139 项测试 · 9 件工具 · 三条独立证据轴 · 双检测器级联 94.7% / 误伤 0<br>纯 CPU 可跑、全开源、数据自产 —— 欢迎评委实测在线 Demo。</div>
     <div class="demo-link" style="margin-top:22px"><a href="https://beautyproof-demo.app.workbuddy.host/">beautyproof-demo.app.workbuddy.host</a></div>
   </section>
 
@@ -266,7 +291,8 @@
 (function(){
   var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
   var idx = 0, timer = null, playing = false;
-  var DUR = [7, 11, 13, 15, 13, 13, 14, 15, 15, 9];  // per-scene seconds
+  // 每屏停留秒数，长度必须等于屏数；按 docs/演示视频脚本_v2.md 的口播时间轴分配
+  var DUR = [7, 10, 13, 14, 15, 13, 13, 15, 15, 14, 15, 9];
 
   function setBar(){
     var bar = document.querySelector('#bar > i');
@@ -312,13 +338,20 @@
     playing = true;
     document.getElementById('play').textContent = '❚❚ 暂停';
     activate();
+    var elapsed = 0;
     timer = setInterval(function(){
+      elapsed += 1;
       var cur = scenes[idx];
-      var el = cur.querySelector('.fill');
+      var dur = DUR[idx] || 13;
       var done = Array.prototype.every.call(
         cur.querySelectorAll('.tool'), function(d){ return d.classList.contains('done'); }) &&
         Array.prototype.every.call(cur.querySelectorAll('.fill'), function(f){ return f.style.width !== '0px' && f.style.width !== ''; });
-      if (done) { go(idx + 1); } else { activate(); }
+      // 到点就走；若动画还没铺完最多再等 6s，避免卡死在某屏
+      if (elapsed >= dur && (done || elapsed >= dur + 6)) {
+        // 末屏播完就停住（不回卷到封面），录屏时能干净收尾
+        if (idx === scenes.length - 1) { pause(); return; }
+        go(idx + 1); elapsed = 0;
+      }
     }, 1000);
   }
   function pause(){

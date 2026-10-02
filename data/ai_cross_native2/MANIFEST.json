@@ -1,0 +1,127 @@
+{
+  "dataset": "ai_cross_native2",
+  "purpose": "跨生成器 / 跨风格零样本召回评测（held-out，绝不进训练集）",
+  "generator": "ImageGen（平台内置图像生成工具，12 张独立 prompt，风格互不重复）",
+  "generated_at": "2026-10-02",
+  "n_images": 12,
+  "style_distribution": {
+    "伪真实感生活流": 4,
+    "直播/截图流": 2,
+    "非人主体（静物/微距）": 3,
+    "编辑/杂志流": 2,
+    "生活场景": 1
+  },
+  "design_intent": "刻意覆盖 v3 在 data/ai_cross_native/ 上漏检的风格簇（滤镜自拍 / 直播截图 / 生活场景 / 插画 / 杂志封面），验证 v4 是否已补上这些短板",
+  "train_split": false,
+  "compliance_note": "本目录所有图片仅用于评测，未参与任何训练；图片内容为 AI 生成的虚构美妆/护肤场景，不涉及真实人物或品牌。",
+  "images": [
+    {
+      "id": "crossgen2_01",
+      "file": "crossgen2_01.png",
+      "prompt": "手机自拍照风格：一位亚洲年轻女性在自家窗边用手机前置摄像头自拍，素颜淡妆，只涂了口红，柔和自然光从窗户斜射进来形成光斑，轻微手机噪点和真实感，背景是虚化的房间，普通人随手拍的真实感，不要商业摄影感",
+      "style_tag": "伪真实感生活流/手机自拍",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_02",
+      "file": "crossgen2_02.png",
+      "prompt": "卧室镜子前的半身自拍：亚洲女性站在卧室梳妆台前对镜自拍半身，只露出肩膀和半张脸，手里拿着粉饼盒，台面上散落口红和刷子，暖色台灯光，普通人的日常随手拍，略带颗粒感，真实生活气息，不要杂志感",
+      "style_tag": "伪真实感生活流/镜前自拍",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_03",
+      "file": "crossgen2_03.png",
+      "prompt": "居家护肤台平铺俯拍：木质梳妆台桌面平铺俯拍，摆着精华瓶、面霜罐、化妆刷、几个玻璃滴管瓶，窗外自然光斜照，木纹和玻璃反光真实，居家随手拍的杂乱感，浅景深，不要商业产品摄影布光",
+      "style_tag": "伪真实感生活流/居家平铺",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_04",
+      "file": "crossgen2_04.png",
+      "prompt": "湿毛巾敷脸特写：亚洲女性用一条白色湿毛巾敷在脸上，只露出眼睛和额头，毛巾贴脸有真实褶皱和水渍，浴室洗手台前，手机随手拍的近距离特写，略微过曝的浴室灯光，真实生活感",
+      "style_tag": "伪真实感生活流/敷脸特写",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_05",
+      "file": "crossgen2_05.png",
+      "prompt": "直播间主播画面：一位亚洲女性主播坐在直播补光灯前手持口红对着镜头讲话，画面像手机直播截图，中景，背景是家居直播间布置，顶部有直播界面的氛围光，屏幕抓拍质感的直播中画面，口红色号很饱和",
+      "style_tag": "直播/截图流",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_06",
+      "file": "crossgen2_06.png",
+      "prompt": "电商详情页轮播图：白底电商产品详情页排版风格，中央是一支口红和一个小精华瓶，底部有中文卖点文字条和价格标签，纯净白背景，典型电商主图设计，带促销角标，平面排版感",
+      "style_tag": "直播/截图流/电商详情页",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_07",
+      "file": "crossgen2_07.png",
+      "prompt": "护肤品静物 3D 渲染：几个无品牌名的白色磨砂玻璃护肤瓶放在淡灰色渐变背景前，柔和顶光加轮廓光，渲染质感干净，CG 三维渲染风格，塑料和玻璃材质细腻，广告级产品渲染图",
+      "style_tag": "非人主体/3D 渲染静物",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_08",
+      "file": "crossgen2_08.png",
+      "prompt": "成分瓶特写：一个透明玻璃滴管瓶的极近距离特写，瓶身上有中文标签写着“烟酰胺精华液 30ml”，标签文字清晰可读，背景虚化，柔和侧光，真实产品摄影质感",
+      "style_tag": "非人主体/成分瓶微距",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_09",
+      "file": "crossgen2_09.png",
+      "prompt": "香膏质地涂抹特写：手指从膏体上刮起一条奶白色眼霜膏体的极近距离微距特写，能看到膏体细腻纹理和指腹推开的痕迹，暖米色背景，柔光，微距质感，真实产品 macro 摄影",
+      "style_tag": "非人主体/质地微距",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_10",
+      "file": "crossgen2_10.png",
+      "prompt": "杂志封面排版风：美妆杂志封面版式设计，大标题中文“夏日底妆特辑”，人物半身侧脸特写，顶部和底部有横排条状排版和条形码，中文字体排版规整，封面文字清晰可读，时尚杂志设计感",
+      "style_tag": "编辑/杂志流/封面排版",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_11",
+      "file": "crossgen2_11.png",
+      "prompt": "时尚大片硬光影：亚洲模特面部硬光影时尚大片，强烈的顶侧硬光在脸上切出明显明暗分界，背景纯黑，高对比度，皮肤质感强，影棚硬光时尚摄影，眼神直视镜头",
+      "style_tag": "编辑/杂志流/硬光大片",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    },
+    {
+      "id": "crossgen2_12",
+      "file": "crossgen2_12.png",
+      "prompt": "咖啡店生活场景：咖啡店靠窗桌面上放着一本摊开的笔记本和一支口红、一杯拿铁，窗外街景虚化，午后自然光斜照在桌面上，背景有模糊的咖啡店环境，普通人随手记录的生活场景照片",
+      "style_tag": "生活场景/咖啡店桌面",
+      "generated_by": "ImageGen",
+      "generated_at": "2026-10-02",
+      "in_train_split": false
+    }
+  ]
+}

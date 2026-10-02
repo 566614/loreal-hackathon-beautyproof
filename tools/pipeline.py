@@ -56,6 +56,7 @@ TOOL_LIST = [
     ("ela", "ela_tool.py", True),
     ("spectral", "spectral_tool.py", True),
     ("ocr", "ocr_tool.py", True),
+    ("ai_label", "ai_label_tool.py", True),
     ("aigc", "aigc_tool.py", True),
     ("trufor", "trufor_tool.py", True),
 ]
@@ -73,6 +74,7 @@ TOOL_META = {
     "ela": {"label": "压缩痕迹", "job": "把图压一遍再还原，看哪块区域的压缩反应跟周围不一样（注意：它只查『局部被二次编辑』，对整图 AI 生成基本无效，所以不能单独给 AI 图定案）"},
     "spectral": {"label": "频域取证", "job": "看这张图的高频能量和频谱规整度像不像相机直出照片 —— 这是与压缩历史无关的独立证据线，用来兜住 AIGC 模型换生成器就失效的盲区"},
     "ocr": {"label": "文字识别", "job": "把图上所有字抄下来，跟品牌方给的标准文案逐字比对"},
+    "ai_label": {"label": "可见AI标识", "job": "在图上找「AI生成 / AI绘制 / 人工智能生成」这类平台自打的水印 —— 相机直出的真实照片不会有这种字样，属于图上自证的硬证据，用来兜住 AIGC 模型在全新风格上掉分的盲区（局限：标识可被伪造，洗掉标识的 AI 图发现不了）"},
     "aigc": {"label": "AI 生成检测", "job": "判断这张图是不是整张由 AI 生成的（用的是本域微调模型：拿 10 张真实美妆照 + 20 张即梦 AI 图专门练过，补 TruFor 查不出的「整图 AI 生成」盲区）"},
     "trufor": {"label": "篡改痕迹检测", "job": "用 CVPR 2023 的取证模型查整图有没有被人工动过，并定位可疑区域"},
     # 文案侧（只有传了 --text 才会跑，不影响原来只鉴定图片的用法）

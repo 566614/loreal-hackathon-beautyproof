@@ -39,7 +39,9 @@ from rule_engine import THRESHOLDS, _first
 #    也不用像 trufor 那样等前序结论，放在中检第一位顺带跑掉。
 WAVES = [
     ("快检", ["hash", "c2pa"]),
-    ("中检", ["spectral", "ela", "ocr"]),
+    # ⚠️ ai_label 必须排在 ocr **之后**：它复用 ocr_tool 落盘的文本行做二次分析（边际成本约 1 秒），
+    #    排前面会拿不到缓存、反而自己再跑一遍 80 秒的 PaddleOCR。
+    ("中检", ["spectral", "ela", "ocr", "ai_label"]),
     ("深检", ["aigc", "trufor"]),
 ]
 TEXT_TOOLS = ["text", "crossmodal"]

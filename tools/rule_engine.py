@@ -101,6 +101,17 @@ CROSSMODAL_TRIGGERS_RISK = True
 # 定级理由里必须写清楚是哪一类，不能混着说。
 TEXT_CLAIM_TRIGGERS_RISK = True
 
+# 可见 AI 标识是否参与自动定级 —— 2026-10-02 新增，默认开启。
+# 它解决的是一个具体实测出来的洞：生产模型 v4 在**全新风格**的 AI 图上召回只有 75%
+# （results/crossgen_native2_eval.json，12 张零样本，3 张直接判 0.0 = "真实"），
+# 漏检全在「伪真实感 / 生活流 / 直播截图 / 场景静物」这些看起来最像照片的风格。
+# 但那批图右下角都带着平台自动打的「AI生成」标识，OCR 抄写置信度 0.95~0.99 ——
+# **模型有盲区，系统不必有盲区**：图上留着硬证据，就用硬证据定级。
+# 为什么它可以单独定 high_risk（不像频域那样只能升 suspicious）：
+#   相机直出的真实照片不会有「AI生成」这种标识，它不是"某个分数偏高"，而是"图上自证"。
+# 诚实的边界（必须同时讲）：标识可被伪造/贴图；洗掉标识的 AI 图本工具发现不了。
+AI_LABEL_TRIGGERS_RISK = True
+
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
 
@@ -227,6 +238,28 @@ def judge(evidence):
                 reasons.append(
                     f"AI 生成检测：AI 生成概率 {aigc_score}（<{THRESHOLDS['aigc_abstain']}）→ "
                     f"看起来像真实拍摄/人工制作的图")
+
+    # 信号1a：可见 AI 标识 —— 2026-10-02 新增。
+    # 优先级说明：它排在 AIGC 分数之后、频域之前，因为它是「图上自证」的硬证据，
+    # 强度高于任何倾向分；但仍排在图文硬矛盾（crossmodal hard）之后，那条是跨模态矛盾，更硬。
+    # 本项判 high_risk 时也要说清边界：只证明"图上写着它是 AI 生成的"。
+    ai_label = evidence.get("ai_label")
+    if ai_label:
+        a0 = (ai_label.get("evidence") or [{}])[0]
+        detected = bool(a0.get("ai_label_detected", ai_label.get("ai_label_detected")))
+        best = a0.get("best_hit") or {}
+        if not detected:
+            reasons.append("可见AI标识：本项未在图上读到「AI生成/AI绘制/人工智能生成」这类标识（不排除是漏检）")
+        elif not AI_LABEL_TRIGGERS_RISK:
+            reasons.append(
+                f"可见AI标识：图上标有「{best.get('text', '')}」（按开关设置不参与自动定级）")
+        else:
+            hint = f"，同区域还出现生成器/平台名「{best.get('generator_hint')}」" if best.get("generator_hint") else ""
+            reasons.append(
+                f"可见AI标识：图上明确标注「{best.get('text', '')}」"
+                f"（OCR 抄写置信度 {best.get('confidence')}，位置 {best.get('bbox')}{hint}）"
+                f"→ 图上自证为 AI 生成，模型分数再低也不改变这一事实")
+            return "high_risk", reasons
 
     # 信号1b：频域取证 —— 与压缩历史无关的独立证据线，专治 AIGC 的跨生成器盲区
     spec = evidence.get("spectral")
@@ -419,6 +452,11 @@ def explain(risk_level, evidence):
     spec_strong = spec_ready and spec_score >= THRESHOLDS["spectral_strong"]
     spec_gray = spec_ready and THRESHOLDS["spectral_gray"] <= spec_score < THRESHOLDS["spectral_strong"]
 
+    # 可见 AI 标识（2026-10-02 新增）：模型盲区的补偿手段
+    lbl = _first(evidence, "ai_label")
+    lbl_detected = bool(lbl.get("ai_label_detected"))
+    lbl_best = lbl.get("best_hit") or {}
+
     caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
 
@@ -431,6 +469,23 @@ def explain(risk_level, evidence):
     action_playbook = ACTION_PLAYBOOK[risk_level]
 
     if risk_level == "high_risk":
+        if lbl_detected:
+            # 可见 AI 标识：图上自证，优先于分数类解释（分数可能很低，必须先解释清楚为什么还是高风险）
+            headline = "图上带着「AI生成」标识，建议直接下架并追来源"
+            gen = lbl_best.get("generator_hint")
+            summary = (f"OCR 在图上读到「{lbl_best.get('text', '')}」"
+                       f"（抄写置信度 {lbl_best.get('confidence')}，位置 {lbl_best.get('bbox')}）"
+                       + (f"，同区域还有生成器/平台名「{gen}」" if gen else "")
+                       + "。这意味着图上已经自带了「这是 AI 生成的」的标注 —— "
+                         "相机拍的真实照片不会有这种字样，所以不需要再等模型分数。")
+            what_to_do = ("先按平台规则处理下架/限流，再顺着标识里的平台名去查这张图的生成来源与授权情况；"
+                          "如果这张图确实是品牌方自己买的 AI 素材，请补登记授权凭证再放行。")
+            return {
+                "headline": headline, "summary": summary,
+                "what_to_do": what_to_do,
+                "caveat": caveat + " 另外：标识本身可被伪造或贴图，若图上写着 AI 生成但内容与生成痕迹明显矛盾，请人工复核。",
+                "action_playbook": action_playbook,
+            }
         if cross_level == "hard":
             headline = "文案和图在互相打架，建议立即复核"
             summary = (f"{cross_top.get('text_side', '')}，"
