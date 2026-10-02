@@ -1,0 +1,80 @@
+{
+  "schema": "beautyproof/compliance_scan@1",
+  "scanned": 6,
+  "rows": [
+    {
+      "id": "xs_01",
+      "platform": "小红书（新浪网转载）",
+      "title": "",
+      "claim_count": 0,
+      "special": [
+        "美白",
+        "防晒"
+      ],
+      "tiers": [
+        "特殊化妆品无证宣称"
+      ],
+      "top_tier": "特殊化妆品无证宣称"
+    },
+    {
+      "id": "xs_02",
+      "platform": "小红书（今日头条转载）",
+      "title": "",
+      "claim_count": 1,
+      "special": [],
+      "tiers": [
+        "化妆品宣称违规"
+      ],
+      "top_tier": "化妆品宣称违规"
+    },
+    {
+      "id": "xs_03",
+      "platform": "小红书（今日头条转载）",
+      "title": "",
+      "claim_count": 0,
+      "special": [
+        "防晒"
+      ],
+      "tiers": [
+        "特殊化妆品无证宣称"
+      ],
+      "top_tier": "特殊化妆品无证宣称"
+    },
+    {
+      "id": "xs_04",
+      "platform": "小红书（纯时尚站转载）",
+      "title": "",
+      "claim_count": 0,
+      "special": [
+        "防晒"
+      ],
+      "tiers": [
+        "特殊化妆品无证宣称"
+      ],
+      "top_tier": "特殊化妆品无证宣称"
+    },
+    {
+      "id": "xs_05",
+      "platform": "小红书（云上枣阳站转载）",
+      "title": "",
+      "claim_count": 0,
+      "special": [],
+      "tiers": [],
+      "top_tier": null
+    },
+    {
+      "id": "xs_06",
+      "platform": "小红书（纯时尚站转载）",
+      "title": "",
+      "claim_count": 0,
+      "special": [
+        "防晒"
+      ],
+      "tiers": [
+        "特殊化妆品无证宣称"
+      ],
+      "top_tier": "特殊化妆品无证宣称"
+    }
+  ],
+  "note": "全部为公开可见的真实种草文案，逐条可回溯到原文；仅作合规风险提示"
+}
