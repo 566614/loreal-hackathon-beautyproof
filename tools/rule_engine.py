@@ -39,7 +39,14 @@ THRESHOLDS = {
     "aigc_hard_high": 0.99,      # AI 生成概率 ≥ 这个 → high_risk（仅此极高风险区才自动定级）
     "aigc_high_risk": 0.9,       # AI 生成概率 ≥ 这个但 < aigc_hard_high → 灰带：suspicious（人工复核，不自动下架）
     "aigc_abstain": 0.2,         # AI 生成概率落在 [0.2, 0.9) → 本项弃权，不硬判
-    "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑
+    "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑（注意：ELA 只查局部二次编辑，
+                                  #   对整图 AI 生成无效，因此它只升 suspicious，绝不单独升 high_risk）
+    # 频域（spectral / FFT）双阈值 —— 2026-10-02 新增，与 AIGC 三档同理：
+    #   spectral_strong  强频域信号（生成器无关）。实测冻结 TEST 段：AI 召回 85% / 真实图误报 0/10。
+    #   spectral_gray    频域灰带。实测冻结 TEST 段：AI 召回 90% / 真实图误报 1/10。
+    # 两者都是**倾向分不是概率**，标定与评测见 results/spectral_calib.json / spectral_eval.json。
+    "spectral_strong": 0.8,
+    "spectral_gray": 0.6,
     # TruFor 阈值（已在本批素材上校准）
     "trufor_high": 0.9,          # 篡改分数 ≥ 这个 → 高风险
     "trufor_suspicious": 0.5,    # 篡改分数 ≥ 这个 → 可疑
@@ -61,6 +68,20 @@ THRESHOLDS = {
 # 而模型真正捕获的 AI 图几乎都在 0.99 以上，所以把灰带单独拆出来只升到 suspicious，既不丢 AI 召回、又压住误伤。
 # 仍保留「分数不是事实」的边界声明，high_risk / suspicious 都必人工复核。
 AIGC_TRIGGERS_RISK = True
+
+# 频域信号是否参与自动定级 —— 2026-10-02 新增，默认开启。
+# 它存在的理由：AIGC 本域微调模型是「按我们见过的美妆图学的」，换生成器/换风格就掉
+# （实测跨生成器召回仅 66.7%）。频域看的是高频能量与频谱规整度，**与是谁生成的无关**，
+# 恰好补这个盲区。代价是重压/强锐化的真实图会误报，所以它单独不能自动下架。
+#
+# 🚨 级联规则（实测见 results/cascade_eval.json，冻结图 38 AI / 20 真实）：
+#     只用 AIGC ：AI 捕获 34/38 = 89.5%，自动下架误伤 0/20
+#     级联      ：AI 捕获 36/38 = 94.7%，自动下架误伤 0/20   ← 捕获 +5.3pt，误伤不变
+#   规则：
+#     自动下架(high_risk) = AIGC ≥ 0.99  或  (AIGC ≥ 0.9 且 频域 ≥ 0.8 两条都指向)
+#     转人工(suspicious)  = AIGC ≥ 0.9  或  频域 ≥ 0.6  或  (AIGC 弃权区但频域强)
+#   也就是说：**只有两条独立证据一致时才自动下架**（分级风险策略，官方点名加分项）。
+SPECTRAL_TRIGGERS_RISK = True
 
 # TruFor 信号是否参与自动定级 —— 默认开启。
 # 它是真正的「篡改检测」深度学习模型（CVPR 2023），判的是"有没有被人工动过"，
@@ -169,44 +190,84 @@ def judge(evidence):
         else:
             reasons.append("图文交叉验证：文案与图像侧结论未发现互相矛盾")
 
-    # 信号1：AI 生成图检测 —— 判断是不是整张由 AI 生成（TruFor 查不出的盲区，靠它兜底）
+    # 信号1：生成类证据级联 —— AIGC 本域微调模型 × 频域工具
+    # 为什么要两条：两者失效模式不同。AIGC 弱在跨生成器，频域弱在重压/强锐化真实图。
+    # 单用一条都有系统性盲区，级联用一条的长处补另一条的短处。
     aigc = evidence.get("aigc")
-    aigc_gray_flag = False  # 标记 AIGC 落在灰带 [0.9, 0.99)：疑似但非极高，最终最多升 suspicious
+    aigc_gray_flag = False   # 最终最多升 suspicious 的标记（转人工，不自动下架）
+    aigc_score = None
     if aigc:
         items = aigc.get("evidence", [])
         first = items[0] if items else {}
-        score = first.get("aigc_score")
+        aigc_score = first.get("aigc_score")
         available = first.get("available", True)
-        if score is None:
+        if aigc_score is None:
             if not available:
                 reasons.append("AI 生成检测：模型未就绪（暂未下载成功），本项无法判断，已跳过")
             else:
                 reasons.append("AI 生成检测：本次推理未返回分数，本项无法判断，已跳过")
         elif AIGC_TRIGGERS_RISK:
-            if score >= THRESHOLDS["aigc_hard_high"]:
+            if aigc_score >= THRESHOLDS["aigc_hard_high"]:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score}（≥{THRESHOLDS['aigc_hard_high']}）→ "
+                    f"AI 生成检测：AI 生成概率 {aigc_score}（≥{THRESHOLDS['aigc_hard_high']}）→ "
                     f"极可能是整图由 AI 生成的图")
                 return "high_risk", reasons
-            elif score >= THRESHOLDS["aigc_high_risk"]:
-                # 灰带：疑似 AI 生成但非极高（真实滤镜自拍常落此区间），不 return，
-                # 留待 TruFor / 图文交叉 / C2PA 等其它信号 corroborate；若无强信号则最终升 suspicious。
+            elif aigc_score >= THRESHOLDS["aigc_high_risk"]:
                 aigc_gray_flag = True
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score} 落在高分区但未到极高 "
+                    f"AI 生成检测：AI 生成概率 {aigc_score} 落在高分区但未到极高 "
                     f"[{THRESHOLDS['aigc_high_risk']}, {THRESHOLDS['aigc_hard_high']}) → "
-                    f"疑似整图 AI 生成，但不单独定性为高风险；需其它证据 corroborate 或人工复核")
-            elif score >= THRESHOLDS["aigc_abstain"]:
-                # 弃权区：不硬判，也不 return —— 让 TruFor 等后续信号继续参与定级。
-                # 直接 return 会跳过 TruFor（我们最鲁棒的那部分），所以这里只记理由。
+                    f"疑似整图 AI 生成，需另一条独立证据佐证或人工复核")
+            elif aigc_score >= THRESHOLDS["aigc_abstain"]:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score} 落在不确定区间 "
+                    f"AI 生成检测：AI 生成概率 {aigc_score} 落在不确定区间 "
                     f"[{THRESHOLDS['aigc_abstain']}, {THRESHOLDS['aigc_high_risk']}) → "
                     f"本项模型拿不准，不做判定，交由其他证据与人工复核")
             else:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {score}（<{THRESHOLDS['aigc_abstain']}）→ "
+                    f"AI 生成检测：AI 生成概率 {aigc_score}（<{THRESHOLDS['aigc_abstain']}）→ "
                     f"看起来像真实拍摄/人工制作的图")
+
+    # 信号1b：频域取证 —— 与压缩历史无关的独立证据线，专治 AIGC 的跨生成器盲区
+    spec = evidence.get("spectral")
+    spec_strong = False
+    spec_gray = False
+    spec_score = None
+    if spec:
+        s0 = (spec.get("evidence") or [{}])[0]
+        spec_score = s0.get("spectral_score")
+        if spec_score is None:
+            reasons.append("频域取证：未返回倾向分，本项跳过（多半是 results/spectral_calib.json 还没标定）")
+        elif not SPECTRAL_TRIGGERS_RISK:
+            reasons.append(f"频域取证：倾向分 {spec_score}（已检测，但按开关设置不参与自动定级）")
+        elif spec_score >= THRESHOLDS["spectral_strong"]:
+            spec_strong = True
+            reasons.append(
+                f"频域取证：倾向分 {spec_score}（≥{THRESHOLDS['spectral_strong']}）→ "
+                f"高频能量/频谱规整度明显不像相机直出照片（生成器无关的独立信号）")
+        elif spec_score >= THRESHOLDS["spectral_gray"]:
+            spec_gray = True
+            reasons.append(
+                f"频域取证：倾向分 {spec_score} 落在频域灰带 "
+                f"[{THRESHOLDS['spectral_gray']}, {THRESHOLDS['spectral_strong']}) → 有偏离但不极端")
+        else:
+            reasons.append(f"频域取证：倾向分 {spec_score}（<{THRESHOLDS['spectral_gray']}）→ 频谱形态接近常规照片")
+
+    # 级联判定：两条独立证据一致才自动下架（实测：捕获率 +5.3pt，自动下架误伤保持 0/20）
+    if aigc_gray_flag and spec_strong:
+        reasons.append(
+            f"双证据一致：AIGC 高分区（{aigc_score}）+ 频域强信号（{spec_score}）→ "
+            f"两条互相独立的证据都指向 AI 生成，自动定级高风险")
+        return "high_risk", reasons
+    if aigc_score is not None and THRESHOLDS["aigc_abstain"] <= aigc_score < THRESHOLDS["aigc_high_risk"] \
+            and spec_strong:
+        # AIGC 弃权但频域强 —— 这正是级联要捞回来的那批跨生成器漏检
+        aigc_gray_flag = True
+        reasons.append(
+            f"级联捞回：AIGC 落在弃权区（{aigc_score}）本不判定，"
+            f"但频域给出强信号（{spec_score}）→ 合并升为可疑，转人工复核")
+    if spec_gray:
+        aigc_gray_flag = True
 
     # 信号2：TruFor 深度学习篡改检测 —— 真的查"有没有被人工改过"
     trufor = evidence.get("trufor")
@@ -256,13 +317,18 @@ def judge(evidence):
         else:
             reasons.append("文案体检：未命中违禁宣称词典")
 
-    # 信号3：ELA 压缩异常 —— 局部篡改痕迹
+    # ELA 压缩异常 —— 局部篡改痕迹
+    # ⚠️ 定位已下调：ELA 依赖"原图 vs 二次编辑"的压缩历史差异，而 AI 从零生成的图
+    #    没有编辑区、压缩场均匀，ELA 往往看起来很干净；反过来截图/平台重压会全图误差。
+    #    所以 ELA 只能提示"哪块值得人工看"，绝不单独升 high_risk。
     ela = evidence.get("ela")
     if ela:
         regions = ela.get("evidence", [{}])[0].get("suspicious_regions", [])
         if regions and regions[0]["ela_score"] >= THRESHOLDS["ela_region_score"]:
             reasons.append(
-                f"ELA：最可疑区域误差 {regions[0]['ela_score']}（≥{THRESHOLDS['ela_region_score']}）→ 有局部篡改痕迹")
+                f"ELA：最可疑区域误差 {regions[0]['ela_score']}（≥{THRESHOLDS['ela_region_score']}）→ "
+                f"有局部二次编辑痕迹（注意：ELA 只查局部编辑，**不能**用它判断整图是否 AI 生成，"
+                f"截图与平台重压也会造成同样现象）")
             return "suspicious", reasons
 
     # 信号4：C2PA / TC260 凭证 —— 来源可追溯，但必须「验证通过」才提升可信度
@@ -292,12 +358,12 @@ def judge(evidence):
                 "保留为待核验（不自动判可信）")
         # status == "missing" / "error"：无凭证，不处理，继续走 inconclusive
 
-    # AIGC 灰带收口：若 AIGC 落在 [0.9, 0.99) 且其它信号都未升级，则定为 suspicious（转人工复核）
+    # 生成类信号收口：AIGC 灰带 / 频域灰带 / 级联捞回，都只转人工复核，不自动下架。
     # 而非 high_risk（自动下架）—— 直接压住「高滤镜真实自拍」被误判为自动下架的误伤；
     # 同时不丢失任何已被模型捕获的 AI 图（它们均 ≥0.995，走上面的 hard_high 分支已是 high_risk）。
     if aigc_gray_flag:
         reasons.append(
-            "综合其他工具无强信号，AIGC 灰带提示转为「可疑 / 待人工复核」，不自动下架")
+            "综合其他工具无强信号，生成类证据只到灰带 → 转为「可疑 / 待人工复核」，不自动下架")
         return "suspicious", reasons
 
     reasons.append(
@@ -346,6 +412,13 @@ def explain(risk_level, evidence):
     # 灰带：分数落在 [0.9, 0.99)，疑似但非极高（高滤镜真实自拍也常落此区间）
     aigc_gray = aigc_ready and THRESHOLDS["aigc_high_risk"] <= aigc_score < THRESHOLDS["aigc_hard_high"]
 
+    # 频域证据（2026-10-02 新增）：生成器无关的独立信号，与 AIGC 互为补盲
+    spc = _first(evidence, "spectral")
+    spec_score = spc.get("spectral_score")
+    spec_ready = spec_score is not None
+    spec_strong = spec_ready and spec_score >= THRESHOLDS["spectral_strong"]
+    spec_gray = spec_ready and THRESHOLDS["spectral_gray"] <= spec_score < THRESHOLDS["spectral_strong"]
+
     caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
 
@@ -377,6 +450,10 @@ def explain(risk_level, evidence):
             summary = (f"AI 生成检测给出 {aigc_score}"
                        f"（≥{THRESHOLDS['aigc_high_risk']}），"
                        "说明这张图很可能是整张由 AI 生成的，而不是相机拍出来的。")
+            if spec_ready:
+                summary += (f"频域取证同时给出倾向分 {spec_score}"
+                            + ("，两条互相独立的证据方向一致。" if spec_score >= THRESHOLDS["spectral_gray"]
+                               else "，但频域证据偏弱（重压或强锐化的真实图也可能这样），因此仍需人工确认。"))
             if tru_ready:
                 summary += f"取证模型 TruFor 同时给出篡改分 {score}"
                 if ratio is not None:
@@ -432,6 +509,23 @@ def explain(risk_level, evidence):
                 summary += f"，且主要集中在{pos}。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
             else:
                 summary += "。不像高风险那样确定，但也不像干净图那样平稳，值得人工核对。"
+        elif spec_strong:
+            # 级联捞回 / 频域主导：本域模型没给出高置信，但与压缩历史无关的频域证据很强
+            headline = "频域证据显示这张图不像相机直出，建议人工复核"
+            summary = (
+                f"频域取证给出倾向分 {spec_score}（≥{THRESHOLDS['spectral_strong']}）："
+                "这张图的高频能量与频谱规整度明显偏离真实相机直出照片。"
+                "这条证据与「是谁生成的」无关，因此能补上本域模型换生成器就失效的盲区。")
+            if aigc_ready:
+                summary += (f"本域 AI 生成模型给出 {aigc_score}"
+                            + ("（落在不确定区间，模型自己拿不准）。" if aigc_gray or aigc_score < THRESHOLDS["aigc_high_risk"]
+                               else "。"))
+            else:
+                summary += "本域 AI 生成模型本次未参与判断。"
+            summary += ("需要提醒的是：重压缩、强锐化或重度降噪的真实照片也可能呈现类似频谱，"
+                        "所以这不构成结论，只说明值得人工看一眼原图。")
+            what_to_do = ("标记待人工确认，复核前暂缓对外发布；"
+                          "让审核员对照原始拍摄图或品牌方素材库确认。")
         elif aigc_gray:
             headline = "AI 生成检测偏高但未到极高，建议人工复核"
             summary = (f"AI 生成检测给出 {aigc_score}（落在 0.9~0.99 不确定区间），"

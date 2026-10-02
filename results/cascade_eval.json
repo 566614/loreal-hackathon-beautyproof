@@ -1,0 +1,672 @@
+{
+  "schema": "beautyproof/cascade_eval@1",
+  "production_model": "beautyproof_aigen_v4",
+  "model_pin_verified": true,
+  "spectral_calib": "results/spectral_calib.json",
+  "thresholds": {
+    "aigc_hard_high": 0.99,
+    "aigc_high_risk": 0.9,
+    "spectral_strong": 0.8,
+    "spectral_gray": 0.6
+  },
+  "n_ai": 38,
+  "n_real": 20,
+  "results": [
+    {
+      "config": "aigc_only",
+      "n_ai": 38,
+      "n_real": 20,
+      "ai_auto_takedown": 33,
+      "ai_auto_takedown_rate": 0.8684,
+      "ai_captured": 34,
+      "ai_capture_rate": 0.8947,
+      "real_auto_takedown_FP": 0,
+      "real_fp_rate": 0.0,
+      "real_flagged": 3,
+      "real_flag_rate": 0.15,
+      "ai_missed": [
+        "frozen_ai/ai_cross_native/crossgen_04.png",
+        "frozen_ai/ai_cross_native/crossgen_09.png",
+        "frozen_ai/ai_cross_native/crossgen_10.png",
+        "frozen_ai/ai_cross_native/crossgen_12.png"
+      ],
+      "real_FP_files": []
+    },
+    {
+      "config": "spectral_only",
+      "n_ai": 38,
+      "n_real": 20,
+      "ai_auto_takedown": 30,
+      "ai_auto_takedown_rate": 0.7895,
+      "ai_captured": 34,
+      "ai_capture_rate": 0.8947,
+      "real_auto_takedown_FP": 0,
+      "real_fp_rate": 0.0,
+      "real_flagged": 1,
+      "real_flag_rate": 0.05,
+      "ai_missed": [
+        "frozen_ai/ai_cross_native/crossgen_03.png",
+        "frozen_ai/ai_cross_native/crossgen_06.png",
+        "frozen_ai/ai_cross_native/crossgen_10.png",
+        "frozen_ai/ai_cross_native/crossgen_12.png"
+      ],
+      "real_FP_files": []
+    },
+    {
+      "config": "cascade_strict",
+      "n_ai": 38,
+      "n_real": 20,
+      "ai_auto_takedown": 34,
+      "ai_auto_takedown_rate": 0.8947,
+      "ai_captured": 36,
+      "ai_capture_rate": 0.9474,
+      "real_auto_takedown_FP": 0,
+      "real_fp_rate": 0.0,
+      "real_flagged": 4,
+      "real_flag_rate": 0.2,
+      "ai_missed": [
+        "frozen_ai/ai_cross_native/crossgen_10.png",
+        "frozen_ai/ai_cross_native/crossgen_12.png"
+      ],
+      "real_FP_files": []
+    }
+  ],
+  "headline": {
+    "ai_capture_rate_aigc_only": 0.8947,
+    "ai_capture_rate_cascade": 0.9474,
+    "delta_capture": 0.0527,
+    "real_fp_rate_aigc_only": 0.0,
+    "real_fp_rate_cascade": 0.0,
+    "delta_fp": 0.0,
+    "auto_takedown_fp_count": 0
+  },
+  "per_image": [
+    {
+      "file": "frozen_ai/ai_cross/artistic_makeup__colorful_grap_2026-09-25T07-42-56.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9758,
+      "hf_ratio": 0.0702,
+      "flatness": 0.45701
+    },
+    {
+      "file": "frozen_ai/ai_cross/bold_eyeliner_and_lipstick__hi_2026-09-25T07-41-42.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9997,
+      "hf_ratio": 0.17046,
+      "flatness": 0.65933
+    },
+    {
+      "file": "frozen_ai/ai_cross/bridal_makeup__soft_curls__lum_2026-09-25T07-43-04.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.7475,
+      "hf_ratio": 0.03902,
+      "flatness": 0.29519
+    },
+    {
+      "file": "frozen_ai/ai_cross/close_up_beauty_face__dewy_gla_2026-09-25T07-42-59.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9971,
+      "hf_ratio": 0.11398,
+      "flatness": 0.57533
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_01.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9955,
+      "hf_ratio": 0.09999,
+      "flatness": 0.55468
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_02.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8173,
+      "hf_ratio": 0.06284,
+      "flatness": 0.34356
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_03.png",
+      "kind": "ai",
+      "aigc": 0.9997,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8813,
+      "hf_ratio": 0.04613,
+      "flatness": 0.36117
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_04.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.7376,
+      "hf_ratio": 0.08627,
+      "flatness": 0.46427
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_05.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8729,
+      "hf_ratio": 0.04605,
+      "flatness": 0.35123
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_06.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.6888,
+      "hf_ratio": 0.04074,
+      "flatness": 0.30263
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_07.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9926,
+      "hf_ratio": 0.09502,
+      "flatness": 0.53153
+    },
+    {
+      "file": "frozen_ai/ai_cross/cross_08.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8688,
+      "hf_ratio": 0.04763,
+      "flatness": 0.32733
+    },
+    {
+      "file": "frozen_ai/ai_cross/cyberpunk_beauty__neon_makeup__2026-09-25T07-43-00.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9335,
+      "hf_ratio": 0.06147,
+      "flatness": 0.37997
+    },
+    {
+      "file": "frozen_ai/ai_cross/editorial_beauty_shot__metalli_2026-09-25T07-43-00.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9721,
+      "hf_ratio": 0.06893,
+      "flatness": 0.45575
+    },
+    {
+      "file": "frozen_ai/ai_cross/fashion_makeup_look__soft_past_2026-09-25T07-41-43.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.801,
+      "hf_ratio": 0.04237,
+      "flatness": 0.31019
+    },
+    {
+      "file": "frozen_ai/ai_cross/glam_red_carpet_makeup__contou_2026-09-25T07-42-59.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9997,
+      "hf_ratio": 0.16969,
+      "flatness": 0.67089
+    },
+    {
+      "file": "frozen_ai/ai_cross/glamorous_eyeshadow_look__stud_2026-09-25T07-41-43.png",
+      "kind": "ai",
+      "aigc": 0.9985,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9928,
+      "hf_ratio": 0.09271,
+      "flatness": 0.53749
+    },
+    {
+      "file": "frozen_ai/ai_cross/korean_idol_style_makeup__aegy_2026-09-25T07-42-59.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9592,
+      "hf_ratio": 0.07205,
+      "flatness": 0.42277
+    },
+    {
+      "file": "frozen_ai/ai_cross/matte_makeup__warm_brown_tones_2026-09-25T07-42-58.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9098,
+      "hf_ratio": 0.0502,
+      "flatness": 0.36308
+    },
+    {
+      "file": "frozen_ai/ai_cross/natural_glowing_skin_makeup__s_2026-09-25T07-41-42.png",
+      "kind": "ai",
+      "aigc": 0.9824,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9952,
+      "hf_ratio": 0.10487,
+      "flatness": 0.53322
+    },
+    {
+      "file": "frozen_ai/ai_cross/natural_no_makeup_glow__freckl_2026-09-25T07-42-57.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8745,
+      "hf_ratio": 0.04466,
+      "flatness": 0.33257
+    },
+    {
+      "file": "frozen_ai/ai_cross/photorealistic_beauty_portrait_2026-09-25T07-41-41.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9993,
+      "hf_ratio": 0.14825,
+      "flatness": 0.62375
+    },
+    {
+      "file": "frozen_ai/ai_cross/skincare_and_makeup_beauty_por_2026-09-25T07-41-41.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8996,
+      "hf_ratio": 0.05371,
+      "flatness": 0.35303
+    },
+    {
+      "file": "frozen_ai/ai_cross/smokey_eye_makeup__studio_shot_2026-09-25T07-41-43.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9987,
+      "hf_ratio": 0.13325,
+      "flatness": 0.60839
+    },
+    {
+      "file": "frozen_ai/ai_cross/soft_warm_glam_makeup__close_u_2026-09-25T07-41-43.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9892,
+      "hf_ratio": 0.09185,
+      "flatness": 0.52998
+    },
+    {
+      "file": "frozen_ai/ai_cross/vintage_hollywood_makeup__red__2026-09-25T07-42-59.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.6576,
+      "hf_ratio": 0.03432,
+      "flatness": 0.29345
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_01.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9749,
+      "hf_ratio": 0.12496,
+      "flatness": 0.55575
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_02.png",
+      "kind": "ai",
+      "aigc": 0.9994,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.8895,
+      "hf_ratio": 0.05558,
+      "flatness": 0.34293
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_03.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.5015,
+      "hf_ratio": 0.01835,
+      "flatness": 0.21082
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_04.png",
+      "kind": "ai",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.905,
+      "hf_ratio": 0.0542,
+      "flatness": 0.3506
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_05.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.995,
+      "hf_ratio": 0.12329,
+      "flatness": 0.53965
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_06.png",
+      "kind": "ai",
+      "aigc": 0.9996,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.5632,
+      "hf_ratio": 0.02576,
+      "flatness": 0.22498
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_07.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9997,
+      "hf_ratio": 0.1623,
+      "flatness": 0.68614
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_08.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.917,
+      "hf_ratio": 0.0458,
+      "flatness": 0.35923
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_09.png",
+      "kind": "ai",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.9176,
+      "hf_ratio": 0.0651,
+      "flatness": 0.39417
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_10.png",
+      "kind": "ai",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.4464,
+      "hf_ratio": 0.01677,
+      "flatness": 0.17812
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_11.png",
+      "kind": "ai",
+      "aigc": 1.0,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.9754,
+      "hf_ratio": 0.08304,
+      "flatness": 0.45972
+    },
+    {
+      "file": "frozen_ai/ai_cross_native/crossgen_12.png",
+      "kind": "ai",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.5692,
+      "hf_ratio": 0.01883,
+      "flatness": 0.1798
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790434905472.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.756,
+      "hf_ratio": 0.03235,
+      "flatness": 0.29131
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435045721.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.0521,
+      "hf_ratio": 0.00369,
+      "flatness": 0.06552
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435082358.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.179,
+      "hf_ratio": 0.00625,
+      "flatness": 0.08708
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435103363.jpg",
+      "kind": "real",
+      "aigc": 0.9792,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.1439,
+      "hf_ratio": 0.00549,
+      "flatness": 0.08718
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435343600.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.1619,
+      "hf_ratio": 0.00837,
+      "flatness": 0.12443
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435361528.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.1573,
+      "hf_ratio": 0.01069,
+      "flatness": 0.13145
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435371005.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.138,
+      "hf_ratio": 0.01861,
+      "flatness": 0.18893
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435411391.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.4687,
+      "hf_ratio": 0.02136,
+      "flatness": 0.19972
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435427813.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.4386,
+      "hf_ratio": 0.01585,
+      "flatness": 0.1713
+    },
+    {
+      "file": "frozen_real/realworld_heldout/Image_1790435468506.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.0878,
+      "hf_ratio": 0.01421,
+      "flatness": 0.1431
+    },
+    {
+      "file": "fs_heldout_never_train/fs_02.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.3785,
+      "hf_ratio": 0.0224,
+      "flatness": 0.20419
+    },
+    {
+      "file": "fs_heldout_never_train/fs_04.jpg",
+      "kind": "real",
+      "aigc": 0.9842,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.1449,
+      "hf_ratio": 0.00761,
+      "flatness": 0.1073
+    },
+    {
+      "file": "fs_heldout_never_train/fs_06.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.1724,
+      "hf_ratio": 0.00495,
+      "flatness": 0.07902
+    },
+    {
+      "file": "fs_heldout_never_train/fs_11.jpg",
+      "kind": "real",
+      "aigc": 0.9154,
+      "aigc_available": true,
+      "aigc_label": "ai_generated",
+      "spectral": 0.5308,
+      "hf_ratio": 0.037,
+      "flatness": 0.25814
+    },
+    {
+      "file": "fs_heldout_never_train/fs_18.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.4907,
+      "hf_ratio": 0.02329,
+      "flatness": 0.20726
+    },
+    {
+      "file": "fs_heldout_never_train/fs_19.jpg",
+      "kind": "real",
+      "aigc": 0.2927,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.1434,
+      "hf_ratio": 0.01704,
+      "flatness": 0.17231
+    },
+    {
+      "file": "fs_heldout_never_train/fs_21.jpg",
+      "kind": "real",
+      "aigc": 0.0049,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.5688,
+      "hf_ratio": 0.04276,
+      "flatness": 0.30175
+    },
+    {
+      "file": "fs_heldout_never_train/fs_23.jpg",
+      "kind": "real",
+      "aigc": 0.0,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.1755,
+      "hf_ratio": 0.01394,
+      "flatness": 0.15762
+    },
+    {
+      "file": "fs_heldout_never_train/fs_25.jpg",
+      "kind": "real",
+      "aigc": 0.0327,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.0992,
+      "hf_ratio": 0.01161,
+      "flatness": 0.12054
+    },
+    {
+      "file": "fs_heldout_never_train/fs_26.jpg",
+      "kind": "real",
+      "aigc": 0.2331,
+      "aigc_available": true,
+      "aigc_label": "real",
+      "spectral": 0.3235,
+      "hf_ratio": 0.01766,
+      "flatness": 0.16679
+    }
+  ],
+  "missing": [
+    {
+      "file": "frozen_ai/flux/FLUX1_dev_image_0000001.jpg",
+      "note": "路径还原失败/文件不存在"
+    }
+  ],
+  "integrity": "冻结图（从未参与 v1~v7 训练）；模型已 pin 并断言；缺失文件不进分母"
+}

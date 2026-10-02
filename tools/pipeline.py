@@ -47,12 +47,14 @@ REPO = Path(__file__).resolve().parent.parent
 TOOLS = REPO / "tools"
 PY = sys.executable
 
-# 六个工具：(证据里的名字, 脚本名, 是否默认开启)
+# 七个工具：(证据里的名字, 脚本名, 是否默认开启)
 # 深度学习那两个（aigc / trufor）要加载几百 MB 的模型，慢，所以支持 --fast 跳过
+# spectral 是纯 numpy FFT，不需要模型，秒级返回，所以不进 SLOW_TOOLS
 TOOL_LIST = [
     ("hash", "hash_tool.py", True),
     ("c2pa", "c2pa_tool.py", True),
     ("ela", "ela_tool.py", True),
+    ("spectral", "spectral_tool.py", True),
     ("ocr", "ocr_tool.py", True),
     ("aigc", "aigc_tool.py", True),
     ("trufor", "trufor_tool.py", True),
@@ -68,7 +70,8 @@ VALUE_FLAGS = ("--text", "--text-file", "--max-frames", "--fps-sample")
 TOOL_META = {
     "hash": {"label": "文件指纹", "job": "给这张图算一个独一无二的身份证号，看它是不是跟已知原图一字不差"},
     "c2pa": {"label": "内容凭证", "job": "查图片里有没有官方的「出生证」，记录它是谁拍的、被哪些软件改过"},
-    "ela": {"label": "压缩痕迹", "job": "把图压一遍再还原，看哪块区域的压缩反应跟周围不一样"},
+    "ela": {"label": "压缩痕迹", "job": "把图压一遍再还原，看哪块区域的压缩反应跟周围不一样（注意：它只查『局部被二次编辑』，对整图 AI 生成基本无效，所以不能单独给 AI 图定案）"},
+    "spectral": {"label": "频域取证", "job": "看这张图的高频能量和频谱规整度像不像相机直出照片 —— 这是与压缩历史无关的独立证据线，用来兜住 AIGC 模型换生成器就失效的盲区"},
     "ocr": {"label": "文字识别", "job": "把图上所有字抄下来，跟品牌方给的标准文案逐字比对"},
     "aigc": {"label": "AI 生成检测", "job": "判断这张图是不是整张由 AI 生成的（用的是本域微调模型：拿 10 张真实美妆照 + 20 张即梦 AI 图专门练过，补 TruFor 查不出的「整图 AI 生成」盲区）"},
     "trufor": {"label": "篡改痕迹检测", "job": "用 CVPR 2023 的取证模型查整图有没有被人工动过，并定位可疑区域"},

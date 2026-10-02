@@ -1,0 +1,79 @@
+{
+  "schema": "beautyproof/spectral_calib@3",
+  "features": {
+    "hf_energy_ratio": {
+      "polarity": "high_is_ai",
+      "thr": 0.054392,
+      "scale": 0.042407,
+      "weight": 1.1146,
+      "signed_weight": 1.1146
+    },
+    "spectral_flatness": {
+      "polarity": "high_is_ai",
+      "thr": 0.332271,
+      "scale": 0.172354,
+      "weight": 1.546,
+      "signed_weight": 1.546
+    },
+    "azimuthal_anomaly": {
+      "polarity": "low_is_ai",
+      "thr": 3.370393,
+      "scale": 3.151724,
+      "weight": 0.2223,
+      "signed_weight": 0.2223
+    },
+    "hf_residual_kurtosis": {
+      "polarity": "low_is_ai",
+      "thr": 38.382,
+      "scale": 32.7427,
+      "weight": 0.7589,
+      "signed_weight": -0.7589
+    }
+  },
+  "decision_thr": 0.469,
+  "normalization": {
+    "mean": [
+      0.05439207,
+      0.33227103,
+      3.3703931,
+      38.382
+    ],
+    "std": [
+      0.04240673,
+      0.17235398,
+      3.15172442,
+      32.74270024
+    ],
+    "bias": 1.684831
+  },
+  "feature_order": [
+    "hf_energy_ratio",
+    "spectral_flatness",
+    "azimuthal_anomaly",
+    "hf_residual_kurtosis"
+  ],
+  "calibrated_on": "冻结池对半切 CAL 段（seed=20261002）：AI 19 张 / REAL 10 张；目标真实误报<=0.1；TEST 段全程未参与拟合",
+  "cal_metrics": {
+    "ai_recall": 1.0,
+    "real_fp_rate": 0.1
+  },
+  "per_feature_cal": {
+    "hf_energy_ratio": {
+      "cal_auc_raw": 0.9737,
+      "cal_auc_effective": 0.9737
+    },
+    "spectral_flatness": {
+      "cal_auc_raw": 0.9737,
+      "cal_auc_effective": 0.9737
+    },
+    "azimuthal_anomaly": {
+      "cal_auc_raw": 0.2053,
+      "cal_auc_effective": 0.7947
+    },
+    "hf_residual_kurtosis": {
+      "cal_auc_raw": 0.0684,
+      "cal_auc_effective": 0.9316
+    }
+  },
+  "note": "本分数是频域倾向分（规则+逻辑回归），不是「AI 生成概率」，不可与 aigc_tool 的模型概率混读"
+}

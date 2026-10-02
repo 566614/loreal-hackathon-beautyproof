@@ -34,9 +34,12 @@ from pathlib import Path
 from rule_engine import THRESHOLDS, _first
 
 # 图像侧工具分三波，先便宜的后贵的 —— 贵的结果依赖便宜的结论来决定要不要跑
+# ⚠️ 频域（spectral）是纯 numpy FFT，约 0.3 秒就出结果，排在最便宜那一档；
+#    它的价值是「与压缩历史无关」，所以不像 ela 那样受 PNG/JPEG 限制，
+#    也不用像 trufor 那样等前序结论，放在中检第一位顺带跑掉。
 WAVES = [
     ("快检", ["hash", "c2pa"]),
-    ("中检", ["ela", "ocr"]),
+    ("中检", ["spectral", "ela", "ocr"]),
     ("深检", ["aigc", "trufor"]),
 ]
 TEXT_TOOLS = ["text", "crossmodal"]

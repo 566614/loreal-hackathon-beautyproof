@@ -1,0 +1,61 @@
+{
+  "schema": "beautyproof/spectral_eval@2",
+  "calib_file": "results/spectral_calib.json",
+  "split_seed": 20261002,
+  "decision_thr": 0.469,
+  "protocol": "冻结池（全部从未参与 v1~v7 训练）按 seed 对半切：CAL 定极性/权重/决策线，TEST 只做评测。TEST 样本量小，数字必须带 n 一起引用。",
+  "cal": {
+    "ai": {
+      "n_evaluated": 19,
+      "ai_recall": 1.0
+    },
+    "real": {
+      "n_evaluated": 10,
+      "real_fp_rate": 0.1
+    }
+  },
+  "test": {
+    "ai": {
+      "n_evaluated": 20,
+      "mean_score": 0.876,
+      "median_score": 0.9255,
+      "n_ge_thr": 19,
+      "recall": 0.95
+    },
+    "real": {
+      "n_evaluated": 10,
+      "mean_score": 0.3301,
+      "median_score": 0.2495,
+      "n_ge_thr": 3,
+      "fp_rate": 0.3
+    },
+    "auc": 0.97
+  },
+  "full_frozen_pool_reference": {
+    "n_ai": 39,
+    "n_real": 20,
+    "auc": 0.9808,
+    "note": "含 CAL 段，仅作参考，不可当测试结果引用"
+  },
+  "sample_size_warning": null,
+  "per_feature_cal": {
+    "hf_energy_ratio": {
+      "cal_auc_raw": 0.9737,
+      "cal_auc_effective": 0.9737
+    },
+    "spectral_flatness": {
+      "cal_auc_raw": 0.9737,
+      "cal_auc_effective": 0.9737
+    },
+    "azimuthal_anomaly": {
+      "cal_auc_raw": 0.2053,
+      "cal_auc_effective": 0.7947
+    },
+    "hf_residual_kurtosis": {
+      "cal_auc_raw": 0.0684,
+      "cal_auc_effective": 0.9316
+    }
+  },
+  "missing": [],
+  "integrity": "TEST 段未参与任何拟合；缺失文件已排除在分母外"
+}
