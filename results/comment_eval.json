@@ -1,0 +1,114 @@
+{
+  "schema": "beautyproof/comment_eval@1",
+  "data_provenance": "团队自建合成（无第三方数据集、无真实用户评论采集）。按公开可观察的灌水模式编写，用于验证特征管线与判定方向是否正确。",
+  "disclaimer": "⚠️ 重要边界：本文件是**合成**数据。因此 results/comment_eval.json 里的『方向命中率』只能证明『特征能区分我们设定的两种模式』，**不能**当作真实场景准确率对外引用。真实评论标注集仍然缺失，已列入待补清单。真实场景里刷量与真实短评的边界远比合成集模糊（品牌方组织的试用活动常导致清一色好评）。",
+  "n_cases": 6,
+  "direction_hit": 6,
+  "direction_rate": 1.0,
+  "rows": [
+    {
+      "id": "cc_01_flood_burst",
+      "expected": "high_risk",
+      "got": "high_risk",
+      "hit": true,
+      "score": 0.9839,
+      "n": 10,
+      "features": {
+        "dup_exact_rate": 0.9,
+        "near_dup_rate": 1.0,
+        "short_rate": 1.0,
+        "no_detail_rate": 1.0,
+        "positive_uniformity": 1.0,
+        "template_concentration": 1.0,
+        "burstiness": 1.0,
+        "cross_post_repeat_max": 0,
+        "cross_post_repeat_ratio": 0.0
+      }
+    },
+    {
+      "id": "cc_02_flood_near_dup",
+      "expected": "high_risk",
+      "got": "high_risk",
+      "hit": true,
+      "score": 0.8497,
+      "n": 8,
+      "features": {
+        "dup_exact_rate": 0.625,
+        "near_dup_rate": 0.5357,
+        "short_rate": 1.0,
+        "no_detail_rate": 1.0,
+        "positive_uniformity": 1.0,
+        "template_concentration": 1.0,
+        "burstiness": 1.0,
+        "cross_post_repeat_max": 0,
+        "cross_post_repeat_ratio": 0.0
+      }
+    },
+    {
+      "id": "cc_03_flood_cross_post",
+      "expected": "high_risk",
+      "got": "high_risk",
+      "hit": true,
+      "score": 0.7305,
+      "n": 8,
+      "features": {
+        "dup_exact_rate": 0.125,
+        "near_dup_rate": 0.0357,
+        "short_rate": 1.0,
+        "no_detail_rate": 1.0,
+        "positive_uniformity": 0.75,
+        "template_concentration": 0.25,
+        "burstiness": null,
+        "cross_post_repeat_max": 7,
+        "cross_post_repeat_ratio": 1.0
+      }
+    },
+    {
+      "id": "cc_04_organic_detailed",
+      "expected": "credible",
+      "got": "credible",
+      "hit": true,
+      "score": 0.1652,
+      "n": 7,
+      "features": {
+        "dup_exact_rate": 0.0,
+        "near_dup_rate": 0.0,
+        "short_rate": 0.1429,
+        "no_detail_rate": 0.1429,
+        "positive_uniformity": 0.1429,
+        "template_concentration": 0.1429,
+        "burstiness": 0.7895,
+        "cross_post_repeat_max": 0,
+        "cross_post_repeat_ratio": 0.0
+      }
+    },
+    {
+      "id": "cc_05_organic_short",
+      "expected": "credible",
+      "got": "credible",
+      "hit": true,
+      "score": 0.3295,
+      "n": 8,
+      "features": {
+        "dup_exact_rate": 0.0,
+        "near_dup_rate": 0.0,
+        "short_rate": 1.0,
+        "no_detail_rate": 1.0,
+        "positive_uniformity": 0.125,
+        "template_concentration": 0.125,
+        "burstiness": null,
+        "cross_post_repeat_max": 0,
+        "cross_post_repeat_ratio": 0.0
+      }
+    },
+    {
+      "id": "cc_06_too_few",
+      "expected": "inconclusive",
+      "got": "inconclusive",
+      "hit": true,
+      "score": null,
+      "n": 3,
+      "features": null
+    }
+  ]
+}
