@@ -294,3 +294,6 @@ data/_meta/
 
 # HEIC 原件仅本地留证（体积大，不入库）
 data/real_filter_selfie/_heic_originals/
+
+# 测试数据包：目录是中间产物，入库只留打包好的 zip
+/outputs/SubmitDataset/
