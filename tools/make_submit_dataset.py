@@ -157,13 +157,21 @@ def build(manifest_path: Path, out_zip: Path | None, repo: Path) -> int:
             lines.append(f"备注（团队标注）：{note}")
         (sd / "README.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-        # ---- 文案（有则写，无则不写，README 里说明为何没有）
+        # ---- 文案：每个样本必须带 文案.txt（官方格式硬要求「每样本内含文案.txt」）
+        #      纯视觉样本没有配文时，写一份显式声明「本样本无配套文案」，
+        #      既保证格式 100% 齐整（格式是官方硬评分项），又不伪造配文。
         text = texts.get(sid, "")
         if text:
             (sd / "种草正文.txt").write_text(text + "\n", encoding="utf-8")
             _append(sd / "README.txt", "含配套文案：种草正文.txt（用于图文交叉验证）")
         else:
-            _append(sd / "README.txt", "本样本为纯视觉素材，未提供配套文案（仅走图像侧检测）")
+            (sd / "种草正文.txt").write_text(
+                "本样本为纯视觉素材，无配套文案。\n"
+                "（这是团队自造样本的真实情况：仅走图像侧检测，不伪造配文。）\n",
+                encoding="utf-8")
+            _append(sd / "README.txt",
+                    "无配套文案：种草正文.txt 内为「本样本无配套文案」的显式声明，"
+                    "以保证每样本文件清单与官方格式一致（不伪造配文）")
 
         # ---- 图片
         prepare_image(src, sd / "image_1.jpg")
@@ -178,9 +186,9 @@ def build(manifest_path: Path, out_zip: Path | None, repo: Path) -> int:
         f"样本总数：{len(samples)}   成功打包：{len(ok)}",
         "",
         "目录格式（遵循赛题说明页「测试数据包」要求）：",
-        "  sample_001/  每条样本一个文件夹",
+        "  sample_001/  每条样本一个文件夹（每样本三个文件，无缺项）",
         "    README.txt      数据来源平台 / 样本类型 / 是否伪造 / 伪造方式说明",
-        "    种草正文.txt    配套文案（无配套文案的样本不出现此文件）",
+        "    种草正文.txt    配套文案；纯视觉样本内为「本样本无配套文案」的显式声明（不伪造配文）",
         "    image_1.jpg     样本图片",
         "",
         "样本清单：",

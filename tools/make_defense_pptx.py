@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
-"""生成 BeautyProof 答辩 PPT（.pptx），对齐 Brandstorm 2026 官方 5+5 评审准则。
+"""生成 BeautyProof 答辩 PPT（.pptx），对齐天池赛题2「信任守护师」硬性要求 + L'Oréal 5+5 评审准则。
+v2（2026-10-02 冲一档轮）：
+  - 从 15 页扩到 20 页，主线改成「三轴互补 → 双检测器级联 → 工具消融实证」
+  - 新增：频域工具、评论区场景、跨平台溯源、合规法条引擎、v5/v7 负面结果归档、诚实边界页
+  - 商业页数字改由 docs/商业数字调研_2026-10-02.md + results/commercial_numbers.json 驱动
 输出：docs/BeautyProof_答辩PPT.pptx
 """
+import json
+import os
+
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
@@ -9,22 +16,28 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 CJK = "Microsoft YaHei"
-DARK  = RGBColor(0x12, 0x12, 0x16)
+DARK = RGBColor(0x12, 0x12, 0x16)
 LIGHT = RGBColor(0xFF, 0xFF, 0xFF)
-INK   = RGBColor(0x1A, 0x1A, 0x1A)
-MUTE  = RGBColor(0x6B, 0x72, 0x80)
-GOLD  = RGBColor(0xC8, 0xA2, 0x4B)
-ROSE  = RGBColor(0xE8, 0x9A, 0xA8)
+INK = RGBColor(0x1A, 0x1A, 0x1A)
+MUTE = RGBColor(0x6B, 0x72, 0x80)
+GOLD = RGBColor(0xC8, 0xA2, 0x4B)
+ROSE = RGBColor(0xE8, 0x9A, 0xA8)
+GREEN = RGBColor(0x3F, 0xA5, 0x6B)
+RED = RGBColor(0xC4, 0x39, 0x4B)
 PANEL = RGBColor(0xF4, 0xF1, 0xEC)
-PANEL2= RGBColor(0x1E, 0x1E, 0x24)
+PANEL2 = RGBColor(0x1E, 0x1E, 0x24)
 
 prs = Presentation()
-prs.slide_width  = Inches(13.333)
+prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
 SW, SH = prs.slide_width, prs.slide_height
 BLANK = prs.slide_layouts[6]
 
+
+# ---------------------------------------------------------------- helpers
 def set_cjk(run, font=CJK):
     rPr = run._r.get_or_add_rPr()
     for tag in ("a:latin", "a:ea", "a:cs"):
@@ -34,312 +47,600 @@ def set_cjk(run, font=CJK):
             rPr.append(el)
         el.set("typeface", font)
 
+
 def bg(slide, color):
     fill = slide.background.fill
-    fill.solid(); fill.fore_color.rgb = color
+    fill.solid()
+    fill.fore_color.rgb = color
+
 
 def textbox(slide, l, t, w, h, text, size=18, color=INK, bold=False,
             align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, spacing=1.12):
     tb = slide.shapes.add_textbox(l, t, w, h)
-    tf = tb.text_frame; tf.word_wrap = True; tf.vertical_anchor = anchor
-    tf.margin_left = Inches(0.05); tf.margin_right = Inches(0.05)
-    tf.margin_top = Inches(0.02); tf.margin_bottom = Inches(0.02)
+    tf = tb.text_frame
+    tf.word_wrap = True
+    tf.vertical_anchor = anchor
+    tf.margin_left = Inches(0.05)
+    tf.margin_right = Inches(0.05)
+    tf.margin_top = Inches(0.02)
+    tf.margin_bottom = Inches(0.02)
     first = True
-    for line in text.split("\n"):
+    for line in str(text).split("\n"):
         p = tf.paragraphs[0] if first else tf.add_paragraph()
         first = False
-        p.alignment = align; p.line_spacing = spacing
-        r = p.add_run(); r.text = line
-        r.font.size = Pt(size); r.font.bold = bold
-        r.font.color.rgb = color; r.font.name = CJK
+        p.alignment = align
+        p.line_spacing = spacing
+        r = p.add_run()
+        r.text = line
+        r.font.size = Pt(size)
+        r.font.bold = bold
+        r.font.color.rgb = color
+        r.font.name = CJK
         set_cjk(r)
     return tb
 
+
 def bullets(slide, l, t, w, h, items, size=16, color=INK, gap=7, spacing=1.08):
     tb = slide.shapes.add_textbox(l, t, w, h)
-    tf = tb.text_frame; tf.word_wrap = True
+    tf = tb.text_frame
+    tf.word_wrap = True
     first = True
     for it in items:
         txt, lvl = it if isinstance(it, tuple) else (it, 0)
         p = tf.paragraphs[0] if first else tf.add_paragraph()
         first = False
-        p.line_spacing = spacing; p.space_after = Pt(gap)
-        b = ("      – ") if lvl > 0 else "● "
-        r = p.add_run(); r.text = b + txt
-        r.font.size = Pt(size); r.font.color.rgb = color; r.font.name = CJK
+        p.line_spacing = spacing
+        p.space_after = Pt(gap)
+        pre = ("      – " if lvl > 0 else "● ")
+        r = p.add_run()
+        r.text = pre + txt
+        r.font.size = Pt(size)
+        r.font.color.rgb = color
+        r.font.name = CJK
         set_cjk(r)
     return tb
 
+
 def rect(slide, l, t, w, h, fill, line=None, line_w=None, shape=MSO_SHAPE.ROUNDED_RECTANGLE):
     sp = slide.shapes.add_shape(shape, l, t, w, h)
-    sp.fill.solid(); sp.fill.fore_color.rgb = fill
+    sp.fill.solid()
+    sp.fill.fore_color.rgb = fill
     if line is None:
         sp.line.fill.background()
     else:
-        sp.line.color.rgb = line; sp.line.width = line_w or Pt(1)
+        sp.line.color.rgb = line
+        sp.line.width = line_w or Pt(1)
     sp.shadow.inherit = False
     return sp
+
 
 def callout(slide, l, t, w, h, text, fill=PANEL, barcolor=GOLD, size=15, color=INK):
     rect(slide, l, t, w, h, fill)
     rect(slide, l, t, Inches(0.09), h, barcolor)
     textbox(slide, l + Inches(0.22), t + Inches(0.08), w - Inches(0.34), h - Inches(0.16),
             text, size=size, color=color, anchor=MSO_ANCHOR.MIDDLE)
-    return
+
 
 def header(slide, title, kicker=None):
     rect(slide, 0, 0, Inches(0.22), SH, GOLD)
-    textbox(slide, Inches(0.55), Inches(0.42), Inches(12.2), Inches(0.85),
-            title, size=29, bold=True, color=INK)
+    textbox(slide, Inches(0.55), Inches(0.38), Inches(12.2), Inches(0.8),
+            title, size=28, bold=True, color=INK)
     if kicker:
-        textbox(slide, Inches(0.57), Inches(1.22), Inches(12.0), Inches(0.4),
-                kicker, size=14, color=MUTE)
+        textbox(slide, Inches(0.57), Inches(1.14), Inches(12.0), Inches(0.42),
+                kicker, size=13.5, color=MUTE)
+
 
 def add_table(slide, data, l, t, w, h, header_fill=DARK, header_color=LIGHT,
-              body_size=13, head_size=13):
+              body_size=13, head_size=13, col_w=None):
     rows, cols = len(data), len(data[0])
     gtbl = slide.shapes.add_table(rows, cols, l, t, w, h)
     tbl = gtbl.table
-    # 关掉默认样式条带
-    tbl.first_row = False; tbl.horz_banding = False
-    colw = w // cols
-    for c in range(cols):
-        tbl.columns[c].width = colw
+    tbl.first_row = False
+    tbl.horz_banding = False
+    if col_w:
+        for ci, cw in enumerate(col_w):
+            tbl.columns[ci].width = int(w * cw)
+    else:
+        for c in range(cols):
+            tbl.columns[c].width = int(w // cols)
     for ri, row in enumerate(data):
         for ci, val in enumerate(row):
             cell = tbl.cell(ri, ci)
-            cell.margin_left = Inches(0.08); cell.margin_right = Inches(0.08)
-            cell.margin_top = Inches(0.04); cell.margin_bottom = Inches(0.04)
+            cell.margin_left = Inches(0.07)
+            cell.margin_right = Inches(0.07)
+            cell.margin_top = Inches(0.03)
+            cell.margin_bottom = Inches(0.03)
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+            cell.fill.solid()
             if ri == 0:
-                cell.fill.solid(); cell.fill.fore_color.rgb = header_fill
+                cell.fill.fore_color.rgb = header_fill
             else:
-                cell.fill.solid()
                 cell.fill.fore_color.rgb = LIGHT if ri % 2 else PANEL
-            tf = cell.text_frame; tf.word_wrap = True
+            tf = cell.text_frame
+            tf.word_wrap = True
             p = tf.paragraphs[0]
             p.alignment = PP_ALIGN.LEFT if ci == 0 else PP_ALIGN.CENTER
-            r = p.add_run(); r.text = str(val)
+            r = p.add_run()
+            r.text = str(val)
             r.font.size = Pt(head_size if ri == 0 else body_size)
             r.font.bold = (ri == 0)
             r.font.color.rgb = header_color if ri == 0 else INK
-            r.font.name = CJK; set_cjk(r)
+            r.font.name = CJK
+            set_cjk(r)
     return tbl
 
-def new(): return prs.slides.add_slide(BLANK)
 
-# ============ Slide 1: 封面 ============
+def card(slide, l, t, w, h, title, body, foot=None, accent=GOLD,
+         title_size=16, body_size=13.5, foot_size=12):
+    rect(slide, l, t, w, h, PANEL2 if accent == GOLD else PANEL)
+    rect(slide, l, t, w, Inches(0.055), accent)
+    textbox(slide, l + Inches(0.18), t + Inches(0.16), w - Inches(0.3), Inches(0.4),
+            title, size=title_size, bold=True,
+            color=LIGHT if accent == GOLD else INK)
+    textbox(slide, l + Inches(0.18), t + Inches(0.62), w - Inches(0.32), Inches(0.9),
+            body, size=body_size,
+            color=(RGBColor(0xB9, 0xB3, 0xAA) if accent == GOLD else MUTE), spacing=1.25)
+    if foot:
+        textbox(slide, l + Inches(0.18), t + h - Inches(0.62), w - Inches(0.32), Inches(0.55),
+                foot, size=foot_size, color=(GREEN if accent == GOLD else MUTE), spacing=1.2)
+
+
+def new():
+    return prs.slides.add_slide(BLANK)
+
+
+# ---------------------------------------------------------------- commercial numbers
+COMM = {"ok": False}
+_cn = os.path.join(ROOT, "results", "commercial_numbers.json")
+if os.path.exists(_cn):
+    try:
+        COMM = json.load(open(_cn, encoding="utf-8"))
+        COMM["ok"] = True
+    except Exception:
+        COMM = {"ok": False}
+
+
+def _all():
+    return COMM.get("numbers", []) if COMM.get("ok") else []
+
+
+def num(i, key, default="待补"):
+    """按 id（N1..N5）或 key 取数；取不到就老实返回 default，绝不编造。"""
+    if not COMM.get("ok"):
+        return default
+    for n in _all():
+        if n.get("id") == i or n.get("key") == key:
+            return n.get("value", default)
+    return default
+
+
+def conf(i, default="待补"):
+    return next((n.get("confidence", default) for n in _all() if n.get("id") == i), default)
+
+
+# ================================================================ Slide 1 · 封面
 s = new(); bg(s, DARK)
 rect(s, 0, Inches(2.55), SW, Inches(0.06), GOLD)
-textbox(s, Inches(0.9), Inches(1.5), Inches(11.5), Inches(1.1),
-        "BeautyProof", size=52, bold=True, color=LIGHT)
+textbox(s, Inches(0.9), Inches(1.45), Inches(11.5), Inches(1.1),
+        "BeautyProof", size=50, bold=True, color=LIGHT)
 textbox(s, Inches(0.92), Inches(2.75), Inches(11.5), Inches(0.7),
-        "美妆内容信任守护师 · 多模态 AI 取证台", size=24, color=ROSE)
-textbox(s, Inches(0.92), Inches(3.75), Inches(11.5), Inches(0.5),
+        "美妆内容信任守护师 · 多模态 AI 取证台", size=23, color=ROSE)
+textbox(s, Inches(0.92), Inches(3.6), Inches(11.5), Inches(0.5),
         "欧莱雅第二届美妆科技黑客松 · 赛题 2「信任守护师」", size=16, color=LIGHT)
-textbox(s, Inches(0.92), Inches(5.7), Inches(11.5), Inches(0.5),
-        "团队：BeautyProof Team（阮 / liying856 / AI 工程）  ·  2026-09", size=14, color=MUTE)
+textbox(s, Inches(0.92), Inches(4.25), Inches(11.5), Inches(0.5),
+        "8 件工具 · 三条独立证据轴 · 双检测器级联 94.7% / 自动下架误伤 0 · 108 项测试",
+        size=15, color=GOLD)
+textbox(s, Inches(0.92), Inches(5.75), Inches(11.5), Inches(0.5),
+        "团队：BeautyProof Team（阮 / liying856 / AI 工程）  ·  2026-10", size=14, color=MUTE)
 
-# ============ Slide 2: 痛点 ============
+# ================================================================ Slide 2 · 一句话
 s = new()
-header(s, "我们解决的问题", "美妆，是 AI 伪造 / 篡改的重灾区")
-bullets(s, Inches(0.6), Inches(1.95), Inches(7.4), Inches(4.6), [
-    "种草图、评论区、品牌素材里混着 PS 拼接、局部篡改、整图 AI 生成。",
-    "普通消费者看不出「这张口红试色，到底是拍的还是 AI 画的」。",
-    "品牌信任资产因此被悄悄侵蚀——赛题要我们「守护信任」。",
-    "通用检测模型在中文美妆域集体失效：AIRealNet 基本判反、capcheck 全判 human≈0.99。",
+header(s, "三秒看懂 BeautyProof", "一句话定位 + 交付形态")
+textbox(s, Inches(0.6), Inches(1.95), Inches(12.1), Inches(1.1),
+        "面向美妆垂域的「多模态取证台」——一张图（或一段评论、一次跨平台比对）进去，\n一份普通人看得懂、法务能引用、平台可执行的信任结论出来。",
+        size=19, bold=True, color=INK, spacing=1.3)
+bullets(s, Inches(0.6), Inches(3.35), Inches(7.6), Inches(3.4), [
+    "不是黑箱打分：8 件工具各出独立证据 → 规则引擎定四档 → 解释层翻译成人话。",
+    "三条证据轴：生成轴（AIGC×频域）/ 篡改轴（ELA×TruFor）/ 内容溯源轴（OCR×文案×图文×跨平台）。",
+    "纯 CPU 可跑、开源可复现、训练数据 100% 团队自产；已上线在线 Demo。",
 ])
-callout(s, Inches(8.25), Inches(2.2), Inches(4.5), Inches(2.4),
-        "痛点一句话：\n美妆内容真假难辨，而且「通用检测」在我们这个领域根本不准。",
-        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=17)
+callout(s, Inches(8.4), Inches(2.35), Inches(4.35), Inches(1.55),
+        "定位 = 美妆界的「内容体检中心」\n每张图都拿得到一份带证据的体检报告。",
+        fill=PANEL, barcolor=GOLD, size=15)
+callout(s, Inches(8.4), Inches(4.1), Inches(4.35), Inches(1.75),
+        "三条交付形态：\n① Web 取证台 ② CLI/API 流水线 ③ PDF/MD 可审计报告",
+        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=14)
 
-# ============ Slide 3: 我们的答案 ============
+# ================================================================ Slide 3 · 痛点（带商业数字）
 s = new()
-header(s, "BeautyProof 是什么", "一句话定位")
-textbox(s, Inches(0.6), Inches(2.0), Inches(12.1), Inches(1.2),
-        "面向美妆垂域的「多模态取证台」——一张图（或图文）进去，一份普通人看得懂的信任结论出来。",
-        size=20, bold=True, color=INK)
-bullets(s, Inches(0.6), Inches(3.4), Inches(7.6), Inches(3.4), [
-    "不是黑箱打分：8 件工具各出证据 → 规则引擎定四档 → 大模型翻译成人话。",
-    "纯 CPU 可跑、开源、可复现，已上线在线 Demo。",
-    "覆盖「被局部改过」与「整张 AI 画的」两类风险，互补不打架。",
-])
-callout(s, Inches(8.4), Inches(3.5), Inches(4.35), Inches(1.7),
-        "定位 = 美妆界的「内容体检中心」\n每张图都能拿到一份带证据的体检报告。",
-        fill=PANEL, barcolor=GOLD, size=16)
-
-# ============ Slide 4: 赛题四件事 ============
-s = new()
-header(s, "赛题要的四件事，我们逐条交卷", "任务验收口径 vs 实现")
+header(s, "为什么这件事值得做", "数据口径见 docs/商业数字调研_2026-10-02.md")
 add_table(s, [
-    ["赛题硬性要求", "BeautyProof 实现"],
-    ["多模态检测（图 + 文并列）", "8 工具证据链：看图 6 件 + 读字 2 件"],
-    ["可解释判定", "四段式人话报告 + LLM 解释层（过护栏）"],
-    ["智能体 Agent", "planner 波次调度，每条决策留人话理由"],
-    ["数据集展示闭环", "batch 评测：受控 100% / 真实误报 1.4% 实证"],
-], Inches(0.6), Inches(2.0), Inches(12.1), Inches(4.3), body_size=15, head_size=15)
+    ["受害方", "痛点", "可引用的规模数字（2025 全年口径）"],
+    ["消费者", "看不出真假的「完美脸」诱导下单 → 花冤枉钱",
+     f"用户怀疑小红书笔记真实性的比例 45%（2023）→ 78%（2025）"],
+    ["品牌方", "信任资产被虚假种草 / 仿冒素材悄悄侵蚀",
+     f"全渠道交易额 {num('N1', 'market', '11042.45')} 亿元/年（同比 +2.83%）"],
+    ["平台 / 监管", "虚假种草治理靠人肉，投诉才处理，滞后且不可逆",
+     f"营销盘子约 {num('N2', 'marketing', '5521')} 亿元/年（营销费用率中位 50%，五家上市公司年报实测）"],
+], Inches(0.55), Inches(1.95), Inches(12.2), Inches(2.9), body_size=14, head_size=14,
+    col_w=[0.16, 0.44, 0.40])
+bullets(s, Inches(0.55), Inches(5.05), Inches(7.7), Inches(2.2), [
+    "更扎心的行业事实：现成通用 AI 检测模型在中文美妆域集体失效——真实精修美妆图被误判为 AI 的比例 66.2%。",
+    "通用检测失灵，正是 BeautyProof 的差异化空间。",
+], size=15)
+callout(s, Inches(8.5), Inches(5.05), Inches(4.25), Inches(1.7),
+        "风险敞口（单案）：\n{0}\n（{1}）".format(
+            str(num("N4", "penalty", "20 万~100 万元")),
+            "情节严重 100 万~200 万 + 可吊销营业执照"),
+        fill=PANEL2, barcolor=RED, color=LIGHT, size=14)
 
-# ============ Slide 5: 架构流 ============
+# ================================================================ Slide 4 · 赛题四件事逐条交卷
+s = new()
+header(s, "赛题要的四件事，我们逐条交卷", "天池 532496 · 硬任务对照表")
+add_table(s, [
+    ["赛题硬性要求", "BeautyProof 实现", "证据文件"],
+    ["① 多模态检测方案（图+文并列）", "8 件工具：看图 5 件（hash/c2pa/ela/spectral/trufor/aigc）+ 读字 2 件（ocr/text）+ 跨模态 1 件", "tools/pipeline.py"],
+    ["② 可解释判定依据", "四段式人话报告 + 法条出处 + 处罚区间 + 每条工具写明「不能证明什么」", "tools/rule_engine.py"],
+    ["③ 构建 Agent（识别→预警→建议）", "planner 波次调度 + ACTION_PLAYBOOK 四档处置 + 决策留痕（decision_trace）", "tools/planner.py / rule_engine.py"],
+    ["④ 数据集展示完整闭环", "合成集 + 冻结池 + 工具消融 + 级联评测 + 三场景评测，共 5 份可复现 JSON", "results/*.json"],
+], Inches(0.5), Inches(1.95), Inches(12.3), Inches(4.3), body_size=13.5, head_size=14,
+    col_w=[0.27, 0.53, 0.20])
+callout(s, Inches(0.5), Inches(6.4), Inches(12.3), Inches(0.75),
+        "官方三个场景全覆盖：种草内容核验 / 评论区真实性核验 / AI 视觉素材鉴伪 —— 见第 7 页。",
+        fill=PANEL, barcolor=GOLD, size=14)
+
+# ================================================================ Slide 5 · 架构全景
 s = new()
 header(s, "系统架构：证据链 → 规则 → 人话", "一张图看懂全流程")
-labels = ["输入\n图 / 文", "8 取证工具", "统一证据\n格式", "规则引擎\n四档判定", "人话报告\n(+LLM/圆桌)"]
-caps   = ["图片或图文帖", "hash/c2pa/ela/\nocr/aigc/trufor", "{tool,observed,\ncannot_prove,ev}", "high/suspicious/\ncredible/inconclusive", "普通人看得懂\n的信任结论"]
-bw, bh, top = Inches(2.18), Inches(1.25), Inches(3.1)
-left0 = Inches(0.55); gap = Inches(0.28)
+labels = ["输入\n图 / 文 / 评论", "8 件取证工具", "统一证据\n格式", "规则引擎\n四档判定", "人话报告\n+可审计留痕"]
+caps = ["图 / 图文帖 / 评论区", "hash·c2pa·spectral\nela·ocr·aigc\ntrufor·text·crossmodal",
+        "{tool, observed,\ncannot_prove, evidence[]}", "high / suspicious /\ncredible / inconclusive",
+        "结论·依据·说不清·\n建议（四段式）"]
+bw, bh, top = Inches(2.18), Inches(1.35), Inches(3.15)
+left0 = Inches(0.5)
+gap = Inches(0.26)
 for i, (lb, cp) in enumerate(zip(labels, caps)):
     l = left0 + i * (bw + gap)
-    rect(s, l, top, bw, bh, PANEL2 if i % 2 == 0 else RGBColor(0x2A,0x2A,0x33), line=GOLD, line_w=Pt(1.25))
-    textbox(s, l, top + Inches(0.12), bw, Inches(0.7), lb, size=15, bold=True,
-            color=LIGHT, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    textbox(s, l, top + bh + Inches(0.08), bw, Inches(0.8), cp, size=11,
-            color=MUTE, align=PP_ALIGN.CENTER)
+    rect(s, l, top, bw, bh, PANEL2 if i % 2 == 0 else RGBColor(0x2A, 0x2A, 0x33),
+         line=GOLD, line_w=Pt(1.2))
+    textbox(s, l, top + Inches(0.14), bw, Inches(0.75), lb, size=14.5, bold=True,
+            color=LIGHT, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE, spacing=1.1)
+    textbox(s, l, top + bh + Inches(0.07), bw, Inches(0.85), cp, size=10.5,
+            color=MUTE, align=PP_ALIGN.CENTER, spacing=1.15)
     if i < 4:
         ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, l + bw + Inches(0.01),
-                                top + Inches(0.42), gap - Inches(0.02), Inches(0.4))
-        ar.fill.solid(); ar.fill.fore_color.rgb = GOLD; ar.line.fill.background(); ar.shadow.inherit = False
-callout(s, Inches(0.55), Inches(5.5), Inches(12.2), Inches(1.2),
-        "关键设计：所有工具共享同一套证据格式 → 可组合、可审计；规则引擎是「法官」，LLM 只是「翻译官」（绝不下结论）。",
+                                top + Inches(0.47), gap - Inches(0.02), Inches(0.4))
+        ar.fill.solid()
+        ar.fill.fore_color.rgb = GOLD
+        ar.line.fill.background()
+        ar.shadow.inherit = False
+callout(s, Inches(0.5), Inches(5.6), Inches(12.3), Inches(1.0),
+        "关键设计：所有工具共享同一套证据格式 → 可组合、可审计；规则引擎是「法官」，大模型只是「翻译官」，绝不下结论、越界措辞被 validator 拦截。",
         fill=PANEL, barcolor=GOLD, size=15)
 
-# ============ Slide 6: 八工具 ============
+# ================================================================ Slide 6 · 八工具与三轴互补
 s = new()
-header(s, "八工具证据链（统一证据格式）", "看图 6 件 + 读字 2 件")
-bullets(s, Inches(0.6), Inches(2.0), Inches(6.2), Inches(4.4), [
-    "hash — 图片指纹（是否被复制搬运）",
-    "c2pa — 出生证（是否带可信出处元数据）",
-    "ela — 篡改噪点（局部是否被PS）",
-    "ocr — 抄字（图上文字提取）",
-    "aigc — 整图 AI·本域微调（是否 AI 生成）",
-    "trufor — 局部篡改定位热力图",
+header(s, "八件工具，分三条轴——不是堆料", "核心架构论点（本轮升级重点）")
+card(s, Inches(0.5), Inches(2.0), Inches(3.95), Inches(2.35),
+     "① 生成轴 · AIGC × 频域",
+     "aigc：本域微调 MobileNetV3（17MB）\nspectral：FFT 高频能量 / 谱平坦度 /\n方位角异常 / 残差峰度\n\n管「整张就是 AI 画的」",
+     foot="失效：对局部 PS 篡改 0 反应（0.15 / 0.000）", accent=GOLD)
+card(s, Inches(4.66), Inches(2.0), Inches(3.95), Inches(2.35),
+     "② 篡改轴 · ELA + TruFor",
+     "ela：压缩噪声块差异（降级为局部编辑定位器）\ntrufor：CVPR 2023 篡改定位热力图\n\n管「图被局部改过」",
+     foot="失效：对整图 AI 生成无反应（0.350~0.411）", accent=ROSE)
+card(s, Inches(8.82), Inches(2.0), Inches(4.0), Inches(2.35),
+     "③ 内容 / 溯源轴",
+     "ocr 抄字 · text 文案合规 ·\ncrossmodal 图文交叉 ·\ntrace 跨平台水印 / 品类 / 矩阵\n\n管「话和图对得上吗、人从哪来」",
+     foot="生成器无关，最稳兜底防线", accent=GREEN)
+add_table(s, [
+    ["受控样本", "ELA", "频域", "AIGC", "TruFor", "谁在管"],
+    ["真实 clean_01", "1.685", "0.148", "0.000", "0.350", "（都是低分＝正常）"],
+    ["真实 clean_02", "0.710", "0.150", "0.000", "0.411", "（都是低分＝正常）"],
+    ["复制粘贴篡改", "3.905", "0.148", "0.000", "0.995", "篡改轴 TruFor"],
+    ["拼接篡改", "4.336", "0.206", "0.000", "1.000", "篡改轴 TruFor"],
+    ["改文字篡改", "3.935", "0.171", "0.000", "0.595", "篡改轴 TruFor"],
+], Inches(0.5), Inches(4.7), Inches(12.3), Inches(2.4), body_size=12.5, head_size=12.5,
+    col_w=[0.19, 0.11, 0.11, 0.11, 0.11, 0.37])
+callout(s, Inches(0.5), Inches(4.55), Inches(12.3), Inches(0.75),
+        "左右两轴对彼此的失效场景完全沉默——这是取舍的结果，不是巧合。当作「我用了 8 个工具」讲，评委只会记成工具堆料；当作「三条轴互相补位」讲，才是架构贡献。",
+        fill=PANEL, barcolor=GOLD, size=13.5)
+
+# ================================================================ Slide 7 · 双检测器级联
+s = new()
+header(s, "亮点 1 · 双检测器级联：捕获 +5.3pt，误伤不变", "技术创新点（可复现）")
+bullets(s, Inches(0.55), Inches(2.0), Inches(6.6), Inches(4.6), [
+    "为什么做：本域微调的 AIGC 模型弱在「跨生成器 / 换风格就掉」；频域弱在「重压、强锐化的真实图会误报」。",
+    "两条线的失效模式不同 —— 用一条的长处补另一条的短处。",
+    "判罚规则（与项目灰带设计一脉相承）：",
+    ("自动下架 = AIGC ≥ 0.99 或（AIGC ≥ 0.9 且 频域 ≥ 0.8）", 1),
+    ("转人工 = AIGC ≥ 0.9 或 频域 ≥ 0.6 或（AIGC 弃权但频域强）", 1),
+    "级联在「转人工」这一档额外捞回 2 张，且自动下架误伤一张没多。",
 ], size=15)
-bullets(s, Inches(7.0), Inches(2.0), Inches(5.7), Inches(2.4), [
-    "text — 文案分析（宣称是否夸张/违规）",
-    "crossmodal — 图文是否对得上（跨模态交叉）",
-    "统一格式 {tool, observed, cannot_prove, evidence[]}",
+add_table(s, [
+    ["配置", "AI 捕获率（≥可疑）", "自动下架误伤（20 张真实图）"],
+    ["只用 AIGC 模型", "34/38 = 89.5%", "0 / 20"],
+    ["只用频域工具", "34/38 = 89.5%", "0 / 20"],
+    ["两级联（生产配置）", "36/38 = 94.7%", "0 / 20"],
+], Inches(7.4), Inches(2.15), Inches(5.4), Inches(2.3), body_size=14, head_size=13.5)
+callout(s, Inches(7.4), Inches(4.75), Inches(5.4), Inches(2.2),
+        "频域工具单独在冻结 TEST 段：\nAUC = 0.97\nAI 召回 85%，真实图误报 0/10\n（阈值 0.8 时）",
+        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=14.5)
+textbox(s, Inches(0.55), Inches(6.55), Inches(6.6), Inches(0.5),
+        "复现：python tools/spectral_calib.py --refit && python tools/cascade_eval.py → results/cascade_eval.json",
+        size=11.5, color=MUTE)
+
+# ================================================================ Slide 8 · 工具消融表
+s = new()
+header(s, "亮点 2 · 工具消融表：证明「编排」本身是贡献", "方法严谨性（对标 ForenAgent arXiv 2512.16300）")
+add_table(s, [
+    ["层", "工具", "AI 捕获", "自动下架", "真实误伤", "说明"],
+    ["T0", "仅文件指纹 + 内容凭证", "0/38 = 0.0%", "0", "0/20", "只能证明「不是我拍的」，证明不了「是假的」"],
+    ["T1", "+ELA（加入篡改轴）", "35/38 = 92.1%", "0", "0/20", "篡改轴一进来，覆盖立刻起来"],
+    ["T2", "+AIGC 模型（单条生成轴）", "37/38 = 97.4%", "33", "0/20", "已敢动手，但单条证据风险高"],
+    ["T3", "+频域（两条生成轴合并＝级联）", "38/38 = 100%", "34", "0/20", "两条一致才动手 → 敢提自动下架"],
+], Inches(0.5), Inches(2.0), Inches(12.3), Inches(3.4), body_size=13.5, head_size=13.5,
+    col_w=[0.07, 0.26, 0.13, 0.12, 0.13, 0.29])
+callout(s, Inches(0.5), Inches(5.55), Inches(6.0), Inches(1.35),
+        "每层严格包含上一层（真嵌套）。\n只堆工具到 T2 就到顶了；\n把两条轴合起来才到 100%。",
+        fill=PANEL, barcolor=GOLD, size=14.5)
+callout(s, Inches(6.75), Inches(5.55), Inches(6.05), Inches(1.35),
+        "横向互补（第 6 页表 B）证明：\n三条轴各自失效、互相补位。\n这就是「编排 ≠ 堆料」的量化答案。",
+        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=14)
+textbox(s, Inches(0.5), Inches(7.02), Inches(12.3), Inches(0.3),
+        "复现：python tools/ablation_eval.py → results/ablation_eval.json", size=11.5, color=MUTE)
+
+# ================================================================ Slide 9 · 三个官方场景
+s = new()
+header(s, "亮点 3 · 三个官方场景全覆盖 + 官方点名加分项", "功能完整性")
+card(s, Inches(0.5), Inches(2.0), Inches(3.95), Inches(2.5),
+     "① 种草内容核验",
+     "8 工具图文流水线 + 合规法条引擎。\n6 段真实种草文案实测：\n1 段命中违禁宣称 /\n4 段需核对特妆注册证 / 1 段干净",
+     foot="tools/content_check.py", accent=GOLD)
+card(s, Inches(4.66), Inches(2.0), Inches(3.95), Inches(2.5),
+     "② 评论区真实性核验",
+     "8 项特征：完全重复率 / 近似重复 /\n短评率 / 无细节率 / 好评一致度 /\n模板集中度 / 爆发性 / 跨帖重复\n+ 虚假种草账号画像",
+     foot="6 组合成案例方向命中 6/6", accent=ROSE)
+card(s, Inches(8.82), Inches(2.0), Inches(4.0), Inches(2.5),
+     "③ AI 视觉素材鉴伪",
+     "频域 + AIGC 双检测器级联。\n冻结池 38 张 AI / 20 张真实：\n捕获 94.7%、自动下架误伤 0/20",
+     foot="tools/pipeline.py + spectral_tool", accent=GREEN)
+add_table(s, [
+    ["官方点名加分项", "状态", "落地件"],
+    ["分级风险策略（已实现）", "✅", "四档 + 三条独立证据轴，双证据一致才自动下架"],
+    ["矩阵级异常模式识别", "✅ 本轮新增", "comment_check 跨帖重复率 + trace_tool.trace_matrix（一人多号）"],
+    ["跨平台跨内容比对与溯源", "✅ 本轮新增", "tools/trace_tool.py：水印账号 vs 来源声称 / 品类一致性 / 矩阵"],
+    ["虚假种草账号画像", "✅ 本轮新增", "comment_check.analyze_account（文案复用率 + 发布规律性）"],
+], Inches(0.5), Inches(4.85), Inches(12.3), Inches(2.2), body_size=13, head_size=13,
+    col_w=[0.25, 0.15, 0.60])
+
+# ================================================================ Slide 10 · 评论区
+s = new()
+header(s, "场景② 展开：评论区真实性怎么判", "八项特征 + 账号画像 + 跨帖矩阵")
+bullets(s, Inches(0.55), Inches(1.95), Inches(6.5), Inches(4.8), [
+    "完全重复率：一模一样的评论占比（水军最直接的信号）",
+    "近似重复率：3-gram Jaccard ≥ 0.8 视为同模板改写",
+    "短评率 / 无细节率：真实用户会写「油皮、T 区、两周一瓶」，水军只写「好用！」",
+    "好评一致度：清一色正面 = 异常；真实评论区一定有分歧",
+    "模板集中度：同一句式出现在多条不同账号下",
+    "爆发性：发布时间间隔的变异系数反向（均匀卡点 = 脚本）",
+    "跨帖重复：同一文案出现在多个帖子（矩阵级异常）",
+    "账号画像：文案复用率 + 发布规律性 → 虚假种草账号",
+], size=14)
+add_table(s, [
+    ["案例", "期望", "实得", "分数"],
+    ["cc_01 刷屏 + 卡点", "high_risk", "high_risk", "0.9839"],
+    ["cc_02 刷屏 + 近似重复", "high_risk", "high_risk", "0.8497"],
+    ["cc_03 跨帖重复（矩阵）", "high_risk", "high_risk", "0.7305"],
+    ["cc_04 自然长评", "credible", "credible", "0.1652"],
+    ["cc_05 自然短评", "credible", "credible", "0.3295"],
+    ["cc_06 评论数太少", "inconclusive", "inconclusive", "—（主动弃权）"],
+], Inches(7.35), Inches(2.0), Inches(5.45), Inches(3.5), body_size=13, head_size=13,
+    col_w=[0.36, 0.20, 0.22, 0.22])
+callout(s, Inches(7.35), Inches(5.75), Inches(5.45), Inches(1.4),
+        "⚠️ 这组是团队自建合成集。\n6/6 只证明「设定的两种模式能被区分」，\n不能当真实场景准确率。",
+        fill=PANEL2, barcolor=RED, color=LIGHT, size=13.5)
+
+# ================================================================ Slide 11 · 溯源
+s = new()
+header(s, "场景①③ 展开：跨平台溯源怎么查", "水印账号 vs 来源声称 / 品类一致性 / 一人多号")
+bullets(s, Inches(0.55), Inches(1.95), Inches(6.6), Inches(4.9), [
+    "图上水印账号 vs 文案声称的来源：声称「本人实拍」，图上水印却是另一个账号 → 高危。",
+    "品类一致性：文案讲的是精华，图上出现的是面膜／粉底液容器 → 图文交叉失败。",
+    "跨内容矩阵：同一水印账号的数个图，在多个帖子里重复出现 → 矩阵级异常（官方点名加分项）。",
+    "「品牌名出现在图上」不算证据（首版 5/10 全判错）—— 已删除该判据，改用品类一致性为主。",
+    "所有结论落到 trace_matrix()，一条决策链可直接上会、可复核。",
 ], size=15)
-callout(s, Inches(7.0), Inches(4.5), Inches(5.7), Inches(1.8),
-        "互补口径：TruFor 管「被局部改过」，AIGC 管「整张 AI 画的」——\n两者互补，不是替代（R5 规则专门处理）。",
-        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=15)
-
-# ============ Slide 7: 可解释 Agent ============
-s = new()
-header(s, "可解释 Agent：planner 是灵魂", "直接命中赛题「可解释 + Agent」")
-bullets(s, Inches(0.6), Inches(2.0), Inches(7.5), Inches(4.4), [
-    "波次调度：快检(哈希/c2pa) → 中检(ela/ocr) → 深检(aigc/trufor)。",
-    "R1–R5 跳过规则：如 PNG 跳过 ELA、已知原图跳过重复查——每条跳过都写「人话理由」。",
-    "A1–A3 后置动作：命中后自动补查，不留死角。",
-    "决策可审计：评委能看清「下一步查什么、为什么查」。",
-])
-callout(s, Inches(8.3), Inches(2.2), Inches(4.45), Inches(2.6),
-        "Agent 不是装饰：\n它决定「下一步查什么」，并解释「为什么这么查」——这正是赛题「可解释」的题眼。",
-        fill=PANEL, barcolor=GOLD, size=16)
-
-# ============ Slide 8: 本域微调翻车故事 ============
-s = new()
-header(s, "本域微调：把「不准」变成「准」", "翻车 → 修复（评委最爱看的对比）")
 add_table(s, [
-    ["阶段", "发生了什么", "结果"],
-    ["起", "通用 AIGC 检测器在中文美妆域失效", "真实精修图 66% 误判为 AI"],
-    ["承", "74 张真实精修图 + 20 张即梦图本域微调 MobileNetV3", "训练集内饱和到 0/1"],
-    ["转", "重训 v2 + 置信度校准 + 弃权阈值", "真实误报 66.2% → 1.4%"],
-    ["合", "AI 召回保持 100%（即梦域），v1 留作兜底", "「针对美妆定制」的硬证据"],
-], Inches(0.6), Inches(2.0), Inches(12.1), Inches(3.6), body_size=14, head_size=14)
-callout(s, Inches(0.6), Inches(5.85), Inches(12.1), Inches(0.95),
-        "一句话：别人用通用模型，我们为美妆重训了一把——这就是「场景定制」的差异化杀招。",
-        fill=PANEL, barcolor=GOLD, size=15)
+    ["案例", "期望", "实得", "命中要点"],
+    ["tr_01 水印 vs 官方账号", "high_risk", "high_risk", "水印账号 ≠ 声称来源"],
+    ["tr_02 品牌只出现在图上", "suspicious", "suspicious", "不谎报（首版误判已修）"],
+    ["tr_03 自家内容自洽", "credible", "credible", "品类一致、来源明确"],
+    ["tr_04 无水印无声称", "credible", "credible", "主动说「无法溯源」"],
+    ["tr_05 同水印多图混发", "suspicious", "suspicious", "跨内容矩阵命中"],
+], Inches(7.4), Inches(2.0), Inches(5.4), Inches(3.0), body_size=13, head_size=13,
+    col_w=[0.34, 0.20, 0.21, 0.25])
+callout(s, Inches(7.4), Inches(5.25), Inches(5.4), Inches(1.85),
+        "⚠️ 同样为团队自建合成集，\n方向命中 5/5。真实跨平台\n标注集仍缺失，已列入待补清单。",
+        fill=PANEL2, barcolor=RED, color=LIGHT, size=13.5)
 
-# ============ Slide 9: 双保险 ============
+# ================================================================ Slide 12 · 合规法条引擎
 s = new()
-header(s, "双保险：多 Agent 圆桌 + LLM 解释层", "方案 B + 方案 C 都已落地")
-bullets(s, Inches(0.6), Inches(2.0), Inches(7.6), Inches(4.2), [
-    "方案 C · LLM 解释层：本地 Ollama + Qwen3-VL-4B 生成「人话解读」，接入 pipeline --llm。",
-    "方案 B · 多 Agent 圆桌：ImageAgent / TextAgent / SourceAgent 结构化交叉复核 + JudgeAgent 共识。",
-    "护栏 validator 六道关：解释层只翻译、绝不自己下结论；越界措辞一律拦截。",
-    "两者均可选接入，不拖累核心流水线，失败优雅降级。",
-])
-callout(s, Inches(8.4), Inches(2.2), Inches(4.35), Inches(2.2),
-        "大模型 = 翻译官\n规则引擎 = 法官\n分数非法律结论，高风险必人工复核。",
-        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=16)
-
-# ============ Slide 10: 数据集闭环 ============
-s = new()
-header(s, "数据集闭环 & 实测结果（诚实版）", "敢把短板写进报告，才是可信度来源")
+header(s, "亮点 4 · 合规法条引擎：违第几条 + 罚多少钱", "落地与行业价值（最易讲清也最易被忽略的一维）")
 add_table(s, [
-    ["评测指标", "实测数值"],
-    ["受控评测集（35 张）", "100% 正确"],
-    ["真实美妆图误报", "66.2% → 1.4%（v2 重训后）"],
-    ["AI 召回（即梦域）", "100%"],
-    ["跨生成器 held-out 召回", "25% → 100%（v3 已校准；ImageGen 风格，MJ/SD 内核待验证）"],
-    ["弃权率（置信度校准）", "1.8%"],
-], Inches(0.6), Inches(2.0), Inches(12.1), Inches(4.0), body_size=15, head_size=15)
+    ["法条", "要点", "处罚区间", "真实案例（公开可核验）"],
+    ["化妆品监督管理条例 第 16 条", "功效宣称须有充分科学依据", "20~100 万元", "屈臣氏武汉「92% 原液含量」实测 0.414%"],
+    ["化妆品监督管理条例 第 22 条", "特殊化妆品须注册，禁未注册即宣称", "20~100 万元", "南京某店身体乳标「美白淡斑」罚 2000 元"],
+    ["化妆品监督管理条例 第 37 条", "禁止明示 / 暗示医疗作用", "20~100 万元", "英德「止脱育发」套盒罚没 1.14 万元"],
+    ["广告法 第 9 / 17 / 28 条", "禁绝对化用语、非医疗涉疾病、虚假广告", "广告费 3~5 倍，最高 200 万", "仿冒功效宣称典型罚则"],
+    ["反不正当竞争法 第 8 条", "虚假或引人误解的商业宣传", "20~100 万；严重 100~200 万", "虚假宣传最高档判例"],
+], Inches(0.5), Inches(2.0), Inches(12.3), Inches(3.5), body_size=12.5, head_size=12.5,
+    col_w=[0.22, 0.28, 0.22, 0.28])
+callout(s, Inches(0.5), Inches(5.7), Inches(6.0), Inches(1.5),
+        "实测 6 段真实种草文案：\n1 命中违禁宣称 / 4 需核对特妆注册证 / 1 干净\n→ 真实内容不是一片假，这组数字恰好证明我们「不乱报」。",
+        fill=PANEL, barcolor=GOLD, size=14)
+callout(s, Inches(6.75), Inches(5.7), Inches(6.05), Inches(1.5),
+        "每条法条都附 gov.cn 原文链接 + 真实处罚案例，\n法务可直接拿去用，不必二次检索。",
+        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=14)
 
-# ============ Slide 11: 合规开源 ============
+# ================================================================ Slide 13 · 翻车史
 s = new()
-header(s, "合规与开源（资格前提已消除）", "原创性 / IP / 数据红线")
-bullets(s, Inches(0.6), Inches(2.0), Inches(12.0), Inches(4.6), [
-    "仓库已转 public —— 评委 / 举办方可见，满足「被评审 / 被开源」前提。",
-    "Apache-2.0 LICENSE + NOTICE：声明 TruFor(CVPR2023) / PyTorch / timm / PaddleOCR / Qwen3-VL 等第三方许可与归属。",
-    "数据红线：训练 / 评测 = 自产（ImageGen）+ 用户压缩包，未抓任何第三方平台图；GenImage 仅离线参考、不入仓。",
-    "模型权重：TruFor / AIGC 权重走现场脚本下载，不塞仓库（GitHub 单文件 100MB 上限）。",
-])
-
-# ============ Slide 12: 5+5 映射 ============
-s = new()
-header(s, "对齐 Brandstorm 官方 5+5 评审准则", "L'Oréal 评委最终打分口径（共 50 分）")
+header(s, "本域微调：把「不准」变成「准」，并如实归档失败", "团队维度 · RESILIENCE / JUDGMENT")
 add_table(s, [
-    ["维度", "含义", "BeautyProof 对应", "自评"],
-    ["项目·INNOVATIVE", "前人未有的方案", "首个美妆垂域取证台 + b+c 混合架构", "4/5"],
-    ["项目·SUSTAINABLE", "长期责任", "全开源、可复现、数据集闭环可持续", "5/5"],
-    ["项目·INCLUSIVE", "不排斥群体", "保护易被误导的消费者；多形态零门槛演示", "4/5"],
-    ["项目·FEASIBLE", "现实可落地", "纯 CPU 可跑、线上 Demo HTTP 200、三形态交付", "5/5"],
-    ["项目·SCALABLE", "大规模可行", "API/Web/闭环骨架具备；跨生成器待 v3 校准", "3–4/5"],
-    ["团队·JUDGMENT", "复杂决策", "planner R1–R5 + 误报危机果断重训", "4/5"],
-    ["团队·RESILIENCE", "克服困难", "66%→1.4%；SSH 失效改 HTTPS 绕通；补 LICENSE", "5/5"],
-    ["团队·AMBITION", "愿景", "美妆信任基础设施，而非一次性 detector", "4/5"],
-    ["团队·EMPATHY", "团队支持", "跨角色协作（owner/AI/队友）；待口述补实", "3–4/5"],
-    ["团队·LEARNING AGILITY", "学陌生领域", "零技术背景 → 主导完整取证系统；快速试错", "5/5"],
-    ["合计", "", "预计", "≈43–47/50"],
-], Inches(0.45), Inches(1.95), Inches(12.45), Inches(4.9), body_size=12.5, head_size=12.5)
-textbox(s, Inches(0.45), Inches(6.95), Inches(12.4), Inches(0.4),
-        "注：天池技术赛道「多模态/可解释/Agent/数据集闭环」四项全中；5+5 是 L'Oréal 评委最终打分口径，答辩须双轨覆盖。",
-        size=12, color=MUTE)
+    ["版本", "做了什么", "误报 / 召回结果", "处置"],
+    ["v1", "即梦 20 张 AI + 15 张真实图", "真实误报 66%", "-"],
+    ["v2", "+74 张真实精修图 + 类别权重 + GaussianBlur", "真实误报 66% → 1.4%（未训集 61% → 5.6%）", "采用"],
+    ["v3", "+ai_cross 26 张非即梦 AI 图，单独 held-out", "跨生成器召回 25% → 100%，val_acc 0.963", "采用"],
+    ["v4", "+beauty_aug 域增强 + 伪标注真实图（self-training）", "6/6 零退化；真图.zip 34 张误报 5.9%", "✅ 生产模型"],
+    ["v5", "再加 24 张新人标真实图", "误报一个没修好，跨生成器 66.7% → 58.3%", "❌ 不晋升，归档"],
+    ["v7", "再加 20 张滤镜自拍真实图（heldout 10）", "滤镜误报 2/10 → 1/10，但跨生成器 66.7% → 33.3%", "❌ 不晋升，归档"],
+], Inches(0.5), Inches(1.95), Inches(12.3), Inches(4.0), body_size=12.5, head_size=13,
+    col_w=[0.07, 0.33, 0.40, 0.20])
+callout(s, Inches(0.5), Inches(6.15), Inches(6.0), Inches(1.1),
+        "结论：单靠扩真实图换不来鲁棒，\n还会牺牲跨生成器泛化。\n所以生产模型保持 v4，改为用频域做兜底。",
+        fill=PANEL, barcolor=GOLD, size=14)
+callout(s, Inches(6.75), Inches(6.15), Inches(6.05), Inches(1.1),
+        "纪律：不满足晋升口径就不晋升。\nv5 / v7 的负面结果写进\nresults/v7_eval.json 与模型迭代实验记录。",
+        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=14)
 
-# ============ Slide 13: 团队故事 ============
+# ================================================================ Slide 14 · 诚实边界
+s = new()
+header(s, "我们主动声明的边界 —— 不回避短板", "把短板写进报告，才是可信度来源")
+card(s, Inches(0.5), Inches(2.0), Inches(3.95), Inches(2.2),
+     "跨生成器泛化未彻底解决",
+     "v4 在已知风格 held-out 上召回 100%，\n但对 12 张全新风格 ImageGen 直出图\n只有 66.7%。\n\n对策：频域做生成器无关兜底 +\n此类风格默认转人工复核。",
+     accent=ROSE, body_size=12.5, foot_size=11.5)
+card(s, Inches(4.66), Inches(2.0), Inches(3.95), Inches(2.2),
+     "评论区 / 溯源是自建合成集",
+     "6/6、5/5 只证明「两种设定的模式能分开」，\n不能当真实场景准确率。\n\n真实标注集仍缺失 ——\n这是本轮最大的已知缺口。",
+     accent=ROSE, body_size=12.5, foot_size=11.5)
+card(s, Inches(8.82), Inches(2.0), Inches(4.0), Inches(2.2),
+     "MJ / SD / Flux 样本太少",
+     "目前只有 4 张训练 + 1 张冻结，\n跨生成器结论仍有样本量限制。\n\n另外：频域取向分刻意不叫\n「概率」，避免与模型概率混淆。",
+     accent=ROSE, body_size=12.5, foot_size=11.5)
+bullets(s, Inches(0.55), Inches(4.5), Inches(12.2), Inches(2.4), [
+    "分数不是法律结论；高风险一律进人工复核队列；封号 / 下架这类不可逆动作系统绝不自动执行（ACTION_PLAYBOOK 只给建议）。",
+    "训练 / 评测数据 100% 团队自产（即梦 / ImageGen 自产 AI 图 + 团队实拍 + 现场合成），未用 GenImage / COCO / ImageNet 作训练集；ImageNet 仅作骨干初始化权重，并在模型 config.json 中披露。",
+    "冻结池评测按 seed 对半切（CAL 拟合 / TEST 只评测），调用前一律 pin 到 v4 并断言解析目录名，防止静默回退旧模型却输出「看起来通过」的假结果（9/26 踩过）。",
+    "真实世界口径用 2026-09-26 那批真图.zip 34 张的实测（v4 误报 5.9%），不再引用早期的 66%。",
+], size=14)
+
+# ================================================================ Slide 15 · 商业价值（数字驱动）
+s = new()
+header(s, "商业价值：五个数字 + 推导链", "口径与出处：docs/商业数字调研_2026-10-02.md")
+_n5 = next((n.get("value") for n in _all() if n.get("id") == "N5"), {})
+_n5s = "{0} / {1} / {2}".format(
+    _n5.get("SOM_min", "?"), _n5.get("SOM_max", "?"), _n5.get("SOM_midpoint", "?")) if _n5 else "待补"
+add_table(s, [
+    ["#", "数字", "采用值", "口径", "置信度"],
+    ["1", "市场规模（全渠道交易额）", f"{num('N1','market','待补')} 亿元/年", "2025 全年·线上+线下+直播+免税", conf("N1")],
+    ["2", "营销盘子（内容投放总量）", f"{num('N2','marketing','待补')} 亿元/年", "交易额 × 营销费用率中位 50%", conf("N2")],
+    ["3", "虚假 / 违规造成直接损失", f"{num('N3','loss','待补')} 亿元/年", "行政罚没 + 民事退一赔三，中位 2 亿", conf("N3")],
+    ["4", "单案风险敞口（法定罚款）", f"{num('N4','penalty','待补')}", "广告法 55 条原文 + 实测杭州讯犹 17.55 万", conf("N4")],
+    ["5", "TAM / SAM / SOM（3 年）", f"{_n5s} 亿元/年", "双路径交叉校验，取区间不取单点", conf("N5")],
+], Inches(0.5), Inches(1.95), Inches(12.3), Inches(3.0), body_size=13, head_size=13,
+    col_w=[0.05, 0.27, 0.19, 0.28, 0.21])
+callout(s, Inches(0.5), Inches(5.05), Inches(6.0), Inches(2.1),
+        "定价与 ROI（评委最会问的两句）\n"
+        "企业版 {0} / 年（起步包含 5 万张 + 证据链报告）\n"
+        "API ¥0.03–0.08 / 张（低于 AI or Not 折算价）\n"
+        "ROI：一次 17.55 万罚单 ≈ 2–5 年年费".format(
+            _n5.get("ARPU", "20 万~100 万元") if _n5 else "20 万~100 万元"),
+        fill=PANEL, barcolor=GOLD, size=13)
+callout(s, Inches(6.75), Inches(5.05), Inches(6.05), Inches(2.1),
+        "溢价从哪来（不是检测本身）\n"
+        "① 生成器无关的 TruFor 主干\n"
+        "② 中文美妆功效宣称合规语义\n"
+        "③ 品牌原图库 hash 确权 + C2PA\n"
+        "→ 三点竞品全不具备，这是 B 端愿付费的原因",
+        fill=PANEL2, barcolor=ROSE, color=LIGHT, size=13)
+textbox(s, Inches(0.5), Inches(7.15), Inches(12.3), Inches(0.3),
+        "诚实边界：第 2/3/5 项是估算（已给推导链与敏感性）；第 1/4 项为官方一手口径。评委问「哪个数是你编的」，我们答得出来。",
+        size=11.5, color=MUTE)
+
+# ================================================================ Slide 16 · 落地路径
+s = new()
+header(s, "落地路径与合规自证", "从 Demo 到可部署交付")
+bullets(s, Inches(0.55), Inches(2.0), Inches(6.2), Inches(4.8), [
+    "短期（0–6 月）：品牌内审插件 / 私有化 API —— Web 取证台 + Flask API 已就绪，纯 CPU 可跑。",
+    "中期（6–18 月）：平台美妆内容审核接入；补齐真实评论标注集 + MJ/SD/Flux 原生图各 10 张。",
+    "长期（18–36 月）：推动美妆内容「可信凭证」，对齐 C2PA / 内容溯源标准，成为行业信任基础设施。",
+    "公益侧：向市场监管 / 消协 / 反诈中心免费开放 API，作为违法广告抽查的线索初筛（见公益叙事）。",
+], size=15)
+card(s, Inches(7.1), Inches(2.0), Inches(5.7), Inches(2.05),
+     "原创性红线（资格前提）",
+     "仓库 public + Apache-2.0 LICENSE + NOTICE\n声明 TruFor(CVPR2023) / PyTorch / timm /\nPaddleOCR / Qwen3-VL 归属\n训练数据约 135 张全部自产，零第三方数据集\n代码来源有 docs/代码来源声明.md 逐条交代",
+     accent=GREEN, body_size=12, foot_size=11.5)
+card(s, Inches(7.1), Inches(4.25), Inches(5.7), Inches(2.05),
+     "可验证性",
+     "108 项 pytest 全过（含 41 项本轮新增回归）\n5 份评测 JSON 全部落盘可复现\n评测脚本启动即 pin 模型 + 断言目录名\n标定协议：冻结池 seed 对半切，CAL 拟合 / TEST 只评测",
+     accent=GREEN, body_size=12, foot_size=11.5)
+
+# ================================================================ Slide 17 · 5+5 自评（真实版）
+s = new()
+header(s, "对齐 L'Oréal 官方 5+5 评审准则（真实自评）", "本项目所有数字均可复现；扣分点不粉饰")
+add_table(s, [
+    ["维度", "对应我们的落地件", "自评", "扣分理由"],
+    ["项目·INNOVATIVE", "美妆垂域首个多模态取证台 + 三轴互补 + 双检测器级联", "4/5", "垂域首发成立；但频域特征非自创，扣 1"],
+    ["项目·SUSTAINABLE", "全开源 + 自产数据 + 冻结池评测协议可持续", "4/5", "未做 GitHub Release，扣 1"],
+    ["项目·INCLUSIVE", "保护辨别力最弱的消费者；公益侧免费 API", "4/5", "缺真人用户访谈与可用性测试记录，扣 1"],
+    ["项目·FEASIBLE", "纯 CPU 可跑、线上 Demo 200、三形态交付已上线", "5/5", "-"],
+    ["项目·SCALABLE", "三形态具备；跨生成器 66.7%、真实标注集缺失", "3/5", "明显扣分点，不粉饰"],
+    ["团队·JUDGMENT", "消融表定架构、级联阈值、KEEP_V4 晋升纪律", "4/5", "阈值来源是自研冻结池，外部口径待补，扣 1"],
+    ["团队·RESILIENCE", "66%→1.4%；主动归档 v5/v7 负面结果；推送通道绕通", "5/5", "-"],
+    ["团队·AMBITION", "美妆信任基础设施，而非一次性 detector", "4/5", "生态合作尚无实质进展，扣 1"],
+    ["团队·EMPATHY", "零基础 owner 主导完整系统；角色互补", "3/5", "缺团队协作的具体过程证据（会议 / 分工留痕）"],
+    ["团队·LEARNING AGILITY", "从 CV/ML/Agent 零基础到完整取证系统，快速试错", "5/5", "-"],
+    ["合计", "（10 维计入，满分 50）", "≈41/50", "主要失分在 SCALABLE 与 EMPATHY"],
+], Inches(0.45), Inches(1.9), Inches(12.45), Inches(4.6), body_size=11.5, head_size=12,
+    col_w=[0.17, 0.36, 0.09, 0.38])
+textbox(s, Inches(0.45), Inches(6.75), Inches(12.4), Inches(0.6),
+        "注：天池技术赛道「多模态 / 可解释 / Agent / 数据集闭环」四项全中，这是初赛硬门槛；5+5 是 L'Oréal 评委最终打分口径，答辩须双轨覆盖。\n"
+        "本自评故意压低 SCALABLE 与 EMPATHY —— 评委最反感的是「自评 47 分最后拿不到」，其次是「说了自己没有的」。",
+        size=11.5, color=MUTE, spacing=1.3)
+
+# ================================================================ Slide 18 · 团队
 s = new()
 header(s, "团队：从零基础到完整系统", "5+5 里最该讲透的「团队维度」")
 bullets(s, Inches(0.6), Inches(2.0), Inches(12.0), Inches(4.6), [
-    "LEARNING AGILITY：owner 为准大一零技术背景，从 CV/ML/Agent 零基础主导整套取证系统；快速试错（通用模型失效 → 本域微调）。",
-    "RESILIENCE：误报危机果断重训；SSH 推送通道被代理劫持 → 改 HTTPS+token 绕通；TruFor 许可证灰区 → 补 LICENSE/NOTICE。",
-    "JUDGMENT：planner 的 R1–R5 是「复杂局面下怎么查」的工程化判断，每条留人话理由。",
-    "协作：owner 定业务方向，AI 工程执行，队友 liying856 协助——角色互补。",
+    "LEARNING AGILITY：owner 为准大一、自述零技术背景，从 CV / ML / Agent 零基础主导整套取证系统，含模型训练、评测协议、答辩叙事全流程。",
+    "RESILIENCE：真实误报 66% 的危机没有硬撑，直接重训；SSH 推送通道被代理劫持后改 HTTPS + credential-helper 绕通；TruFor 许可证灰区主动补 LICENSE / NOTICE。",
+    "JUDGMENT：planner 的 R1–R5 是「复杂局面下怎么查」的工程化判断，每条跳过都留人话理由；v5 / v7 不满足晋升口径就不晋升，负面结果如实归档。",
+    "EMPATHY（当前最弱）：owner 定业务与叙事方向，AI 工程执行，队友 liying856 协助；缺的是「团队协作过程留痕」与真人用户验证 —— 本轮已补的部分是逐字稿、任务卡与分工文档（docs/ 下）。",
 ])
-callout(s, Inches(0.6), Inches(6.0), Inches(12.1), Inches(0.95),
-        "我们不讳言起点低——但 8 周把「看不懂」变成了「能拿去答辩」。",
+callout(s, Inches(0.6), Inches(6.05), Inches(12.0), Inches(1.05),
+        "我们不讳言起点低 —— 但 8 周把「看不懂」变成了「能拿去答辩」，并且把每一次翻车都写进了可复现的记录里。",
         fill=PANEL2, barcolor=ROSE, color=LIGHT, size=16)
 
-# ============ Slide 14: 边界 & 下一步 ============
+# ================================================================ Slide 19 · 待补清单
 s = new()
-header(s, "我们诚实声明的边界 & 下一步", "不回避短板，才有可信度")
-bullets(s, Inches(0.6), Inches(2.0), Inches(7.6), Inches(4.4), [
-    "边界：跨生成器已校准至 held-out 100%（ImageGen 风格），MJ/SD/Flux 内核仍待验证；AIGC 整图判定在重度滤镜真图上需谨慎。",
-    "分数非法律结论，高风险必人工复核。",
-    "下一步：① v3 跨生成器重训拉起召回；② 置信度校准 + 弃权阈值完善；③ 数据集扩到 200+ 张。",
-])
-callout(s, Inches(8.3), Inches(2.2), Inches(4.45), Inches(2.6),
-        "答辩主张：\nTruFor 篡改定位（鲁棒）+ 图文交叉验证 是主防线；\n整图 AI 判定主动说「校准中 + 高风险人工复核」。",
-        fill=PANEL, barcolor=GOLD, size=15)
+header(s, "仍需补齐的清单（按对获奖的影响排序）", "诚实列出，并说明补齐后能换多少分")
+add_table(s, [
+    ["优先级", "事项", "现在的状态", "补齐后影响"],
+    ["🛡 1", "演示视频重录（2 分 20 秒）", "现版本是灰带之前的旧稿", "演示材料是初赛三交付物之一，直接影响观感分"],
+    ["🛡 2", "PPT 同步本轮新增内容", "本轮已完成（本文档）", "初赛三交付物之一"],
+    ["①", "真实评论标注集（≥50 条）", "仅 6 组合成案例", "直接补 SCALABLE 的短板，是最大失分项"],
+    ["②", "MJ / SD / Flux 原生图各 10 张", "目前 4 + 1 张", "补跨生成器泛化结论的样本量"],
+    ["③", "品牌方侧真实预算 / 审一条内容耗时", "只用了公开调研区间值", "商业数字从「估算」升到「可用」"],
+    ["④", "官网 9MB 数据文件（pptx）", "需账号登录下载", "官方要求并进方案，可能有隐藏评分点"],
+], Inches(0.5), Inches(2.0), Inches(12.3), Inches(3.6), body_size=13, head_size=13,
+    col_w=[0.09, 0.27, 0.26, 0.38])
 
-# ============ Slide 15: 结尾 ============
+# ================================================================ Slide 20 · 结尾
 s = new(); bg(s, DARK)
 rect(s, 0, Inches(3.4), SW, Inches(0.06), GOLD)
 textbox(s, Inches(0.9), Inches(2.2), Inches(11.5), Inches(1.1),
         "让每一张美妆图，都经得起追问", size=34, bold=True, color=LIGHT)
 textbox(s, Inches(0.92), Inches(3.7), Inches(11.5), Inches(0.6),
-        "BeautyProof — 美妆内容信任守护师", size=20, color=ROSE)
-textbox(s, Inches(0.92), Inches(5.4), Inches(11.5), Inches(0.5),
-        "谢谢 · 欢迎评委实测我们的在线 Demo（https://beautyproof-demo.app.workbuddy.host/）", size=15, color=MUTE)
+        "BeautyProof —— 美妆内容信任守护师", size=20, color=ROSE)
+textbox(s, Inches(0.92), Inches(5.0), Inches(11.5), Inches(0.9),
+        "三条独立证据轴 · 双检测器级联 94.7% / 自动下架误伤 0 · 108 项测试 · 全开源可复现",
+        size=15, color=LIGHT)
+textbox(s, Inches(0.92), Inches(5.45), Inches(11.5), Inches(0.5),
+        "在线 Demo：https://beautyproof-demo.app.workbuddy.host/   ·   仓库：github.com/566614/loreal-hackathon-beautyproof",
+        size=13, color=MUTE)
 
-import os
-out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "BeautyProof_答辩PPT.pptx")
+
+out = os.path.join(ROOT, "docs", "BeautyProof_答辩PPT.pptx")
 prs.save(out)
-print("SAVED", out, "slides:", len(prs.slides._sldIdLst))
+print("SAVED", out, "slides:", len(prs.slides._sldIdLst), "commercial_loaded:", COMM.get("ok"))

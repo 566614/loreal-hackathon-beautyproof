@@ -297,3 +297,8 @@ data/real_filter_selfie/_heic_originals/
 
 # 测试数据包：目录是中间产物，入库只留打包好的 zip
 /outputs/SubmitDataset/
+
+# 抓取快照/调研中间产物（不入库，只作本地留证）
+docs/_snapshot_/
+docs/_snapshot_commercial/
+data/official/

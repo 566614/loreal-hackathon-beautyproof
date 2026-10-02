@@ -3,193 +3,340 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BeautyProof 演示 · 美妆内容信任守护师</title>
+<title>BeautyProof 演示 · 美妆内容信任守护师（v2）</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { height:100%; background:#0e0e12; color:#f4f1ec; font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif; overflow:hidden; }
   #stage { position:relative; width:100vw; height:100vh; }
-  .scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6vh 8vw; opacity:0; transform:scale(1.02); transition:opacity .8s ease, transform .8s ease; pointer-events:none; }
+  .scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5vh 6vw; opacity:0; transform:scale(1.02); transition:opacity .8s ease, transform .8s ease; pointer-events:none; }
   .scene.active { opacity:1; transform:scale(1); pointer-events:auto; }
-  .kicker { color:#c8a24b; letter-spacing:.3em; font-size:14px; margin-bottom:18px; text-transform:uppercase; }
-  h1 { font-size:60px; font-weight:800; line-height:1.1; margin-bottom:20px; }
-  h2 { font-size:38px; font-weight:800; margin-bottom:22px; }
-  .sub { font-size:20px; color:#b9b3aa; max-width:900px; text-align:center; line-height:1.6; }
+  .kicker { color:#c8a24b; letter-spacing:.3em; font-size:13px; margin-bottom:16px; text-transform:uppercase; }
+  h1 { font-size:58px; font-weight:800; line-height:1.12; margin-bottom:18px; }
+  h2 { font-size:36px; font-weight:800; margin-bottom:18px; }
+  .sub { font-size:19px; color:#b9b3aa; max-width:960px; text-align:center; line-height:1.65; }
   .accent { color:#e89aa8; }
   .gold { color:#c8a24b; }
-  .pill { display:inline-block; border:1px solid #c8a24b; color:#c8a24b; border-radius:999px; padding:6px 18px; font-size:14px; margin:6px; }
-  /* tool grid */
-  .tools { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; width:920px; margin-top:10px; }
-  .tool { background:#1b1b22; border:1px solid #2c2c36; border-radius:12px; padding:16px; font-size:15px; display:flex; align-items:center; gap:10px; }
-  .tool .dot { width:12px; height:12px; border-radius:50%; background:#444; flex:none; transition:background .4s; }
+  .bad { color:#ff7a90; }
+  .good { color:#5fd08a; }
+  .pill { display:inline-block; border:1px solid #c8a24b; color:#c8a24b; border-radius:999px; padding:5px 16px; font-size:13px; margin:5px; }
+  .tools { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; width:980px; margin-top:8px; }
+  .tool { background:#1b1b22; border:1px solid #2c2c36; border-radius:11px; padding:14px; font-size:14.5px; display:flex; align-items:center; gap:9px; transition:border-color .4s, background .4s; }
+  .tool .dot { width:11px; height:11px; border-radius:50%; background:#444; flex:none; transition:background .4s, box-shadow .4s; }
+  .tool.done { border-color:#5fd08a; background:#14201a; }
   .tool.done .dot { background:#5fd08a; box-shadow:0 0 10px #5fd08a; }
-  .tool.done { border-color:#5fd08a; }
-  /* verdict */
-  .verdict { margin-top:18px; padding:18px 40px; border-radius:14px; font-size:30px; font-weight:800; background:#3a1414; border:1px solid #e11d48; color:#ff9aae; }
+  .tool.hot { border-color:#ff7a90; background:#24151a; }
+  .tool.hot .dot { background:#ff7a90; box-shadow:0 0 10px #ff7a90; }
+  .verdict { margin-top:16px; padding:16px 38px; border-radius:14px; font-size:28px; font-weight:800; background:#3a1414; border:1px solid #e11d48; color:#ff9aae; }
   .verdict.ok { background:#13301c; border-color:#5fd08a; color:#9fe6b4; }
-  /* report card */
-  .report { background:#16161c; border:1px solid #2c2c36; border-left:5px solid #c8a24b; border-radius:12px; padding:22px 28px; width:880px; text-align:left; font-size:17px; line-height:1.9; }
+  .report { background:#16161c; border:1px solid #2c2c36; border-left:5px solid #c8a24b; border-radius:12px; padding:20px 26px; width:900px; text-align:left; font-size:16.5px; line-height:1.85; }
   .report b { color:#c8a24b; }
-  /* chart */
-  .chart { width:760px; margin-top:24px; }
-  .bar { display:flex; align-items:center; margin:14px 0; }
-  .bar .lbl { width:180px; font-size:16px; text-align:right; padding-right:16px; }
-  .bar .track { flex:1; background:#1b1b22; border-radius:8px; height:38px; overflow:hidden; }
-  .bar .fill { height:100%; width:0; border-radius:8px; transition:width 1.6s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; justify-content:flex-end; padding-right:12px; font-weight:800; color:#0e0e12; }
+  .chart { width:820px; margin-top:18px; }
+  .bar { display:flex; align-items:center; margin:11px 0; }
+  .bar .lbl { width:230px; font-size:15.5px; text-align:right; padding-right:14px; }
+  .bar .track { flex:1; background:#1b1b22; border-radius:8px; height:36px; overflow:hidden; }
+  .bar .fill { height:100%; width:0; border-radius:8px; transition:width 1.5s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; justify-content:flex-end; padding-right:11px; font-weight:800; color:#0e0e12; }
   .fill.bad { background:linear-gradient(90deg,#e11d48,#ff7a90); }
   .fill.good { background:linear-gradient(90deg,#5fd08a,#9fe6b4); }
-  /* controls */
-  #bar { position:fixed; bottom:0; left:0; right:0; height:6px; background:#1b1b22; }
+  .fill.gold { background:linear-gradient(90deg,#c8a24b,#e8c98b); }
+  #bar { position:fixed; bottom:0; left:0; right:0; height:5px; background:#1b1b22; }
   #bar > i { display:block; height:100%; width:0; background:#c8a24b; }
-  #nav { position:fixed; bottom:18px; right:24px; display:flex; gap:10px; align-items:center; }
-  #nav button { background:#1b1b22; color:#f4f1ec; border:1px solid #2c2c36; border-radius:8px; padding:8px 14px; font-size:14px; cursor:pointer; }
+  #nav { position:fixed; bottom:16px; right:24px; display:flex; gap:9px; align-items:center; }
+  #nav button { background:#1b1b22; color:#f4f1ec; border:1px solid #2c2c36; border-radius:8px; padding:7px 13px; font-size:13.5px; cursor:pointer; }
   #nav button:hover { border-color:#c8a24b; }
-  .step { position:fixed; bottom:18px; left:24px; font-size:14px; color:#8b857c; }
-  .demo-link { margin-top:26px; font-size:16px; color:#b9b3aa; }
-  .demo-link a { color:#c8a24b; }
+  .step { position:fixed; bottom:16px; left:24px; font-size:13.5px; color:#8b857c; }
+  /* table */
+  table.t { border-collapse:collapse; font-size:15.5px; margin-top:10px; }
+  table.t th, table.t td { border:1px solid #2c2c36; padding:9px 16px; text-align:center; }
+  table.t th { background:#1b1b22; color:#c8a24b; font-weight:700; }
+  table.t td:first-child { text-align:left; }
+  table.t tr:nth-child(even) td { background:#141418; }
+  /* three axes */
+  .axes { display:flex; gap:16px; margin-top:16px; }
+  .axis { width:300px; background:#16161c; border:1px solid #2c2c36; border-top:4px solid #c8a24b; border-radius:11px; padding:16px 18px; text-align:left; }
+  .axis .t { font-size:17px; font-weight:800; margin-bottom:8px; }
+  .axis .m { font-size:14px; color:#b9b3aa; line-height:1.7; }
+  .axis .z { margin-top:10px; font-size:13px; color:#8b857c; }
+  /* cascade boxes */
+  .casc { display:flex; gap:14px; align-items:stretch; margin-top:20px; }
+  .casc .box { flex:1; background:#16161c; border:1px solid #2c2c36; border-radius:11px; padding:16px 18px; text-align:left; }
+  .casc .box .t { font-size:16px; font-weight:800; margin-bottom:8px; }
+  .casc .box .m { font-size:14.5px; color:#b9b3aa; line-height:1.7; }
+  .arrow { align-self:center; font-size:26px; color:#c8a24b; }
+  /* scenario cards */
+  .scen { display:flex; gap:14px; margin-top:16px; }
+  .scen .card { flex:1; background:#16161c; border:1px solid #2c2c36; border-radius:11px; padding:16px 18px; text-align:left; }
+  .scen .card .t { font-size:16.5px; font-weight:800; margin-bottom:8px; color:#c8a24b; }
+  .scen .card .m { font-size:14px; color:#b9b3aa; line-height:1.7; }
+  /* cascade final */
+  .casc2 { display:flex; gap:14px; align-items:center; margin-top:14px; }
+  .casc2 .box { flex:1; background:#16161c; border:1px solid #2c2c36; border-radius:11px; padding:14px 18px; text-align:left; }
+  .casc2 .box .t { font-size:15.5px; font-weight:800; margin-bottom:6px; }
+  .casc2 .box .m { font-size:14px; color:#b9b3aa; }
+  .bignum { display:flex; gap:26px; margin-top:22px; }
+  .bignum .n { text-align:center; }
+  .bignum .n .v { font-size:44px; font-weight:800; color:#c8a24b; line-height:1; }
+  .bignum .n .k { font-size:14px; color:#b9b3aa; margin-top:7px; }
+  .foot { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); font-size:13px; color:#6b655c; }
 </style>
 </head>
 <body>
 <div id="stage">
 
-  <section class="scene" data-name="封面">
+  <!-- ========== 00 封面 ========== -->
+  <section class="scene" data-name="00 封面">
     <div class="kicker">L'ORÉAL HACKATHON · 赛题2 信任守护师</div>
     <h1>美妆图，<span class="accent">经得起追问</span>吗？</h1>
-    <div class="sub">BeautyProof —— 一张美妆图进去，一份带证据的信任结论出来。<br>下面 90 秒，看它怎么工作。</div>
-    <div style="margin-top:30px">
+    <div class="sub">BeautyProof —— 一张美妆图进去，一份带证据的信任结论出来。<br>下面 100 秒，看它怎么工作。</div>
+    <div style="margin-top:26px">
       <span class="pill">多模态取证</span><span class="pill">可解释 Agent</span>
-      <span class="pill">本域微调</span><span class="pill">开源可复现</span>
+      <span class="pill">双检测器级联</span><span class="pill">工具消融实证</span><span class="pill">开源可复现</span>
     </div>
   </section>
 
-  <section class="scene" data-name="输入">
+  <!-- ========== 01 输入 ========== -->
+  <section class="scene" data-name="01 输入">
     <div class="kicker">STEP 01 · 输入</div>
     <h2>一张<span class="gold">口红试色</span>图，丢进来</h2>
-    <div class="sub">可能是种草帖、评论区、或品牌素材。我们不知道它是拍的还是 AI 画的——<br>BeautyProof 的任务，就是给它一份「体检报告」。</div>
-    <div style="margin-top:28px;width:300px;height:200px;border-radius:16px;background:linear-gradient(135deg,#3a2030,#1b2733);display:flex;align-items:center;justify-content:center;font-size:64px;">💄</div>
+    <div class="sub">它可能是种草帖的配图、评论区截图、或品牌方投放的 AI 素材。<br>我们事先并不知道它是拍的还是 AI 画的——BeautyProof 要做的，就是给它一份<b style="color:#e89aa8">带证据的体检报告</b>。</div>
+    <div style="margin-top:24px;width:330px;height:210px;border-radius:16px;background:linear-gradient(135deg,#3a2030,#1b2733);display:flex;align-items:center;justify-content:center;font-size:66px;">💄</div>
+    <div class="sub" style="margin-top:16px;font-size:17px">同一条流水线，也接<span class="gold">评论区文本</span>和<span class="gold">跨平台溯源矩阵</span>——赛题三个场景，一条 Agent 走完。</div>
   </section>
 
-  <section class="scene" data-name="取证">
+  <!-- ========== 02 取证 ========== -->
+  <section class="scene" data-name="02 取证">
     <div class="kicker">STEP 02 · 取证</div>
     <h2>八件工具，各出一份证据</h2>
     <div class="tools" id="tools">
       <div class="tool"><span class="dot"></span>hash · 图片指纹</div>
       <div class="tool"><span class="dot"></span>c2pa · 出生证</div>
-      <div class="tool"><span class="dot"></span>ela · 篡改噪点</div>
-      <div class="tool"><span class="dot"></span>ocr · 抄字</div>
+      <div class="tool"><span class="dot"></span>ela · 局部编辑</div>
+      <div class="tool"><span class="dot"></span>spectral · 频域</div>
+      <div class="tool"><span class="dot"></span>ocr · 抄图上的字</div>
       <div class="tool"><span class="dot"></span>aigc · 整图AI(本域)</div>
-      <div class="tool"><span class="dot"></span>trufor · 局部篡改</div>
-      <div class="tool"><span class="dot"></span>text · 文案分析</div>
-      <div class="tool"><span class="dot"></span>crossmodal · 图文对得上</div>
+      <div class="tool"><span class="dot"></span>trufor · 篡改热力图</div>
+      <div class="tool"><span class="dot"></span>text / crossmodal · 图文</div>
     </div>
-    <div class="sub" style="margin-top:22px">统一证据格式 <code style="color:#c8a24b">{tool, observed, cannot_prove, evidence[]}</code> —— 可组合、可审计。</div>
+    <div class="sub" style="margin-top:20px">统一证据格式 <code style="color:#c8a24b">{tool, observed, cannot_prove, evidence[]}</code> —— 可组合、可审计。<br>注意最后两行：<span class="bad"> ela 对「整图 AI 生成」基本无反应</span>，所以本轮我们加了第 8 件——<span class="gold">频域工具</span>。</div>
   </section>
 
-  <section class="scene" data-name="判定">
-    <div class="kicker">STEP 03 · 判定</div>
-    <h2>规则引擎：四档定级</h2>
-    <div class="sub">Agent（planner）决定「下一步查什么」，规则引擎给出四档结论：<br><span class="gold">高危 / 可疑 / 可信 / 无法判定</span></div>
-    <div class="verdict" id="verdict">⬇ 正在定级…</div>
-  </section>
-
-  <section class="scene" data-name="报告">
-    <div class="kicker">STEP 04 · 人话报告</div>
-    <h2>普通人看得懂的结论</h2>
-    <div class="report">
-      <div>📌 <b>结论</b>：这张图高度疑似 AI 生成（整图合成），建议标记为「AI 内容」。</div>
-      <div>🔍 <b>依据</b>：aigc 本域模型 AI 概率 0.997；trufor 未检出局部篡改；c2pa 无可信出处。</div>
-      <div>❓ <b>说不清的</b>：无法确认具体生成器（即梦 / MJ / SD 难区分）。</div>
-      <div>✅ <b>建议</b>：高风险，发布前人工复核；可作为平台标注信号。</div>
+  <!-- ========== 03 三轴互补 ========== -->
+  <section class="scene" data-name="03 三轴互补">
+    <div class="kicker">STEP 03 · 关键设计 · 三轴互补</div>
+    <h2>不是堆工具，是<span class="gold">三条轴各管一件事</span></h2>
+    <div class="axes">
+      <div class="axis">
+        <div class="t">① 生成轴</div>
+        <div class="m">频域特征（高频能量 / 谱平坦度 / 方位角异常 / 残差峰度）+ AIGC 本域模型<br><b style="color:#f4f1ec">管「整张就是 AI 画的」</b></div>
+        <div class="z">失效：对局部 PS 篡改 0 反应（实测 0.15 / 0.000）</div>
+      </div>
+      <div class="axis">
+        <div class="t">② 篡改轴</div>
+        <div class="m">ELA + TruFor（CVPR 2023 热力图）<br><b style="color:#f4f1ec">管「图被局部改过」</b></div>
+        <div class="z">失效：对整图 AI 生成无反应（实测 0.350~0.411 全低）</div>
+      </div>
+      <div class="axis">
+        <div class="t">③ 内容 / 溯源轴</div>
+        <div class="m">OCR + 文案合规 + 图文交叉 + 跨平台水印比对<br><b style="color:#f4f1ec">管「话和图对不对得上、人从哪来的」</b></div>
+        <div class="z">生成器无关，是最稳的兜底防线</div>
+      </div>
     </div>
-    <div class="sub" style="margin-top:16px">LLM 解释层把结论翻成人话，但<b>只翻译、不下结论</b>——法官是规则引擎。</div>
+    <div class="sub" style="margin-top:18px">左右两轴<span class="bad">对彼此的失效场景完全沉默</span>——这不是巧合，是架构取舍的结果。</div>
   </section>
 
-  <section class="scene" data-name="翻车修复">
-    <div class="kicker">STEP 05 · 真实翻车 → 修复</div>
+  <!-- ========== 04 级联 ========== -->
+  <section class="scene" data-name="04 双检测器级联">
+    <div class="kicker">STEP 04 · 技术创新 · 双检测器级联</div>
+    <h2>两条独立证据一致，<span class="gold">才自动下架</span></h2>
+    <div class="casc">
+      <div class="box"><div class="t" style="color:#ff7a90">AIGC 本域模型</div><div class="m">弱：跨生成器 / 换风格就掉（跨生成器族零样本召回仅 66.7%）</div></div>
+      <div class="arrow">×</div>
+      <div class="box"><div class="t" style="color:#c8a24b">频域工具</div><div class="m">弱：重压 / 强锐化的真实图会误报（真实图误报 3/10）</div></div>
+      <div class="arrow">=</div>
+      <div class="box"><div class="t" style="color:#5fd08a">级联</div><div class="m">两条互相兜底：一条的短处正好是另一条的长处</div></div>
+    </div>
+    <div style="margin-top:22px">
+      <table class="t">
+        <tr><th>配置</th><th>AI 捕获率</th><th>自动下架误伤（20 张真实图）</th></tr>
+        <tr><td>只用 AIGC 模型</td><td>34/38 = 89.5%</td><td>0</td></tr>
+        <tr><td>只用频域工具</td><td>34/38 = 89.5%</td><td>0</td></tr>
+        <tr><td><b style="color:#5fd08a">两级联（生产配置）</b></td><td><b style="color:#5fd08a">36/38 = 94.7%</b></td><td><b style="color:#5fd08a">0</b></td></tr>
+      </table>
+    </div>
+    <div class="sub" style="margin-top:12px;font-size:17px">多捞回 2 张，<span class="good">误伤一张没多</span>。判罚：自动下架 = AIGC ≥ 0.99 <b>或</b>（AIGC ≥ 0.9 <b>且</b> 频域 ≥ 0.8）。</div>
+  </section>
+
+  <!-- ========== 05 消融 ========== -->
+  <section class="scene" data-name="05 消融表">
+    <div class="kicker">STEP 05 · 方法严谨 · 工具消融实证</div>
+    <h2>「编排有价值」这件事，<span class="gold">用数据证明</span></h2>
+    <div style="margin-top:6px">
+      <table class="t">
+        <tr><th>层</th><th>工具</th><th>AI 捕获</th><th>自动下架</th><th>真实误伤</th></tr>
+        <tr><td>T0</td><td>仅文件指纹 + 内容凭证</td><td>0.0%</td><td>0</td><td>0/20</td></tr>
+        <tr><td>T1</td><td>+ELA（篡改轴）</td><td>92.1%</td><td>0</td><td>0/20</td></tr>
+        <tr><td>T2</td><td>+AIGC 模型（单条生成轴）</td><td>97.4%</td><td>33</td><td>0/20</td></tr>
+        <tr><td>T3</td><td><b style="color:#5fd08a">+频域（两轴合并＝级联）</b></td><td><b style="color:#5fd08a">100%</b></td><td><b style="color:#5fd08a">34</b></td><td><b style="color:#5fd08a">0/20</b></td></tr>
+      </table>
+    </div>
+    <div class="sub" style="margin-top:14px">每一层严格包含上一层。<span class="gold">只堆工具</span>到 T2 就到顶了；<span class="gold">把两条轴合起来</span>才到 100%——编排本身是贡献，不是装饰。</div>
+  </section>
+
+  <!-- ========== 06 三场景 ========== -->
+  <section class="scene" data-name="06 三个场景">
+    <div class="kicker">STEP 06 · 功能完整性 · 赛题三个场景全中</div>
+    <h2>赛题点名的场景，<span class="gold">一个不落</span></h2>
+    <div class="scen">
+      <div class="card"><div class="t">① 种草内容核验</div><div class="m">8 工具图文流水线 + 合规法条引擎<br>6 段真实种草文案实测：1 命中违禁宣称 / 4 需核对特妆注册证 / 1 干净</div></div>
+      <div class="card"><div class="t">② 评论区真实性核验</div><div class="m">8 项特征：完全重复率 / 近似重复 / 短评率 / 无细节率 / 好评一致度 / 模板集中度 / 爆发性 / 跨帖重复<br>6 组合成案例方向命中 <b style="color:#5fd08a">6/6</b>，含账号画像</div></div>
+      <div class="card"><div class="t">③ AI 视觉素材鉴伪</div><div class="m">频域 + AIGC 双检测器级联<br>冻结池 38 张 AI / 20 张真实，捕获 94.7%、误伤 0</div></div>
+    </div>
+    <div class="sub" style="margin-top:16px">外加官方<span class="gold">点名加分项</span>：矩阵级异常（跨帖重复 / 一人多号）、跨平台跨内容溯源、虚假种草账号画像 —— 全部实现并留证据。</div>
+  </section>
+
+  <!-- ========== 07 合规 ========== -->
+  <section class="scene" data-name="07 合规法条引擎">
+    <div class="kicker">STEP 07 · 落地价值 · 合规法条引擎</div>
+    <h2>不只是「命中哪个词」，<span class="gold">而是违的是第几条、罚多少</span></h2>
+    <div style="margin-top:8px">
+      <table class="t">
+        <tr><th>法条</th><th>要点</th><th>处罚区间</th></tr>
+        <tr><td>化妆品监督管理条例 第 16 条</td><td>化妆品功效宣称应有充分的科学依据</td><td>20~100 万元</td></tr>
+        <tr><td>化妆品监督管理条例 第 22 条</td><td>特殊化妆品须注册，禁止未注册即宣称特殊功效</td><td>20~100 万元</td></tr>
+        <tr><td>化妆品监督管理条例 第 37 条</td><td>禁止明示/暗示医疗作用</td><td>20~100 万元</td></tr>
+        <tr><td>广告法 第 9 / 17 / 28 条</td><td>禁用绝对化用语、非医疗不得涉疾病、虚假广告</td><td>广告费用 3~5 倍，最高 200 万</td></tr>
+        <tr><td>反不正当竞争法 第 8 条</td><td>虚假或引人误解的商业宣传</td><td>20~100 万元；情节严重 100~200 万</td></tr>
+      </table>
+    </div>
+    <div class="sub" style="margin-top:14px">每条都附<span class="gold">公开可核验的真实处罚案例</span>与 gov.cn 原文链接。实测 6 段真实文案：1 段命中违禁宣称、4 段需核对特妆注册证、1 段干净——<span class="good">真实内容不是一片假，这组数字恰好证明我们不乱报</span>。</div>
+  </section>
+
+  <!-- ========== 08 翻车史 ========== -->
+  <section class="scene" data-name="08 翻车→修复">
+    <div class="kicker">STEP 08 · 团队维度 · 真实翻车与修复</div>
     <h2>通用模型不准？我们为美妆<span class="gold">重训</span></h2>
-    <div class="sub">起初用通用 AIGC 检测器，真实精修美妆图被误判为 AI 的比例高达 <b style="color:#ff7a90">66.2%</b>。<br>用 74 张真实图 + 20 张即梦图本域微调后 ——</div>
+    <div class="sub">起初用通用 AIGC 检测器，真实精修美妆图被误判为 AI 的比例高达 <b class="bad">66.2%</b>。<br>用 74 张真实图 + 20 张即梦图本域微调 MobileNetV3 后 ——</div>
     <div class="chart">
-      <div class="bar"><div class="lbl">重训前 误报</div><div class="track"><div class="fill bad" data-w="66" id="f1">66.2%</div></div></div>
-      <div class="bar"><div class="lbl">重训后 误报</div><div class="track"><div class="fill good" data-w="1.4" id="f2">1.4%</div></div></div>
+      <div class="bar"><div class="lbl">重训前 · 真实图误报</div><div class="track"><div class="fill bad" data-w="66">66.2%</div></div></div>
+      <div class="bar"><div class="lbl">重训后 · 真实图误报</div><div class="track"><div class="fill good" data-w="1.4">1.4%</div></div></div>
+      <div class="bar"><div class="lbl">跨生成器零样本召回</div><div class="track"><div class="fill gold" data-w="66">66.7%</div></div></div>
     </div>
-    <div class="sub" style="margin-top:14px">AI 召回保持 <b class="gold">100%</b>（即梦域），v1 留作兜底。</div>
+    <div class="sub" style="margin-top:12px">我们还<span class="bad">主动归档了两个失败的模型</span>：v5 加了新人标真实图，跨生成器召回反而从 66.7% 掉到 58.3%；v7 加了 20 张滤镜自拍，滤镜误报倒是从 2/10 降到 1/10，但跨生成器召回掉到 33.3% —— 两个都不满足晋升口径，<span class="gold">生产模型继续用 v4</span>。</div>
   </section>
 
-  <section class="scene" data-name="结尾">
+  <!-- ========== 09 边界 ========== -->
+  <section class="scene" data-name="09 诚实边界">
+    <div class="kicker">STEP 09 · 可信度来源 · 我们主动说的短板</div>
+    <h2>把短板写进报告，<span class="gold">反而更可信</span></h2>
+    <div class="axes">
+      <div class="axis" style="border-top-color:#ff7a90">
+        <div class="t">跨生成器泛化没彻底解决</div>
+        <div class="m">v4 在「已知风格」held-out 上召回 100%，但对 12 张全新风格的 ImageGen 直出图只有 66.7%。<br><b style="color:#5fd08a">对策：频域做生成器无关兜底 + 此类风格默认转人工。</b></div>
+      </div>
+      <div class="axis" style="border-top-color:#ff7a90">
+        <div class="t">评论区 / 溯源是自建合成集</div>
+        <div class="m">6/6、5/5 的方向命中只证明「两种设定的模式能分开」，<b>不能</b>当真实场景准确率。<br>真实评论标注集仍缺失。</div>
+      </div>
+      <div class="axis" style="border-top-color:#ff7a90">
+        <div class="t">MJ / SD / Flux 样本太少</div>
+        <div class="m">目前只有 4 张训练 + 1 张冻结，跨生成器结论仍有样本量限制。<br><b style="color:#5fd08a">分数非法律结论，高风险必人工复核。</b></div>
+      </div>
+    </div>
+    <div class="sub" style="margin-top:16px">下一条 slide，我们给这些短板配上<span class="gold">可执行的商业数字</span>。</div>
+  </section>
+
+  <!-- ========== 10 结尾 ========== -->
+  <section class="scene" data-name="10 结尾">
     <div class="kicker">BEAUTYPROOF</div>
     <h1>让每一张美妆图<br><span class="accent">都经得起追问</span></h1>
-    <div class="sub">TruFor 篡改定位（鲁棒）+ 图文交叉验证 是主防线；<br>整图 AI 判定主动说「校准中 + 高风险人工复核」。</div>
-    <div class="demo-link">在线实测 Demo：<a href="https://beautyproof-demo.app.workbuddy.host/" target="_blank">beautyproof-demo.app.workbuddy.host</a></div>
+    <div class="sub">108 项测试 · 8 件工具 · 三条独立证据轴 · 双检测器级联 94.7% / 误伤 0<br>纯 CPU 可跑、全开源、数据自产 —— 欢迎评委实测在线 Demo。</div>
+    <div class="demo-link" style="margin-top:22px"><a href="https://beautyproof-demo.app.workbuddy.host/">beautyproof-demo.app.workbuddy.host</a></div>
   </section>
 
 </div>
 
 <div id="bar"><i></i></div>
-<div class="step" id="step">1 / 7</div>
+<div class="step" id="step"></div>
 <div id="nav">
-  <button id="prev">◀ 上一步</button>
-  <button id="play">⏸ 暂停</button>
-  <button id="next">下一步 ▶</button>
+  <button id="prev">◀ 上一屏</button>
+  <button id="play">▶ 自动播放</button>
+  <button id="next">下一屏 ▶</button>
 </div>
 
 <script>
-  const scenes = [...document.querySelectorAll('.scene')];
-  let idx = 0, timer = null, playing = true;
-  const DUR = 5200;
-  const bar = document.querySelector('#bar > i');
-  const stepEl = document.getElementById('step');
+(function(){
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  var idx = 0, timer = null, playing = false;
+  var DUR = [7, 11, 13, 15, 13, 13, 14, 15, 15, 9];  // per-scene seconds
 
-  function animateChart(){
-    document.querySelectorAll('.fill').forEach(f=>{ f.style.width = f.dataset.w + '%'; });
-  }
-  function resetChart(){
-    document.querySelectorAll('.fill').forEach(f=>{ f.style.width = '0%'; });
-  }
-  function animateTools(){
-    const ts = document.querySelectorAll('#tools .tool');
-    ts.forEach((t,i)=> setTimeout(()=> t.classList.add('done'), 250*(i+1)));
-  }
-  function resetTools(){
-    document.querySelectorAll('#tools .tool').forEach(t=> t.classList.remove('done'));
-  }
-  function setVerdict(){
-    const v = document.getElementById('verdict');
-    v.textContent = '⚠ 高危（high_risk）：高度疑似 AI 生成';
-    v.classList.add('ok'); // keep red style intentionally via class but show text
-    v.style.background = '#3a1414'; v.style.borderColor='#e11d48'; v.style.color='#ff9aae';
+  function setBar(){
+    var bar = document.querySelector('#bar > i');
+    bar.style.width = ((idx + 1) / scenes.length * 100) + '%';
+    document.getElementById('step').textContent =
+      (idx + 1) + ' / ' + scenes.length + '  ·  ' + scenes[idx].dataset.name;
   }
 
-  function show(i){
-    scenes.forEach(s=>s.classList.remove('active'));
+  function activate(){
+    scenes.forEach(function(s, i){
+      s.classList.toggle('active', i === idx);
+      // replay inner animations
+      s.querySelectorAll('.fill').forEach(function(f){ f.style.width = '0'; });
+    });
+    var cur = scenes[idx];
+    // tool dots stagger
+    var dots = cur.querySelectorAll('.tool');
+    dots.forEach(function(d, i){
+      var hot = (d.textContent.indexOf('ela') >= 0 || d.textContent.indexOf('spectral') >= 0);
+      d.classList.remove('done', 'hot');
+      if (hot) { d.classList.add('hot'); }
+      setTimeout(function(){ d.classList.add('done'); }, 240 * i + 160);
+    });
+    // bars
+    cur.querySelectorAll('.fill').forEach(function(f, i){
+      var w = parseFloat(f.dataset.w);
+      setTimeout(function(){ f.style.width = w + '%'; }, 300 + i * 260);
+    });
+    setBar();
+  }
+
+  function go(i){
     idx = (i + scenes.length) % scenes.length;
-    const s = scenes[idx];
-    s.classList.add('active');
-    stepEl.textContent = (idx+1) + ' / ' + scenes.length;
-    // reset & trigger animations per scene
-    resetChart(); resetTools();
-    document.getElementById('verdict').textContent = '⬇ 正在定级…';
-    if(s.dataset.name === '取证') animateTools();
-    if(s.dataset.name === '翻车修复') setTimeout(animateChart, 400);
-    if(s.dataset.name === '判定') setTimeout(setVerdict, 600);
-    restartBar();
+    activate();
   }
-  function restartBar(){
-    bar.style.transition='none'; bar.style.width='0%';
-    requestAnimationFrame(()=>{ bar.style.transition='width '+(DUR/1000)+'s linear'; bar.style.width='100%'; });
+
+  function tick(){
+    go(idx + 1);
+    if (idx === 0 && playing) { /* loop */ }
   }
-  function next(){ show(idx+1); }
-  function tick(){ if(playing) next(); }
-  function schedule(){ clearInterval(timer); timer = setInterval(tick, DUR); }
-  document.getElementById('next').onclick = ()=>{ show(idx+1); schedule(); };
-  document.getElementById('prev').onclick = ()=>{ show(idx-1); schedule(); };
-  document.getElementById('play').onclick = (e)=>{
-    playing = !playing; e.target.textContent = playing ? '⏸ 暂停' : '▶ 播放';
-    if(playing) schedule(); else clearInterval(timer);
-  };
-  document.addEventListener('keydown', e=>{
-    if(e.key==='ArrowRight'){ show(idx+1); schedule(); }
-    if(e.key==='ArrowLeft'){ show(idx-1); schedule(); }
+
+  function play(){
+    playing = true;
+    document.getElementById('play').textContent = '❚❚ 暂停';
+    activate();
+    timer = setInterval(function(){
+      var cur = scenes[idx];
+      var el = cur.querySelector('.fill');
+      var done = Array.prototype.every.call(
+        cur.querySelectorAll('.tool'), function(d){ return d.classList.contains('done'); }) &&
+        Array.prototype.every.call(cur.querySelectorAll('.fill'), function(f){ return f.style.width !== '0px' && f.style.width !== ''; });
+      if (done) { go(idx + 1); } else { activate(); }
+    }, 1000);
+  }
+  function pause(){
+    playing = false;
+    document.getElementById('play').textContent = '▶ 自动播放';
+    clearInterval(timer);
+  }
+
+  document.getElementById('next').onclick = function(){ pause(); go(idx + 1); };
+  document.getElementById('prev').onclick = function(){ pause(); go(idx - 1); };
+  document.getElementById('play').onclick = function(){ playing ? pause() : play(); };
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ') { pause(); go(idx + 1); }
+    if (e.key === 'ArrowLeft') { pause(); go(idx - 1); }
   });
-  show(0); schedule();
+
+  activate();
+})();
 </script>
 </body>
 </html>
