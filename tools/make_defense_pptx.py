@@ -189,6 +189,44 @@ def new():
     return prs.slides.add_slide(BLANK)
 
 
+def _is_content(el):
+    """判断 spTree 子节点是否为可见内容（sp/pic/graphicFrame/grpSp/cxnSp）。"""
+    return el.tag.split("}")[-1] in ("sp", "pic", "graphicFrame", "grpSp", "cxnSp")
+
+
+def full_bleed_bg(slide, rel_path, darken=6200, tint=DARK):
+    """把一张 16:9 配图铺满整页作最底层背景，并在其上、原有内容之下盖一层半透明遮罩。
+
+    只新增两个 shape，绝不移动 / 改写任何已有 shape —— 页面文案与版式结构保持原样。
+    z-order：picture < mask < 原有文字。
+    darken：遮罩不透明度，取值 0–100000（6200 = 62%）。
+    """
+    pic = slide.shapes.add_picture(os.path.join(ROOT, rel_path), 0, 0, SW, SH)
+    mask = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, SW, SH)
+    mask.fill.solid()
+    mask.fill.fore_color.rgb = tint
+    mask.line.fill.background()
+    try:
+        mask.shadow.inherit = False
+    except Exception:
+        pass
+    # 注入 alpha，让遮罩半透明
+    solid_fill = mask.fill._xPr.find(qn("a:solidFill"))
+    srgb = solid_fill.find(qn("a:srgbClr")) if solid_fill is not None else None
+    if srgb is not None:
+        alpha = srgb.makeelement(qn("a:alpha"), {})
+        alpha.set("val", str(int(darken)))
+        srgb.append(alpha)
+
+    sp = slide.shapes._spTree
+    idx = next((i for i, ch in enumerate(sp) if _is_content(ch)), len(sp))
+    sp.remove(pic._element)
+    sp.remove(mask._element)
+    sp.insert(idx, pic._element)      # 图片打底
+    sp.insert(idx + 1, mask._element)  # 遮罩压在图片上、原内容下
+    return pic, mask
+
+
 # ---------------------------------------------------------------- commercial numbers
 COMM = {"ok": False}
 _cn = os.path.join(ROOT, "results", "commercial_numbers.json")
@@ -219,7 +257,10 @@ def conf(i, default="待补"):
 
 
 # ================================================================ Slide 1 · 封面
+# 主视觉配图 = docs/assets/cover_main.jpg（16:9 深色取证风：精华瓶+口红 + 频谱扫描线）
+# 图片置于最底层 + 62% 深色遮罩，左侧文字可读性不变；原有文本框位置字号一字未改。
 s = new(); bg(s, DARK)
+full_bleed_bg(s, os.path.join("docs", "assets", "cover_main.jpg"), darken=6400)
 rect(s, 0, Inches(2.55), SW, Inches(0.06), GOLD)
 textbox(s, Inches(0.9), Inches(1.45), Inches(11.5), Inches(1.1),
         "BeautyProof", size=50, bold=True, color=LIGHT)
@@ -648,7 +689,10 @@ add_table(s, [
     col_w=[0.09, 0.27, 0.26, 0.38])
 
 # ================================================================ Slide 20 · 结尾
+# 主视觉配图 = docs/assets/closing_main.jpg（放大镜 + 美妆罐微距 + 校验环）
+# 与封面同源同风格（同批次生成、同一套配色），呼应「追问」主题。
 s = new(); bg(s, DARK)
+full_bleed_bg(s, os.path.join("docs", "assets", "closing_main.jpg"), darken=6600)
 rect(s, 0, Inches(3.4), SW, Inches(0.06), GOLD)
 textbox(s, Inches(0.9), Inches(2.2), Inches(11.5), Inches(1.1),
         "让每一张美妆图，都经得起追问", size=34, bold=True, color=LIGHT)
