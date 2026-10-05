@@ -31,7 +31,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import aigc_tool  # noqa: E402
 import cascade_eval as ce  # noqa: E402
 import ela_tool  # noqa: E402
 import hash_tool  # noqa: E402

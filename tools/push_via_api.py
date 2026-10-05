@@ -17,14 +17,39 @@
 import base64
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
 
 REPO = "566614/loreal-hackathon-beautyproof"
-GH = r"C:/Users/Lenovo/.workbuddy/binaries/gh/bin/gh.exe"
-GIT = r"C:/Program Files/Git/cmd/git.exe"
+def _find_exe(env_var, name, *fallbacks, hint=""):
+    """三级定位可执行文件：环境变量 > 标准 PATH > 本机兜底路径（存在才用）。
+
+    写死绝对路径会让脚本换机即废；这里既保证本机行为不变，又让换机的人有明确出路。
+    """
+    p = os.environ.get(env_var)
+    if p and os.path.isfile(p):
+        return p
+    found = shutil.which(name)
+    if found:
+        return found
+    for fb in fallbacks:
+        if os.path.isfile(fb):
+            return fb
+    raise SystemExit(
+        f"找不到 {name} 可执行文件。请任选一种方式配置：\n"
+        f"  1) 设置环境变量 {env_var}=<{name} 的完整路径>\n"
+        f"  2) 把 {name} 加入 PATH 后重试\n"
+        f"{('  ' + hint) if hint else ''}"
+    )
+
+
+GH = _find_exe("BEAUTYPROOF_GH", "gh",
+               hint="（GitHub CLI：https://cli.github.com）")
+GIT = _find_exe("BEAUTYPROOF_GIT", "git", r"C:/Program Files/Git/cmd/git.exe",
+                hint="（Git for Windows 或系统自带 git）")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = dict(os.environ)

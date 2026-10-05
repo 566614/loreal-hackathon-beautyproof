@@ -19,6 +19,7 @@
     P 过的应该至少判「可疑」，原图应该是「无法判定」。
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -28,7 +29,9 @@ TOOLS = REPO / "tools"
 MANIFEST = REPO / "data" / "manifest.json"
 RESULTS = REPO / "results"
 
-PY = "C:/Users/Lenovo/.workbuddy/binaries/python/envs/default/Scripts/python.exe"
+# 子脚本用「跑本脚本的那个解释器」执行，避免写死某台机器的 python 路径。
+# 正常用法是 ./run.sh tools/batch_run.py，此时 sys.executable 就是项目 venv 的 python。
+PY = os.environ.get("BEAUTYPROOF_PYTHON") or sys.executable
 
 
 def run_tool(script, img_path):

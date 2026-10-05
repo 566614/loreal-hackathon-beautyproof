@@ -14,7 +14,6 @@
 幂等：目录已存在则跳过。
 """
 import json
-import shutil
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path

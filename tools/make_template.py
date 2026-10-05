@@ -1,10 +1,13 @@
 # 生成给队友A的 Excel 填表模板（防呆版：下拉选择，不用手打）
 # 阮不用看懂这个脚本，跑一次就生成 data/数据登记表_模板.xlsx
+from pathlib import Path
+
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 
-OUT = r"C:/Users/Lenovo/WorkBuddy/黑客松/loreal-hackathon-beautyproof/data/数据登记表_模板.xlsx"
+# 输出到仓库内 data/，由本文件位置推导，换机 / 换 clone 路径都不会写错地方
+OUT = Path(__file__).resolve().parent.parent / "data" / "数据登记表_模板.xlsx"
 
 wb = Workbook()
 ws = wb.active

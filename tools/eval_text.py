@@ -117,7 +117,7 @@ def main():
             print(f"      期望 风险={r['expected']['risk_level']} "
                   f"冲突={r['expected']['conflict_level']} "
                   f"宣称≥{r['expected']['claim_high_min']}/{r['expected']['claim_medium_min']}")
-    print(f"\n已保存到: results/text_eval.json")
+    print("\n已保存到: results/text_eval.json")
     return 0 if summary["risk_direction_rate"] == 1.0 else 1
 
 

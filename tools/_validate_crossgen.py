@@ -27,7 +27,7 @@
     打印 "no images found, skipping run" 并正常退出（exit 0），不报错、不假跑。
 
 运行（务必用项目 venv python）：
-    C:/Users/Lenovo/.workbuddy/binaries/python/envs/default/Scripts/python.exe tools/_validate_crossgen.py
+    ./run.sh tools/_validate_crossgen.py
     # 可选：再跑一遍完整流水线拿综合判定（含 TruFor，较慢）
     ...python.exe tools/_validate_crossgen.py --full
 

@@ -37,7 +37,6 @@
 """
 import json
 import re
-import statistics
 import sys
 from pathlib import Path
 

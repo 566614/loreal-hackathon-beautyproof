@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """探测新网络环境：HuggingFace 直连 / 代理 7897 分别能不能通。"""
-import json
-import os
 import time
 import urllib.request
 

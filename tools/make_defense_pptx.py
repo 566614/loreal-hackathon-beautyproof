@@ -299,7 +299,7 @@ header(s, "为什么这件事值得做", "数据口径见 docs/商业数字调�
 add_table(s, [
     ["受害方", "痛点", "可引用的规模数字（2025 全年口径）"],
     ["消费者", "看不出真假的「完美脸」诱导下单 → 花冤枉钱",
-     f"用户怀疑小红书笔记真实性的比例 45%（2023）→ 78%（2025）"],
+     "用户怀疑小红书笔记真实性的比例 45%（2023）→ 78%（2025）"],
     ["品牌方", "信任资产被虚假种草 / 仿冒素材悄悄侵蚀",
      f"全渠道交易额 {num('N1', 'market', '11042.45')} 亿元/年（同比 +2.83%）"],
     ["平台 / 监管", "虚假种草治理靠人肉，投诉才处理，滞后且不可逆",
@@ -341,7 +341,7 @@ caps = ["图 / 图文帖 / 评论区", "hash·c2pa·spectral\nela·ocr·aigc\ntr
 bw, bh, top = Inches(2.18), Inches(1.35), Inches(3.15)
 left0 = Inches(0.5)
 gap = Inches(0.26)
-for i, (lb, cp) in enumerate(zip(labels, caps)):
+for i, (lb, cp) in enumerate(zip(labels, caps, strict=True)):
     l = left0 + i * (bw + gap)
     rect(s, l, top, bw, bh, PANEL2 if i % 2 == 0 else RGBColor(0x2A, 0x2A, 0x33),
          line=GOLD, line_w=Pt(1.2))

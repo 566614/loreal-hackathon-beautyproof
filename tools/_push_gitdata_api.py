@@ -7,11 +7,16 @@ Replicates `git status --porcelain` entries into one commit:
 import base64
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-GH = r"C:/Users/Lenovo/.workbuddy/binaries/gh/bin/gh.exe"
+# 定位 gh：环境变量 > 标准 PATH > 本机兜底（仅当该路径确实存在时使用）。
+# 写死绝对路径会让这个兜底脚本换机即废，故保留兜底但降级为最后一级。
+GH = (os.environ.get("BEAUTYPROOF_GH")
+      or shutil.which("gh")
+      or r"C:/Users/Lenovo/.workbuddy/binaries/gh/bin/gh.exe")
 
 
 def env():

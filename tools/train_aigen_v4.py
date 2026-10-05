@@ -195,9 +195,9 @@ def main():
     (REPO / "results" / "aigen_finetune_v4.json").write_text(
         json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"\n=== 验证集混淆 (AI=正类) ===", flush=True)
+    print("\n=== 验证集混淆 (AI=正类) ===", flush=True)
     print(f"  TP={cm['tp']} FN={cm['fn']} FP={cm['fp']} TN={cm['tn']}  acc={val_acc:.3f}", flush=True)
-    print(f"=== 跨生成器召回（data/ai_cross, held-out）===", flush=True)
+    print("=== 跨生成器召回（data/ai_cross, held-out）===", flush=True)
     print(f"  {cross_hit}/{cross_total} = {cross_recall:.3f}" if cross_recall is not None
           else "  无跨生成器样本", flush=True)
     print(f"已保存 {OUT_DIR}/model.pt  与 results/aigen_finetune_v4.json", flush=True)

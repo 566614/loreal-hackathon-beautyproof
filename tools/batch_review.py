@@ -328,7 +328,7 @@ def main():
         print(f"[提示] 目录里没找到图片: {folder}")
         return 1
 
-    print(f"=== BeautyProof 批量审核 ===")
+    print("=== BeautyProof 批量审核 ===")
     print(f"目录 : {folder}")
     print(f"图片 : 共 {len(images)} 张  | 模式: {'fast(跳AIGC/OCR)' if args.fast else 'full(全套)'}")
     print(f"输出 : {run_dir}")
@@ -416,7 +416,7 @@ def main():
     html = build_html(results, run_meta)
     (run_dir / "index.html").write_text(html, encoding="utf-8")
 
-    print(f"\n=== 完成 ===")
+    print("\n=== 完成 ===")
     print(f"  总张数 {totals['total']} | 高风险 {totals['high_risk']} | 可疑 {totals['suspicious']} "
           f"| 可信 {totals['credible']} | 无法判定 {totals['inconclusive']} | 失败 {totals['failed']}")
     print(f"  需人工复核合计：{totals['needs_review']} 张")

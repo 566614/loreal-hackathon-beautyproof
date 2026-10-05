@@ -240,9 +240,9 @@ def main():
     (REPO / "results" / "aigen_finetune_v6.json").write_text(
         json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"\n=== 验证集混淆 (AI=正类) ===", flush=True)
+    print("\n=== 验证集混淆 (AI=正类) ===", flush=True)
     print(f"  TP={cm['tp']} FN={cm['fn']} FP={cm['fp']} TN={cm['tn']}  acc={val_acc:.3f}", flush=True)
-    print(f"=== 跨生成器零样本召回 ===", flush=True)
+    print("=== 跨生成器零样本召回 ===", flush=True)
     print(f"  ai_cross_native:      {cross_hit}/{cross_total} = {cross_recall:.3f}"
           if cross_recall is not None else "  ai_cross_native: 无样本", flush=True)
     print(f"  ai_mj_sd_flux_heldout:{newgen_hit}/{newgen_total} = {newgen_recall:.3f}"

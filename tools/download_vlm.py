@@ -10,7 +10,7 @@
       不能用 transformers(torch) 那条路（实测 0.5~2 tok/s，慢到不可用）
 
 运行环境（本机已具备，无需额外安装）：
-    · Ollama 0.32.6 已装在 C:/Users/Lenovo/AppData/Local/Programs/Ollama
+    · Ollama 装在默认位置（C:/Users/<你的用户名>/AppData/Local/Programs/Ollama）
     · 它内部自带完整 llama.cpp：lib/ollama/llama-server.exe + libmtmd.dll（多模态）
       → 不需要去 GitHub 下 llama.cpp，直接复用现成的
 

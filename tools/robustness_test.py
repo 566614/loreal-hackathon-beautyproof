@@ -316,7 +316,7 @@ def render_report(results):
                      f"均值 {sum(tamper_scores) / len(tamper_scores):.4f}")
     if down_rows:
         down_rows.sort()
-        lines.append(f"- 分数下降最多的 3 次扰动：" + "；".join(f"{lab}（{skey} {d:+.4f}）" for d, skey, lab in down_rows[:3]))
+        lines.append("- 分数下降最多的 3 次扰动：" + "；".join(f"{lab}（{skey} {d:+.4f}）" for d, skey, lab in down_rows[:3]))
     lines.append("")
 
     lines.append("## 结论与答辩口径")

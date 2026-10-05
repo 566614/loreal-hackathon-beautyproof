@@ -15,7 +15,6 @@
 产出：
     data/formal_eval_manifest.json（版本固定、可提交、可被评测命令重新生成）
 """
-import hashlib
 import json
 import sys
 from pathlib import Path

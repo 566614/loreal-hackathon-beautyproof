@@ -309,7 +309,9 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         with Image.open(image_path) as im:
             im.verify()
     except Exception as e:  # noqa: BLE001
-        raise ValueError(f"这不是一张能被识别的图片：{image_path.name}（{type(e).__name__}）")
+        raise ValueError(
+            f"这不是一张能被识别的图片：{image_path.name}（{type(e).__name__}）"
+        ) from e
 
     stem = image_path.stem
     info = image_info(image_path)  # 提前拿到格式/尺寸，Agent 要用它做判断

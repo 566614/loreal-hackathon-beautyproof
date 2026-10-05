@@ -89,13 +89,13 @@ def extract_frames(video_path, fps_sample=1.0, max_frames=30, frames_dir=None):
     """
     try:
         import cv2
-    except ImportError:
+    except ImportError as exc:
         raise RuntimeError(
-            "未检测到 opencv（cv2）。请先用项目 venv 的 pip 安装：\n"
-            "  C:/Users/Lenovo/.workbuddy/binaries/python/envs/default/Scripts/pip.exe "
-            "install opencv-python-headless\n"
+            "未检测到 opencv（cv2）。请用项目隔离环境装：\n"
+            "  ./run.sh -m pip install opencv-python-headless\n"
+            f"（等价于：\"{sys.executable}\" -m pip install opencv-python-headless）\n"
             "（绝不要用系统 pip 或全局安装）"
-        )
+        ) from exc
 
     video_path = Path(video_path).resolve()
     if not video_path.exists():

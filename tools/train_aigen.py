@@ -332,11 +332,11 @@ def main():
     (res_dir / "aigen_finetune.json").write_text(
         json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"\n=== 验证集混淆 (AI=正类) ===", flush=True)
+    print("\n=== 验证集混淆 (AI=正类) ===", flush=True)
     print(f"  TP(AI→AI)={cm['tp']}  FN(AI→REAL)={cm['fn']}  "
           f"FP(REAL→AI)={cm['fp']}  TN(REAL→REAL)={cm['tn']}", flush=True)
     print(f"  验证集准确率 = {val_acc:.3f}", flush=True)
-    print(f"\n=== 全量逐图 ai_prob（前 8 / 后 8）===")
+    print("\n=== 全量逐图 ai_prob（前 8 / 后 8）===")
     for r in full[:8]:
         print(f"  {r['ai_prob']:.3f}  {r['label']:4s}  {r['file']}")
     print("  ...")

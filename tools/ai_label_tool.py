@@ -88,7 +88,7 @@ def _ocr_lines(image_path):
     ocr = _ocr(image_path)
     lines = []
     for res in ocr.predict(str(image_path)):
-        for text, score, poly in zip(res["rec_texts"], res["rec_scores"], res["rec_polys"]):
+        for text, score, poly in zip(res["rec_texts"], res["rec_scores"], res["rec_polys"], strict=True):
             xs = [float(p[0]) for p in poly]
             ys = [float(p[1]) for p in poly]
             lines.append({

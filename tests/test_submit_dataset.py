@@ -10,7 +10,6 @@
     ③ 本测试的断言对象是**落盘的 zip**，不是源码 —— 保证评委拿到的那个包是齐的。
 """
 import re
-import sys
 import zipfile
 from pathlib import Path
 

@@ -39,7 +39,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from spectral_tool import FEATURE_KEYS, extract_features, score_from_features  # noqa: E402
+from spectral_tool import FEATURE_KEYS, extract_features  # noqa: E402
 
 IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 SPLIT_SEED = 20261002
@@ -214,7 +214,7 @@ def main():
             "weight": round(abs(float(w[j])), 4),
             "signed_weight": round(float(w[j]), 4),
         }
-    print(f"   逻辑回归权重: " + json.dumps({k: calib_features[k]['signed_weight'] for k in keys}, ensure_ascii=False))
+    print("   逻辑回归权重: " + json.dumps({k: calib_features[k]['signed_weight'] for k in keys}, ensure_ascii=False))
 
     def prob(rows):
         X = (build(rows) - mu) / sd

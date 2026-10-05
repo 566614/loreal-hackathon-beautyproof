@@ -28,6 +28,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -66,8 +67,22 @@ def _to_data_uri(path: Path, max_side: int = 380, quality: int = 80) -> str | No
     return image_to_base64(path, max_side=max_side, quality=quality)
 
 
+_STEM_RE = re.compile(r"^[A-Za-z0-9_.\-]{1,128}$")
+
+
+def _safe_stem(stem) -> bool:
+    """只允许字母 / 数字 / 下划线 / 点 / 横线（防目录穿越，纵深防御）。
+
+    放在 load_analysis 里即可一次覆盖本文件所有读结果端点
+    （/api/review/<stem>、/api/review POST、队列相关接口）。
+    """
+    return bool(_STEM_RE.match(stem or ""))
+
+
 def load_analysis(stem: str) -> dict | None:
     """读 outputs/analysis_<stem>.json，补上中文风险档位与定位图缩略。"""
+    if not _safe_stem(stem):
+        return None
     f = OUTPUTS / f"analysis_{stem}.json"
     if not f.exists():
         return None
@@ -217,6 +232,9 @@ def post_review():
 @app.get("/api/report/<stem>")
 def report(stem):
     """导出该图 PDF（复用 tools/export_pdf.py），失败则回退 Markdown 预览。"""
+    if not _safe_stem(stem):
+        return jsonify({"error": "未找到该图的报告"}), 404
+    err = None   # 显式初始化：原写法 `err if 'err' in dir() else ''` 靠运行时自省探测变量是否存在
     md_path = REPORTS / f"report_{stem}.md"
     if not md_path.is_file():
         return jsonify({"error": f"未找到该图的报告：reports/report_{stem}.md"}), 404
@@ -246,7 +264,7 @@ def report(stem):
     return Response(
         text,
         mimetype="text/markdown; charset=utf-8",
-        headers={"X-Pdf-Export": "failed", "X-Pdf-Error": (err if 'err' in dir() else "")},
+        headers={"X-Pdf-Export": "failed", "X-Pdf-Error": (err or "")},
     )
 
 

@@ -19,6 +19,7 @@
     GET  /api/job/<id>     轮询任务进度与结果
 """
 import json
+import re
 import sys
 import threading
 import traceback
@@ -40,6 +41,31 @@ UPLOADS.mkdir(exist_ok=True)
 
 JOBS = {}          # job_id -> {status, steps, result, error}
 JOBS_LOCK = threading.Lock()
+
+# 任务结果里存着完整 analysis（含原图 data URI，单个可达数 MB）。
+# 演示时长跑或接口被反复调用时 JOBS 会无限增长，故设上限并淘汰最旧的已完结任务。
+MAX_JOBS = 64
+
+
+def _prune_jobs():
+    """把 JOBS 压到 MAX_JOBS 以内：先淘汰已完结的，仍超限再按插入顺序淘汰最旧的。"""
+    with JOBS_LOCK:
+        if len(JOBS) <= MAX_JOBS:
+            return
+        for k in [k for k, v in JOBS.items() if v["status"] != "running"]:
+            JOBS.pop(k, None)
+            if len(JOBS) <= MAX_JOBS:
+                return
+        while len(JOBS) > MAX_JOBS:
+            JOBS.pop(next(iter(JOBS)), None)   # dict 保序 → 即最旧
+
+
+_STEM_RE = re.compile(r"^[A-Za-z0-9_.\-]{1,128}$")
+
+
+def _safe_stem(stem) -> bool:
+    """只允许字母 / 数字 / 下划线 / 点 / 横线，长度 1~128（防目录穿越，纵深防御）。"""
+    return bool(_STEM_RE.match(stem or ""))
 
 RISK_ZH = {
     "high_risk": "高风险",
@@ -97,10 +123,15 @@ def samples():
 
 @app.get("/api/sample/<stem>")
 def sample(stem):
+    if not _safe_stem(stem):
+        return jsonify({"error": "sample not found"}), 404
     f = REPO / "outputs" / f"analysis_{stem}.json"
     if not f.exists():
         return jsonify({"error": "sample not found"}), 404
-    data = json.loads(f.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return jsonify({"error": f"结果文件损坏或不可读：{type(exc).__name__}"}), 500
     # 兜底：老结果里没有工具说明和中文档位，这里补上，免得页面上卡片描述空白
     data.setdefault("tool_meta", pipeline.TOOL_META)
     lvl = data.get("verdict", {}).get("risk_level", "")
@@ -133,18 +164,25 @@ def analyze():
     job_id = uuid.uuid4().hex[:12]
     with JOBS_LOCK:
         JOBS[job_id] = {"status": "running", "steps": [], "result": None, "error": None}
+    _prune_jobs()
     threading.Thread(target=_run_job, args=(job_id, str(path), fast, text), daemon=True).start()
     return jsonify({"job_id": job_id})
 
 
 @app.get("/api/job/<job_id>")
 def job(job_id):
+    # 查不到时返回 404 —— 原实现直接 JOBS[job_id] 会抛 KeyError 变成 500，
+    # 前端轮询一个已淘汰/不存在的 id 时只能显示"失败"，分不清是任务失败还是 id 无效。
     with JOBS_LOCK:
+        rec = JOBS.get(job_id)
+        if rec is None:
+            return jsonify({"status": "not_found", "steps": [], "result": None,
+                            "error": "任务不存在或已过期，请重新提交"}), 404
         snap = {
-            "status": JOBS[job_id]["status"],
-            "steps": list(JOBS[job_id]["steps"]),
-            "result": JOBS[job_id]["result"],
-            "error": JOBS[job_id]["error"],
+            "status": rec["status"],
+            "steps": list(rec["steps"]),
+            "result": rec["result"],
+            "error": rec["error"],
         }
     return jsonify(snap)
 

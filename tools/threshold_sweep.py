@@ -39,8 +39,14 @@ try:
     import rule_engine
     BASELINE_HIGH = rule_engine.THRESHOLDS["aigc_high_risk"]
     BASELINE_HARD = rule_engine.THRESHOLDS["aigc_hard_high"]
+    # 灰带下沿（AIGC 侧）。依据 rule_engine.py 第 40 / 65 行：AIGC 分数
+    # ∈ [aigc_high_risk=0.9, aigc_hard_high=0.99) 即判 suspicious（灰带，转人工不自动下架）——
+    # 也就是说灰带入口就是 aigc_high_risk 本身，规则引擎里**没有**独立的 aigc_suspicious 键。
+    # 这里用 .get 兼容将来新增该键的情形，不臆造当前不存在的阈值。
+    BASELINE_SUSP = rule_engine.THRESHOLDS.get("aigc_suspicious", BASELINE_HIGH)
 except Exception:
     BASELINE_HIGH, BASELINE_HARD = 0.9, 0.99
+    BASELINE_SUSP = BASELINE_HIGH
 
 REAL_SET = "realworld_heldout"
 AI_SET = "ai_cross_native"

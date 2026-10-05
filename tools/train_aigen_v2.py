@@ -281,7 +281,7 @@ def main():
     (REPO / "results" / "aigen_finetune_v2.json").write_text(
         json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"\n=== 验证集混淆 (AI=正类) ===", flush=True)
+    print("\n=== 验证集混淆 (AI=正类) ===", flush=True)
     print(f"  TP={cm['tp']} FN={cm['fn']} FP={cm['fp']} TN={cm['tn']}  acc={val_acc:.3f}", flush=True)
     print(f"已保存 {OUT_DIR}/model.pt  与 results/aigen_finetune_v2.json", flush=True)
     print(f"耗时 {res['elapsed_sec']}s", flush=True)

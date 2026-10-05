@@ -29,7 +29,6 @@ os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "180")
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
 from PIL import Image
 import timm
 # 域增强：覆盖「美颜/滤镜/重压缩后的真实美妆图」分布。纯图像处理，无外部数据、无第三方权重。
@@ -284,9 +283,9 @@ def main():
     (REPO / "results" / "aigen_finetune_v3.json").write_text(
         json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"\n=== 验证集混淆 (AI=正类) ===", flush=True)
+    print("\n=== 验证集混淆 (AI=正类) ===", flush=True)
     print(f"  TP={cm['tp']} FN={cm['fn']} FP={cm['fp']} TN={cm['tn']}  acc={val_acc:.3f}", flush=True)
-    print(f"=== 跨生成器召回（data/ai_cross）===", flush=True)
+    print("=== 跨生成器召回（data/ai_cross）===", flush=True)
     print(f"  {cross_hit}/{cross_total} = {cross_recall:.3f}  （v2 基线 = 0.25）" if cross_recall is not None
           else "  无跨生成器样本", flush=True)
     print(f"已保存 {OUT_DIR}/model.pt  与 results/aigen_finetune_v3.json", flush=True)

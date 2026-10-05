@@ -95,7 +95,7 @@ def main():
     (REPO / "data" / "ai_mj_sd_flux_PROVENANCE.json").write_text(
         json.dumps(ledger, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n已收编：训练 {total_train} 张 / 零样本 {total_held} 张")
-    print(f"已写 data/ai_mj_sd_flux_PROVENANCE.json", flush=True)
+    print("已写 data/ai_mj_sd_flux_PROVENANCE.json", flush=True)
     print("下一步：python tools/train_aigen_v6.py", flush=True)
     return 0
 

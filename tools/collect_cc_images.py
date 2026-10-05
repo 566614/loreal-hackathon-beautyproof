@@ -8,7 +8,6 @@
 用法：python tools/collect_cc_images.py
 """
 import json
-import os
 import re
 import sys
 import time

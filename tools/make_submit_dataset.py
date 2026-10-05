@@ -148,7 +148,7 @@ def build(manifest_path: Path, out_zip: Path | None, repo: Path) -> int:
             f"② 样本类型：{scene}",
             f"③ 是否为伪造样本：{fake_flag}",
             f"④ 伪造方式说明：{fake_way}",
-            f"数据文件：image_1.jpg",
+            "数据文件：image_1.jpg",
         ]
         if not fake_flag.startswith("否"):
             lines.append("注：本样本为团队自造的高仿伪造内容，仅用于测试与评估，不含任何第三方素材。")

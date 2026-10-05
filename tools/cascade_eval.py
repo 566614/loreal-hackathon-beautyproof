@@ -32,9 +32,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import aigc_tool  # noqa: E402
-import numpy as np  # noqa: E402
 import spectral_calib as sc  # noqa: E402
-from spectral_tool import extract_features, load_calib  # noqa: E402
+from spectral_tool import load_calib  # noqa: E402
 
 PRODUCTION_MODEL = "beautyproof_aigen_v4"
 

@@ -35,7 +35,8 @@ import cv2
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
-PY = "C:/Users/Lenovo/.workbuddy/binaries/python/envs/default/Scripts/python.exe"
+# 复用当前解释器（./run.sh 已指向装了全部依赖的隔离 Python），不写死本机路径。
+PY = os.environ.get("BEAUTYPROOF_PYTHON") or sys.executable
 CACHE_FILE = REPO / "outputs" / "trufor_cache.json"
 
 

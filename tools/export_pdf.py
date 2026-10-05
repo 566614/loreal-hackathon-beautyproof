@@ -411,7 +411,7 @@ def read_report(md_path):
     try:
         raw = md_path.read_bytes()
     except OSError as exc:
-        raise ExportError("读取失败：{}（{}）".format(md_path.name, exc.strerror or exc))
+        raise ExportError("读取失败：{}（{}）".format(md_path.name, exc.strerror or exc)) from exc
 
     for encoding in ("utf-8-sig", "utf-8", "gb18030"):
         try:
@@ -449,7 +449,7 @@ def export_one(md_path, pdf_path, body_font, mono_font):
     except Exception as exc:  # noqa: BLE001
         raise ExportError(
             "生成 PDF 失败：{}（{}: {}）".format(md_path.name, exc.__class__.__name__, exc)
-        )
+        ) from exc
     return pdf_path
 
 

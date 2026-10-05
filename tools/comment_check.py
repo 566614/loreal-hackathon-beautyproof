@@ -371,7 +371,7 @@ def analyze_account(posts):
     if reuse >= 0.5:
         flags.append(f"同一账号文案两两相似度均值 {reuse:.0%}，高度模板化")
     if regularity is not None and regularity >= 0.7:
-        flags.append(f"发布间隔高度规律（变异系数低），疑似定时批量投放")
+        flags.append("发布间隔高度规律（变异系数低），疑似定时批量投放")
     if feats["mean_positive_hits"] >= 3:
         flags.append(f"平均每条命中 {feats['mean_positive_hits']:.1f} 个正面词，情感表述一边倒")
 
