@@ -1,7 +1,10 @@
 """Conservative extraction and comparison of explicit beauty claims."""
 
+import json
+import os
 import re
 import unicodedata
+from pathlib import Path
 
 
 CLAUSES = re.compile(r"[^。！？!?；;\n]+")
@@ -140,12 +143,34 @@ def comparable(left, right):
             and all(left[k] == right[k] for k in fields))
 
 
-def assess(body, image, references, contradictions):
-    """References are user-supplied excerpts with a source, not authenticated studies."""
+def verified_catalog():
+    """The reviewer maintains this catalog outside the web upload directory."""
+    path = os.environ.get("BP_VERIFIED_REFERENCES")
+    if not path:
+        return {}
+    rows = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(rows, list):
+        raise ValueError("已核验依据清单须为数组")
+    catalog = {}
+    fields = ("id", "source", "excerpt", "product", "version", "locator", "reviewer")
+    for row in rows:
+        if not isinstance(row, dict) or any(not isinstance(row.get(k), str) or not row[k].strip() for k in fields):
+            raise ValueError("依据清单须含 ID、来源、摘录、产品、版本、位置和审核人")
+        ref = {k: row[k].strip() for k in fields}
+        if ref["id"] in catalog:
+            raise ValueError("已核验依据 ID 重复")
+        catalog[ref["id"]] = ref
+    return catalog
+
+
+def assess(body, image, references, contradictions, *, verified_references=()):
     supplied = []
-    for ref in references:
+    for ref, verification in ([(r, "user_supplied") for r in references] +
+                              [(r, "reviewer_verified") for r in verified_references]):
         for fact in extract(ref["excerpt"], ref.get("product"), "reference"):
-            supplied.append((ref["source"], fact))
+            if verification == "reviewer_verified" and fact["product"] != ref["product"]:
+                continue
+            supplied.append((ref, verification, fact))
 
     results = []
     for claim in body + image:
@@ -156,12 +181,14 @@ def assess(body, image, references, contradictions):
                      (side == "body_claim" and claim["metric"] == "实拍或未经编辑宣称"
                       and "body_claim" not in c and
                       claim["span"][0] <= c.get("body_position", -1) < claim["span"][1])]
-        matched = [{"source": source, "quote": fact["quote"], "value": fact["value"],
-                    "unit": fact["unit"], "verification": "user_supplied", "matches": fact["value"] == claim["value"]}
-                   for source, fact in supplied if comparable(claim, fact)]
-        if conflicts or any(not m["matches"] for m in matched):
+        matched = [{**{k: ref[k] for k in ("id", "source", "version", "locator", "reviewer") if k in ref},
+                    "quote": fact["quote"], "value": fact["value"], "unit": fact["unit"],
+                    "verification": verification, "matches": fact["value"] == claim["value"]}
+                   for ref, verification, fact in supplied if comparable(claim, fact)]
+        verified = [m for m in matched if m["verification"] == "reviewer_verified"]
+        if conflicts or any(not m["matches"] for m in verified):
             status, missing = "存在冲突", []
-        elif matched:
+        elif verified:
             status, missing = "有证据支持", []
         else:
             status = "证据不足"
@@ -180,4 +207,23 @@ def normalize_references(value):
                 any(not isinstance(item.get(key), str) or not item[key].strip() for key in ("source", "excerpt")) or
                 (item.get("product") is not None and not isinstance(item["product"], str))):
             raise ValueError("每份依据须含 source、excerpt，product 可选")
-    return value
+    return [{k: row[k] for k in ("source", "excerpt", "product") if k in row} for row in value]
+
+
+def ocr_regions(lines, span):
+    """Map offsets in newline-joined OCR to boxes in original pixels."""
+    start = 0
+    regions = []
+    for line in lines:
+        end = start + len(line["text"])
+        if start < span[1] and end > span[0] and line.get("bbox"):
+            regions.append({k: line[k] for k in ("text", "bbox", "confidence") if k in line})
+        start = end + 1
+    return regions
+
+
+def ocr_lines(evidence):
+    """Keep low-confidence OCR in raw evidence but out of claim comparisons."""
+    return [row for row in evidence.get("ocr", {}).get("evidence", [])
+            if isinstance(row, dict) and isinstance(row.get("text"), str)
+            and row.get("confidence", 1) >= .70]

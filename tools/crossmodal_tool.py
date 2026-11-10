@@ -104,10 +104,10 @@ def merge_marker_hits(text, markers):
     return {"words": words, "context": hits[0]["context"], "position": hits[0]["position"]}, negated
 
 
-def check(text, image_evidence, product=None, *, body_claims=None, image_claims=None):
+def check(text, image_evidence, product=None, *, body_claims=None, image_claims=None, image_present=None):
     """Compare only attributable claims. Scores remain signals for review."""
     contradictions, negated = [], []
-    ocr = image_evidence.get("ocr", {}).get("evidence") or []
+    ocr = claim_review.ocr_lines(image_evidence)
     ocr_text = "\n".join(line.get("text", "") for line in ocr if isinstance(line, dict))
     signal = rule_engine.image_signals(image_evidence)
     disclosed = claim_review.is_illustration_disclosed(text, ocr_text)
@@ -120,21 +120,27 @@ def check(text, image_evidence, product=None, *, body_claims=None, image_claims=
     verified_ai = signal["origin"]["verified_ai"]
     has_label = signal["origin"]["visible_ai_label"]
     score = signal["origin"]["decision_score"]
-    suspected_ai = score is not None and score >= rule_engine.THRESHOLDS["aigc_high_risk"]
-    if (efficacy or (shots and not disclosed)) and (verified_ai or has_label or suspected_ai or disclosed):
+    suspected_ai = (signal["origin"]["status"] == "倾向生成" or
+                    (score is not None and score >= rule_engine.THRESHOLDS["aigc_high_risk"]))
+    if (efficacy or (shots and not disclosed)) and (verified_ai or has_label or suspected_ai or
+                                                   (disclosed and (image_present or ocr))):
+        disclosure = claim_review.DISCLOSURE.search(ocr_text)
+        regions = claim_review.ocr_regions(ocr, disclosure.span()) if disclosure else []
         contradictions.append({
             "type": "实拍宣称与AI生成证据冲突",
             "severity": "hard" if verified_ai or (efficacy and disclosed) else "medium",
             "text_side": efficacy.group() if efficacy else shots["context"],
             "body_position": efficacy.start() if efficacy else shots["position"],
+            "regions": regions,
             "image_side": ("来源凭证已验证且声明 AI 生成" if verified_ai else
                            "素材声明为 AI 示意" if disclosed else
-                           "图中出现可见 AI 标识" if has_label else f"生成检测倾向分 {score}"),
+                           "图中出现可见 AI 标识" if has_label else f"生成检测倾向分 {signal['origin']['score']}"),
             "why": "该素材被用于实拍宣称，需核对原始图及其适用的宣传承诺。",
         })
 
     editing_score = signal["editing"]["score"]
-    if editing_score is not None and editing_score >= rule_engine.THRESHOLDS["trufor_high"]:
+    if (not signal["editing"]["review_only"] and editing_score is not None
+            and editing_score >= rule_engine.THRESHOLDS["trufor_high"]):
         unedited, ignored = merge_marker_hits(text, NO_EDIT_MARKERS)
         negated.extend(ignored)
         if unedited:
@@ -166,14 +172,32 @@ def check(text, image_evidence, product=None, *, body_claims=None, image_claims=
     return contradictions, negated
 
 
+def alignment(body, image):
+    rows = []
+    for claim in body:
+        if claim["stance"] != "asserted" or claim["value"] is None:
+            continue
+        candidates = [other for other in image if claim_review.comparable(claim, other)]
+        other = candidates[0] if len(candidates) == 1 else None
+        if other:
+            status = "数值一致" if other["value"] == claim["value"] else "数值冲突"
+            missing = None
+        else:
+            status = "无法对齐"
+            missing = ("图片存在多条对应宣称，需确认适用位置" if candidates else
+                       "缺少可确认的同一产品、指标、规格及使用条件")
+        rows.append({"body": claim, "image": other, "status": status, "missing": missing})
+    return rows
+
+
 def build_evidence(text, contradictions, image_evidence, source_id, negated=None):
     hard = [c for c in contradictions if c["severity"] == "hard"]
     medium = [c for c in contradictions if c["severity"] == "medium"]
 
-    ocr = image_evidence.get("ocr", {}).get("evidence") or []
+    ocr = claim_review.ocr_lines(image_evidence)
     image_text = "\n".join(line.get("text", "") for line in ocr if isinstance(line, dict))
     signals = rule_engine.image_signals(image_evidence)
-    comparable = bool(image_text.strip() or signals["origin"]["decision_score"] is not None
+    comparable = bool(contradictions or image_text.strip() or signals["origin"]["decision_score"] is not None
                       or signals["editing"]["score"] is not None
                       or signals["origin"]["verified_ai"] or signals["origin"]["visible_ai_label"])
     if not comparable:

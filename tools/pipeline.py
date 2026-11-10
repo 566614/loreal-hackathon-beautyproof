@@ -239,7 +239,7 @@ def build_decision_trace(stem, image_name, risk_level, reasons, evidence):
 
 
 def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total=8,
-                   output_dir=None, product=None, body_claims=None, image_claims=None):
+                   output_dir=None, product=None, body_claims=None, image_claims=None, image_present=None):
     """跑文案侧两个工具，结果写进 outputs/ —— 规则引擎随后就能和图像侧证据一起读到
 
     text_tool       只看文字本身：违禁宣称（硬规则，有法律出处）+ 写作特征（弱提示）
@@ -280,7 +280,8 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
         on_progress("crossmodal", base_idx + 2, total, "running")
     try:
         img_ev = collect_evidence(stem, output_dir)
-        cons, negated = crossmodal_tool.check(text, img_ev, product, body_claims=body_claims, image_claims=image_claims)
+        cons, negated = crossmodal_tool.check(text, img_ev, product, body_claims=body_claims,
+                                              image_claims=image_claims, image_present=image_present)
         rep = crossmodal_tool.build_evidence(text, cons, img_ev, stem, negated=negated)
         (output_dir / f"crossmodal_{stem}.json").write_text(
             json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -299,7 +300,7 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
 # ---------------------------------------------------------------- 主流程
 def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
             on_progress=None, text=None, llm=False, roundtable=False, *,
-            product=None, references=None, publish=True):
+            product=None, references=None, publish=True, verified_references=()):
     """对一张图跑完整流水线，返回结构化结果
 
     on_progress: 可选回调 fn(tool, 第几个, 共几个, 状态) —— Web 界面靠它显示实时进度
@@ -339,14 +340,14 @@ def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
                     digest.update(chunk)
             info.update(path=str(original), sha256=digest.hexdigest())
             return _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
-                                on_progress, text, llm, roundtable, product, references, publish)
+                                on_progress, text, llm, roundtable, product, references, publish, verified_references)
 
     return _analyze_run(None, None, output_dir, fast, skip, verbose, timeout,
-                        on_progress, text, llm, roundtable, product, references, publish)
+                        on_progress, text, llm, roundtable, product, references, publish, verified_references)
 
 
 def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
-                 on_progress, text, llm, roundtable, product, references, publish):
+                 on_progress, text, llm, roundtable, product, references, publish, verified_references):
     import claim_review
     import crossmodal_tool
 
@@ -381,6 +382,10 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
     for wave_name, wave_tools in planner.WAVES:
         ev_now = collect_evidence(stem, output_dir)
         wave_skip, dec = planner.decide_next(ev_now, ctx, done=set(ran))
+        if not fast:
+            required = {"aigc", "trufor", "ocr"} & enabled
+            wave_skip -= required
+            dec = [d for d in dec if d["tool"] not in required]
         decisions.extend(dec)
         skipped |= wave_skip
 
@@ -434,7 +439,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
             _note(tool, "done" if ok else "failed")
 
     evidence = collect_evidence(stem, output_dir)
-    ocr = evidence.get("ocr", {}).get("evidence") or []
+    ocr = claim_review.ocr_lines(evidence)
     image_text = "\n".join(line.get("text", "") for line in ocr if isinstance(line, dict))
     body_claims = claim_review.extract(text, product)
     image_claims = claim_review.extract(image_text, product, "image")
@@ -448,13 +453,15 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         for source, facts, kind in ((text, body_claims, "body"), (image_text, image_claims, "image")):
             if source:
                 claim_review.enrich(facts, source, next(by_source) or [], kind)
+    for claim in image_claims:
+        claim["regions"] = claim_review.ocr_regions(ocr, claim["span"])
 
     text_tools_ran = []
     if text:
         text_tools_ran = run_text_tools(
             stem, text, verbose=verbose, on_progress=on_progress, base_idx=idx,
             total=total, output_dir=output_dir, product=product,
-            body_claims=body_claims, image_claims=image_claims,
+            body_claims=body_claims, image_claims=image_claims, image_present=bool(image_path),
         )
         evidence = collect_evidence(stem, output_dir)
     elif image_text:
@@ -467,7 +474,14 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         skipped.update(planner.TEXT_TOOLS)
 
     cross = (evidence.get("crossmodal", {}).get("evidence") or [{}])[0]
-    claims = claim_review.assess(body_claims, image_claims, references, cross.get("contradictions", []))
+    if text and image_path:
+        cross["alignment"] = crossmodal_tool.alignment(body_claims, image_claims)
+        if llm and claim_review.EFFICACY_PHOTO.search(text) and not claim_review.EFFICACY_PHOTO.search(image_text):
+            import llm_explainer
+            cross["visual_observation"] = llm_explainer.observe_comparison_layout(
+                image_path, image_info_fields.get("width"), image_info_fields.get("height"))
+    claims = claim_review.assess(body_claims, image_claims, references, cross.get("contradictions", []),
+                                 verified_references=verified_references)
     asset_hash = image_info_fields.get("sha256")
     for tool, item in evidence.items():
         item.update(run_id=output_dir.name, image_sha256=asset_hash)
@@ -481,7 +495,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         reasons.append("宣称核验：图文或对应参考资料存在冲突")
     if any(claim["status"] == "证据不足" for claim in claims):
         reasons.append("宣称核验：部分宣称缺少对应产品、指标和条件的证据")
-    if risk_level == "credible" and (text or claims):
+    if risk_level == "credible":
         risk_level = "inconclusive"
 
     signals = _import_rule_engine().image_signals(evidence)
@@ -495,6 +509,8 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         checks[tool] = {"status": status}
         if tool in tool_errors:
             checks[tool]["reason"] = tool_errors[tool]
+        elif item.get("reason"):
+            checks[tool]["reason"] = item["reason"]
         if tool == "aigc" and signals["origin"]["score"] is not None and not signals["origin"]["threshold_profile"]:
             checks[tool]["decision_status"] = "insufficient_evidence"
     checks["claim_model"] = {"status": claim_model_status}
@@ -552,6 +568,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         "image": info,
         "run_id": output_dir.name,
         "audit": {"claims": claims, "checks": checks, "image_signals": signals,
+                  "crossmodal": cross,
                   "ai_illustration_disclosed": bool(cross.get("ai_illustration_disclosed"))},
         "verdict": {
             "risk_level": risk_level,
