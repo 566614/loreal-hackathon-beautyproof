@@ -131,3 +131,7 @@ body { background: #f3f7f4; color: var(--ink); min-width: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+.evidence-detail { margin-top: 8px; }
+.evidence-detail summary { cursor: pointer; color: #246752; }
+.evidence-detail svg { display: block; width: 100%; max-height: 420px; margin-top: 8px; }
+.claim mark { color: inherit; background: #e0f0e8; }

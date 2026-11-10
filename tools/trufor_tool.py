@@ -406,8 +406,22 @@ def main():
         print(f"找不到这张图: {image_path}")
         return 1
 
-    res = run_trufor(image_path, force=force)
-    ev = build_evidence(image_path, res)
+    if os.environ.get("BP_MODEL_DIR") and os.environ.get("BP_EDIT_BACKEND") != "trufor":
+        from forensic_models import iml_vit
+        try:
+            res = iml_vit(image_path, out_dir)
+        except Exception as exc:
+            res = {"available": False, "trufor_score": None, "model": "iml-vit",
+                   "reason": f"{type(exc).__name__}: {exc}", "review_only": True}
+        ev = {"tool": "trufor", "source_asset_id": image_path.name, "model": "iml-vit",
+              "observed": (f"IML-ViT 局部异常峰值 {res['trufor_score']}" if res["available"]
+                           else "IML-ViT 模型不可用，查看检查记录"),
+              "cannot_prove": "定位提示异常区域，无法仅凭单张图片区分实体上妆和数字处理。",
+              "evidence": [res]}
+    else:
+        res = run_trufor(image_path, force=force)
+        ev = build_evidence(image_path, res)
+        ev["evidence"][0].update(model="trufor", review_only=True)
     (out_dir / f"trufor_{image_path.stem}.json").write_text(
         json.dumps(ev, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(ev, ensure_ascii=False, indent=2))

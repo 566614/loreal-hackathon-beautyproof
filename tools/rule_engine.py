@@ -23,6 +23,7 @@
     inconclusive 无法判定：现有工具没发现明确问题，但也不能证明一定真实
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -166,16 +167,34 @@ def image_signals(evidence):
     model = aigc.get("model") or evidence.get("aigc", {}).get("model")
     # The old operating thresholds were chosen for v4. They are provisional
     # and do not apply to a model chosen by fallback.
-    threshold_profile = model if model == "beautyproof_aigen_v4" else None
+    threshold_profile = model if model == "beautyproof_aigen_v4" and not aigc.get("review_only") else None
+    origin_status = "模型不可用" if score is None else "未校准，供复核"
+    profile_path = os.environ.get("BP_ORIGIN_PROFILE")
+    if score is not None and profile_path:
+        try:
+            profile = json.loads(Path(profile_path).read_text(encoding="utf-8"))
+            low, high = profile["low"], profile["high"]
+            if (profile.get("approved") is True and 0 <= low <= high <= 1
+                    and all(aigc.get(k) and profile[k] == aigc[k] for k in
+                            ("model", "weights_sha256", "preprocessing"))):
+                origin_status = "倾向生成" if score >= high else "不确定" if score >= low else "未检出强信号"
+                threshold_profile = "review-profile"
+        except (OSError, KeyError, ValueError, TypeError):
+            pass
     return {
         "origin": {
             "model": model, "score": score, "threshold_profile": threshold_profile,
-            "decision_score": score if threshold_profile and AIGC_TRIGGERS_RISK else None,
+            "decision_score": score if threshold_profile == "beautyproof_aigen_v4" and AIGC_TRIGGERS_RISK else None,
+            "status": origin_status, "weights_sha256": aigc.get("weights_sha256"),
+            "preprocessing": aigc.get("preprocessing"), "device": aigc.get("device"),
             "visible_ai_label": bool(label.get("ai_label_detected")),
             "verified_ai": bool(credential.get("c2pa_verified") and credential.get("c2pa_declares_ai_generated")),
             "credential_verified": bool(credential.get("c2pa_verified")),
         },
         "editing": {"score": trufor.get("trufor_score") if trufor.get("available", True) else None,
+                    "model": trufor.get("model"), "weights_sha256": trufor.get("weights_sha256"),
+                    "preprocessing": trufor.get("preprocessing"), "mask": trufor.get("mask"),
+                    "device": trufor.get("device"), "review_only": bool(trufor.get("review_only")),
                     "region": trufor.get("tampered_position"),
                     "area_ratio": trufor.get("tampered_area_ratio"),
                     "physical_makeup": "无法从当前编辑检测确定"},
@@ -356,7 +375,10 @@ def judge(evidence):
         available = first.get("available", True)
         extra = f"；可疑区域约占全图 {ratio:.1%}" if ratio is not None else ""
 
-        if score is None or not available:
+        if first.get("review_only"):
+            name = first.get("model") or "局部编辑检测"
+            reasons.append(f"{name}：本次仅提供待复核的局部异常线索" if available else f"{name}：模型不可用")
+        elif score is None or not available:
             reasons.append("TruFor 检测：模型未部署/未返回分数，本项无法判断，已跳过")
         elif disclosed:
             reasons.append(f"TruFor 检测：局部异常分 {score}，作为已声明示意素材的图像线索记录")

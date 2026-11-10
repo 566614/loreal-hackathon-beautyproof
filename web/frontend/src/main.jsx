@@ -84,6 +84,19 @@ function RunningReport({ steps }) {
   </Card>;
 }
 
+function ImageRegions({ image, regions }) {
+  if (!image?.preview || !image.width || !image.height || !regions?.length) return null;
+  return <details className="evidence-detail">
+    <summary>查看图片中的位置</summary>
+    <svg role="img" aria-label="原图与文字证据位置" viewBox={`0 0 ${image.width} ${image.height}`}>
+      <image href={image.preview} width={image.width} height={image.height} />
+      {regions.map(({ bbox: [x1, y1, x2, y2] }, i) =>
+        <rect key={i} x={x1} y={y1} width={x2 - x1} height={y2 - y1}
+          fill="none" stroke="#ec6044" strokeWidth="3" vectorEffect="non-scaling-stroke" />)}
+    </svg>
+  </details>;
+}
+
 function ClaimResults({ result }) {
   const claims = result.audit?.claims || [];
   const reasons = result.verdict.reasons || [];
@@ -94,12 +107,50 @@ function ClaimResults({ result }) {
         <Tag color={claimColors[claim.status]}>{claim.status}</Tag>
         <span>{claim.source === "image" ? "图片原句" : "正文原句"}</span>
       </div>
-      <blockquote>{claim.quote}</blockquote>
-      {claim.references?.map((reference, i) => <p key={i}><b>{reference.source}</b>　{reference.quote}</p>)}
+      <blockquote><mark>{claim.quote}</mark></blockquote>
+      <ImageRegions image={result.image} regions={claim.regions} />
+      {claim.references?.map((reference, i) => <details className="evidence-detail" key={i}>
+        <summary>{reference.source} · {reference.verification === "reviewer_verified"
+          ? "已核验来源" : reference.matches ? "摘录内容一致，来源待核验" : "摘录内容不一致，来源待核验"}</summary>
+        <blockquote>{reference.quote}</blockquote>
+        {reference.version && <p>版本 {reference.version} · {reference.locator} · 审核人 {reference.reviewer}</p>}
+      </details>)}
       {claim.conflicts?.map((conflict, i) => <p key={i}>冲突　{conflict.text_side} / {conflict.image_side}</p>)}
       {!!claim.missing?.length && <p className="muted">待补　{claim.missing.join("、")}</p>}
     </article>) : <p className="tab-empty">本次报告没有可逐条核对的宣称。</p>}
     {!!reasons.length && <Collapse items={[{ key: "reasons", label: "查看综合判定依据", children: <ul className="detail-list">{reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul> }]} />}
+  </div>;
+}
+
+function CrossmodalResults({ result }) {
+  const cross = result.audit?.crossmodal || result.evidence?.crossmodal?.evidence?.[0] || {};
+  if (!result.image || !result.text_input) {
+    return <p className="tab-empty">上传图片并填写正文后可比对图文。</p>;
+  }
+  const findings = (cross.contradictions || []).filter(item => !item.body_claim);
+  const alignment = cross.alignment || (cross.contradictions || []).filter(item => item.body_claim)
+    .map(item => ({ body: item.body_claim, image: item.image_claim, status: "数值冲突" }));
+  return <div className="result-stack">
+    {cross.ai_illustration_disclosed && <Alert type="info" showIcon title="素材已声明为 AI 示意" />}
+    {!!cross.visual_observation?.regions?.length && <article className="claim">
+      <Tag>{cross.visual_observation.observation}</Tag>
+      <ImageRegions image={result.image} regions={cross.visual_observation.regions} />
+    </article>}
+    {findings.map((item, i) => <article className="claim" key={i}>
+      <Tag color="orange">{item.type}</Tag>
+      <blockquote>正文 · {item.text_side}</blockquote>
+      <blockquote>图片 · {item.image_side}</blockquote>
+      <p>{item.why}</p>
+      <ImageRegions image={result.image} regions={item.regions} />
+    </article>)}
+    {alignment.map((row, i) => <article className="claim" key={i}>
+      <Tag color={row.status === "数值冲突" ? "orange" : undefined}>{row.status}</Tag>
+      <blockquote>正文 · {row.body.quote}</blockquote>
+      {row.image && <blockquote>图片 · {row.image.quote}</blockquote>}
+      {row.missing && <p>{row.missing}</p>}
+      <ImageRegions image={result.image} regions={row.image?.regions} />
+    </article>)}
+    {!alignment.length && !findings.length && <p className="tab-empty">本次未找到可对齐的图文宣称，请核对产品、指标与图片中的文字。</p>}
   </div>;
 }
 
@@ -112,9 +163,13 @@ function ImageResults({ result }) {
   return <div className="result-stack">
     {result.image ? <>
       <div className="score-row">
-        <div><span>生成倾向分</span><b>{origin.score ?? "—"}</b><small>{origin.model || "分数仅供核对来源"}</small></div>
-        <div><span>局部异常分</span><b>{editing.score ?? "—"}</b><small>{editing.region || "区域线索需对照原图"}</small></div>
+        <div><span>生成倾向分</span><b>{origin.score ?? "—"}</b><small>{[origin.model, origin.status || "待复核线索"].filter(Boolean).join(" · ")}</small></div>
+        <div><span>局部异常分</span><b>{editing.score ?? "—"}</b><small>{[editing.model, editing.region || "区域线索需对照原图"].filter(Boolean).join(" · ")}</small></div>
       </div>
+      {result.audit?.ai_illustration_disclosed && <Alert type="info" showIcon title="素材已声明为 AI 示意" />}
+      {origin.verified_ai ? <p>已验证来源凭证声明素材由 AI 生成。</p>
+        : origin.visible_ai_label && <p>图中有可见 AI 标识，需核对原始来源。</p>}
+      <p className="muted">局部热力图提示异常位置。真实上妆、美颜和实际修图需结合原片或处理记录复核。</p>
       {(result.image.preview || heatmap) && <div className="image-grid">
         <Image.PreviewGroup>
           {[[result.image.preview, "送审原图"], [heatmap, "可疑区域"]].filter(([src]) => src).map(([src, label]) =>
@@ -209,8 +264,9 @@ function FinishedReport({ result, isSample }) {
       </Space>
     </div>
     <Tabs defaultActiveKey={hasClaims || !result.image ? "claims" : "image"} items={[
-      { key: "claims", label: hasClaims ? "宣称核验（" + result.audit.claims.length + "）" : "宣称核验", children: <ClaimResults result={result} /> },
-      { key: "image", label: "图像证据", children: <ImageResults result={result} /> },
+      { key: "image", label: "图片审核", children: <ImageResults result={result} /> },
+      { key: "claims", label: hasClaims ? "文字审核（" + result.audit.claims.length + "）" : "文字审核", children: <ClaimResults result={result} /> },
+      { key: "crossmodal", label: "图文匹配", children: <CrossmodalResults result={result} /> },
       { key: "tools", label: "检查记录", children: <EvidenceResults result={result} /> },
     ]} />
     {explanation.caveat && <p className="report-caveat">{explanation.caveat}</p>}
@@ -221,6 +277,7 @@ function Workbench() {
   const [form] = Form.useForm();
   const [file, setFile] = useState(null);
   const [samples, setSamples] = useState([]);
+  const [references, setReferences] = useState([]);
   const [report, setReport] = useState(null);
   const [steps, setSteps] = useState([]);
   const [busy, setBusy] = useState("");
@@ -231,6 +288,7 @@ function Workbench() {
   useEffect(() => {
     const controller = new AbortController();
     readJson("/api/samples", { signal: controller.signal }).then(data => setSamples(data.samples || [])).catch(() => {});
+    readJson("/api/reference-catalog", { signal: controller.signal }).then(data => setReferences(data.references || [])).catch(() => {});
     return () => {
       controller.abort();
       request.current?.abort();
@@ -274,6 +332,7 @@ function Workbench() {
     if (text) data.set("text", text);
     if (values.product?.trim()) data.set("product", values.product.trim());
     if (source) data.set("references", JSON.stringify([{ source, excerpt, product: values.referenceProduct?.trim() || null }]));
+    if (values.referenceIds?.length) data.set("reference_ids", JSON.stringify(values.referenceIds));
     if (values.fast) data.set("fast", "1");
     if (values.llm) data.set("llm", "1");
     run("analysis", async signal => {
@@ -339,9 +398,12 @@ function Workbench() {
               key: "context", label: "补充产品与功效依据", extra: <span className="muted">选填</span>,
               children: <>
                 <Form.Item name="product" label="宣传产品"><Input placeholder="例如青蓝精华" /></Form.Item>
+                {!!references.length && <Form.Item name="referenceIds" label="选择已核验资料">
+                  <Select mode="multiple" options={references.map(ref => ({ value: ref.id, label: `${ref.source} · ${ref.product} · ${ref.locator}` }))} />
+                </Form.Item>}
                 <Form.Item name="referenceSource" label="依据名称"><Input placeholder="例如试验记录或原始报告名称" /></Form.Item>
                 <Form.Item name="referenceProduct" label="依据对应产品"><Input placeholder="按依据原文填写" /></Form.Item>
-                <Form.Item name="referenceExcerpt" label="依据原文"><Input.TextArea rows={3} /></Form.Item>
+                <Form.Item name="referenceExcerpt" label="待核验摘录"><Input.TextArea rows={3} /></Form.Item>
               </>,
             }]} />
             <div className="form-options">

@@ -75,6 +75,9 @@ AI_INCONCLUSIVE_LOW = 0.5
 
 
 def model_path():
+    if os.environ.get("BP_AIGC_BACKEND") == "v4":
+        path = Path(__file__).resolve().parent.parent / "models" / "beautyproof_aigen_v4"
+        return str(path) if (path / "model.pt").is_file() else None
     """返回本地模型目录；都没下好就返回 None（调用方据此优雅降级）。"""
     root = Path(__file__).resolve().parent.parent
     for name in MODEL_PRIORITY:
@@ -260,8 +263,29 @@ def main():
         print(f"找不到这张图: {image_path}")
         return 1
 
-    ai_score, ai_label, available = run_aigc(image_path)
-    report = build_evidence(image_path, ai_score, ai_label, available)
+    from forensic_models import dda, file_hash
+
+    use_dda = bool(os.environ.get("BP_MODEL_DIR")) and os.environ.get("BP_AIGC_BACKEND") != "v4"
+    if use_dda:
+        try:
+            item = dda(image_path)
+        except Exception as exc:
+            item = {"aigc_score": None, "available": False, "model": "dda-dinov2-vitl14",
+                    "reason": f"{type(exc).__name__}: {exc}", "review_only": True}
+        report = {"tool": "aigc", "source_asset_id": image_path.name, "model": item["model"],
+                  "observed": ("DDA 整图生成倾向分 " + str(item["aigc_score"]) if item["available"]
+                               else "DDA 模型不可用，查看检查记录"),
+                  "cannot_prove": "生成分数用于来源复核，需在美妆盲测验证后启用阈值。",
+                  "evidence": [item]}
+    else:
+        ai_score, ai_label, available = run_aigc(image_path)
+        report = build_evidence(image_path, ai_score, ai_label, available)
+        item = report["evidence"][0]
+        item["review_only"] = True
+        path = model_path()
+        if path and available and is_timm_model(path):
+            item.update(weights_sha256=file_hash(Path(path) / "model.pt"),
+                        preprocessing="timm-resize256-center-crop:" + file_hash(Path(path) / "config.json"))
 
     repo_root = Path(__file__).resolve().parent.parent
     out_dir = Path(os.environ.get("BP_RUN_OUTPUT", repo_root / "outputs"))

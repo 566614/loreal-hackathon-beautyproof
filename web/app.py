@@ -41,6 +41,7 @@ UPLOADS.mkdir(exist_ok=True)
 
 JOBS = {}          # job_id -> {status, steps, result, error}
 JOBS_LOCK = threading.Lock()
+MODEL_LOCK = threading.Lock()
 
 # 任务结果里存着完整 analysis（含原图 data URI，单个可达数 MB）。
 # 演示时长跑或接口被反复调用时 JOBS 会无限增长，故设上限并淘汰最旧的已完结任务。
@@ -75,7 +76,8 @@ RISK_ZH = {
 }
 
 
-def _run_job(job_id, image_path, fast, text=None, product=None, references=None, llm=False):
+def _run_job(job_id, image_path, fast, text=None, product=None, references=None, llm=False,
+             verified_references=()):
     job = JOBS[job_id]
 
     def cb(tool, idx, total, state):
@@ -83,8 +85,11 @@ def _run_job(job_id, image_path, fast, text=None, product=None, references=None,
             job["steps"].append({"tool": tool, "state": state, "index": idx, "total": total})
 
     try:
-        res = pipeline.analyze(image_path, fast=fast, on_progress=cb,
-                               verbose=False, text=text, product=product, references=references, llm=llm)
+        from contextlib import nullcontext
+        with MODEL_LOCK if image_path or llm else nullcontext():
+            res = pipeline.analyze(image_path, fast=fast, on_progress=cb, timeout=120,
+                                   verbose=False, text=text, product=product, references=references, llm=llm,
+                                   verified_references=verified_references)
         res["verdict"]["risk_zh"] = RISK_ZH.get(res["verdict"]["risk_level"],
                                                 res["verdict"]["risk_level"])
         res["tool_meta"] = pipeline.TOOL_META
@@ -142,9 +147,20 @@ def sample(stem):
     return jsonify(data)
 
 
+@app.get("/api/reference-catalog")
+def reference_catalog():
+    from claim_review import verified_catalog
+    try:
+        rows = verified_catalog().values()
+    except (OSError, ValueError):
+        return jsonify({"error": "无法读取已核验依据清单"}), 503
+    return jsonify({"references": [{k: row[k] for k in ("id", "source", "product", "version", "locator")}
+                                   for row in rows]})
+
+
 @app.post("/api/analyze")
 def analyze():
-    from claim_review import normalize_references
+    from claim_review import normalize_references, verified_catalog
 
     f = request.files.get("file")
     text = (request.form.get("text") or "").strip() or None
@@ -155,8 +171,18 @@ def analyze():
     llm = request.form.get("llm") == "1"
     try:
         references = normalize_references(json.loads(request.form.get("references", "null")))
+        ids = json.loads(request.form.get("reference_ids", "[]"))
+        if not isinstance(ids, list) or any(not isinstance(i, str) for i in ids):
+            raise ValueError("reference_ids 须为 ID 数组")
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    try:
+        catalog = verified_catalog() if ids else {}
+    except (OSError, ValueError):
+        return jsonify({"error": "无法读取已核验依据清单"}), 503
+    if any(i not in catalog for i in ids):
+        return jsonify({"error": "已核验依据不存在，请刷新后重选"}), 400
+    verified_references = [catalog[i] for i in dict.fromkeys(ids)]
 
     path = None
     if f and f.filename:
@@ -175,7 +201,7 @@ def analyze():
     with JOBS_LOCK:
         JOBS[job_id] = {"status": "running", "steps": [], "result": None, "error": None}
     _prune_jobs()
-    threading.Thread(target=_run_job, args=(job_id, path, fast, text, product, references, llm),
+    threading.Thread(target=_run_job, args=(job_id, path, fast, text, product, references, llm, verified_references),
                      daemon=True).start()
     return jsonify({"job_id": job_id})
 

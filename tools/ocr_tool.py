@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 来源：第三方调用 —— PaddleOCR (PP-OCRv6, Apache-2.0) 为被调用能力；统一证据封装为 BeautyProof 团队原创
+# 来源：第三方调用 —— PaddleOCR PP-OCRv5 mobile (Apache-2.0)
 """
 OCR 检测工具 —— 把图上的文字抄下来，输出「统一格式」的证据 JSON
 
@@ -27,9 +27,16 @@ from pathlib import Path
 
 def run_ocr(image_path):
     """调 PaddleOCR 抄图上的字。返回一堆行，每行含 text / bbox / confidence"""
+    cache = Path(os.environ.get("BP_MODEL_DIR") or Path(__file__).resolve().parents[1] / ".local") / "paddlex"
+    os.environ.setdefault("PADDLE_PDX_CACHE_HOME", str(cache))
+    os.environ.setdefault("HF_HOME", str(cache / "huggingface"))
+    os.environ.setdefault("MODELSCOPE_CACHE", str(cache / "modelscope"))
     from paddleocr import PaddleOCR
 
     ocr = PaddleOCR(
+        text_detection_model_name="PP-OCRv5_mobile_det",
+        text_recognition_model_name="PP-OCRv5_mobile_rec",
+        device="cpu",
         use_doc_orientation_classify=False,
         use_doc_unwarping=False,
         use_textline_orientation=False,
@@ -56,6 +63,7 @@ def build_evidence(image_path, lines):
     """把 OCR 结果打包成统一证据格式。后面所有工具都照抄这个结构"""
     return {
         "tool": "ocr",
+        "model": "PP-OCRv5_mobile",
         "source_asset_id": Path(image_path).name,
         "observed": f"在图上一共读出 {len(lines)} 行文字",
         "cannot_prove": "OCR 只是抄写员，不能证明文字内容为真，也不能证明图片被篡改",

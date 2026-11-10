@@ -104,12 +104,55 @@ def test_claim_model_is_source_anchored_and_degrades(isolated, monkeypatch):
 ])
 def test_reference_status_and_citation(isolated, reference, status):
     result = pipeline.analyze(text="【青蓝精华】7天水分提升20%。",
-                              references=[{"source": "测试记录", "excerpt": reference}], verbose=False)
+                              verified_references=[{"id": "record-1", "source": "测试记录", "excerpt": reference,
+                                                    "product": "青蓝精华", "version": "v1", "locator": "第 2 页",
+                                                    "reviewer": "qa"}], verbose=False)
     claim = result["audit"]["claims"][0]
     assert claim["status"] == status
     if status != "证据不足":
         assert claim["references"][0]["source"] == "测试记录"
     assert result["audit"]["checks"]["crossmodal"]["status"] == "insufficient_evidence"
+
+
+def test_forged_verification_cannot_support_a_claim(isolated, monkeypatch):
+    catalog = isolated / "verified.json"
+    excerpt = "【青蓝精华】7天水分提升20%。"
+    trusted = {"id": "study-1", "source": "真实源测试夹具", "excerpt": excerpt, "product": "青蓝精华",
+               "version": "v2", "locator": "第 2 页", "reviewer": "qa"}
+    catalog.write_text(json.dumps([trusted]), encoding="utf-8")
+    monkeypatch.setenv("BP_VERIFIED_REFERENCES", str(catalog))
+    monkeypatch.setattr(image_app, "JOBS", {})
+    client = image_app.app.test_client()
+    assert "excerpt" not in client.get("/api/reference-catalog").json["references"][0]
+    assert client.post("/api/analyze", data={"text": excerpt, "reference_ids": '["invalid"]'}).status_code == 400
+    user_data = json.dumps([dict(trusted, verification="reviewer_verified")])
+    for ids, status in [([], "证据不足"), (["study-1"], "有证据支持")]:
+        job_id = client.post("/api/analyze", data={"text": excerpt, "references": user_data,
+                                                 "reference_ids": json.dumps(ids)}).json["job_id"]
+        deadline = time.monotonic() + 5
+        while (job := client.get("/api/job/" + job_id).json)["status"] == "running" and time.monotonic() < deadline:
+            time.sleep(.02)
+        assert job["status"] == "done", job
+        claim = job["result"]["audit"]["claims"][0]
+        assert claim["status"] == status
+        assert claim["references"][0]["verification"] == "user_supplied"
+        if ids:
+            assert claim["references"][1]["locator"] == "第 2 页"
+
+
+def test_uncalibrated_detectors_and_mismatched_profile_are_review_only(isolated, monkeypatch):
+    evidence = image_evidence(model="dda-dinov2-vitl14", score=.98)
+    evidence["aigc"]["evidence"][0].update(review_only=True, weights_sha256="v1", preprocessing="crop")
+    evidence["trufor"]["evidence"][0].update(available=True, model="iml-vit", trufor_score=.99, review_only=True)
+    profile = isolated / "profile.json"
+    monkeypatch.setenv("BP_ORIGIN_PROFILE", str(profile))
+    row = {"model": "dda-dinov2-vitl14", "preprocessing": "crop", "low": .3, "high": .8, "approved": True}
+    profile.write_text(json.dumps(dict(row, weights_sha256="wrong")), encoding="utf-8")
+    assert rule_engine.image_signals(evidence)["origin"]["status"] == "未校准，供复核"
+    assert rule_engine.judge(evidence)[0] == "inconclusive"
+    profile.write_text(json.dumps(dict(row, weights_sha256="v1")), encoding="utf-8")
+    assert rule_engine.image_signals(evidence)["origin"]["status"] == "倾向生成"
+    assert rule_engine.judge(evidence)[0] == "inconclusive"
 
 
 def test_concurrent_same_named_images_have_distinct_evidence(isolated, monkeypatch):
