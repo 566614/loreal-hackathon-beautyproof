@@ -61,8 +61,12 @@ def main():
         "<title>美妆图取证台 · BeautyProof（离线演示版）</title>")
     inject = ("<script>window.__DEMO_DATA__ = "
               + json.dumps({"samples": samples}, ensure_ascii=False)
-              + ";</script>\n</body>")
-    html = html.replace("</body>", inject, 1)
+              + ";</script>")
+    app_script = "<script>\nconst $=s=>document.querySelector(s);"
+    if app_script not in html:
+        raise RuntimeError("web 模板中找不到主脚本插入点，未生成离线 Demo")
+    # 先注入样本，再运行页面脚本；否则静态页会先请求不存在的 /api/samples。
+    html = html.replace(app_script, inject + "\n" + app_script, 1)
 
     DEST.parent.mkdir(exist_ok=True)
     DEST.write_text(html, encoding="utf-8")

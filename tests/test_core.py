@@ -24,7 +24,7 @@ import validator   # noqa: E402
 
 
 def ev_aigc(score):
-    return {"aigc": {"evidence": [{"aigc_score": score, "available": True}]}}
+    return {"aigc": {"evidence": [{"aigc_score": score, "available": True, "model": "beautyproof_aigen_v4"}]}}
 
 
 def ev_trufor(score, ratio=0.1):
@@ -63,7 +63,7 @@ class TestRuleEngine(unittest.TestCase):
 
     def test_gray_band_plus_trufor_corroboration_is_high_risk(self):
         # 灰带 + TruFor 强信号 corroborate → 仍应 high_risk（两个信号都硬）
-        ev = {"aigc": {"evidence": [{"aigc_score": 0.95, "available": True}]},
+        ev = {"aigc": {"evidence": [{"aigc_score": 0.95, "available": True, "model": "beautyproof_aigen_v4"}]},
               "trufor": {"evidence": [{"trufor_score": 0.95,
                                        "tampered_area_ratio": 0.1,
                                        "available": True}]}}

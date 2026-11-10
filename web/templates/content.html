@@ -48,8 +48,8 @@
     </div>
     <div class="card">
       <h2>② 选一张配图（图文交叉验证需要）</h2>
-      <select id="imgSel"></select>
-      <div class="hint">只列出跑过完整流水线、有图像侧证据的样本。</div>
+      <select id="imgSel"><option value="">仅审核正文</option></select>
+      <div class="hint">选择示例后对图片重新取证。</div>
       <div class="row"><button id="go" type="button">开始核验</button></div>
       <div class="hint">核验顺序：文本侧查违禁宣称 → 图像侧看 AIGC / TruFor → 图文对质找矛盾 → 出结论</div>
     </div>
@@ -57,6 +57,7 @@
   <div id="out"></div>
 </div>
 <script>
+const esc = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const SAMPLES = {{ samples|tojson }};
 const POSTS = {{ posts|tojson }};
 const CASES = {{ cases|tojson }};
@@ -64,7 +65,7 @@ function fillPickers(sel, list){
   const box = document.querySelector(sel);
   if(!list.length){ box.innerHTML = ''; return; }
   box.innerHTML = '快选：' + list.map(function(p){
-    return '<span class="pickup" data-id="'+p.id+'">'+p.head+'</span>';
+    return '<span class="pickup" data-id="'+esc(p.id)+'">'+esc(p.head)+'</span>';
   }).join('　');
   box.querySelectorAll('.pickup').forEach(function(el){
     el.addEventListener('click', function(){
@@ -87,45 +88,48 @@ document.getElementById('go').addEventListener('click', function(){
   const text = (document.getElementById('text').value||'').trim();
   const img  = document.getElementById('imgSel').value;
   const out  = document.getElementById('out');
-  if(!text){ out.innerHTML = '<div class="card warn">先贴一段文案</div>'; return; }
+  if(!text && !img){ out.innerHTML = '<div class="card warn">请填写文案或选择图片</div>'; return; }
   btn.disabled = true; btn.textContent = '核验中……'; out.innerHTML = '';
   fetch('/check', {method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({text:text, image:img, tag:'web'})})
   .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
   .then(function(res){
-    if(!res.ok){ out.innerHTML = '<div class="card warn">出错：'+res.j.error+'</div>'; return; }
+    if(!res.ok){ out.innerHTML = '<div class="card warn">出错：'+esc(res.j.error)+'</div>'; return; }
     const j = res.j;
     let h = '<div class="card">';
-    h += '<span class="badge '+(BADGE[j.verdict]||'b-inconclusive')+'">'+TXT[j.verdict]+'</span>';
-    h += '<p class="verdict" style="margin-top:10px">'+j.headline+'</p>';
+    h += '<span class="badge '+(BADGE[j.verdict]||'b-inconclusive')+'">'+esc(TXT[j.verdict]||j.verdict)+'</span>';
+    h += '<p class="verdict" style="margin-top:10px">'+esc(j.headline)+'</p>';
     if(j.aigc_score !== null && j.aigc_score !== undefined){
       h += '<div class="ev"><div>图像侧 AIGC 分数：<b>'+j.aigc_score+'</b></div></div>';
     }
     if(j.contradictions_hard && j.contradictions_hard.length){
       h += '<div class="ev"><b>硬矛盾（文案 vs 配图对不上）</b><ol>';
-      j.contradictions_hard.forEach(function(c){ h += '<li>'+c.description+' <span style="color:#888">'+(c.evidence||'')+'</span></li>'; });
+      j.contradictions_hard.forEach(function(c){ h += '<li>'+esc(c.text_side)+' <span style="color:#888">'+esc(c.image_side)+'</span></li>'; });
       h += '</ol></div>';
     }
     if(j.contradictions_medium && j.contradictions_medium.length){
       h += '<div class="ev"><b>中矛盾（数字/量纲对不上）</b><ol>';
-      j.contradictions_medium.forEach(function(c){ h += '<li>'+c.description+' <span style="color:#888">'+(c.evidence||'')+'</span></li>'; });
+      j.contradictions_medium.forEach(function(c){ h += '<li>'+esc(c.text_side)+' <span style="color:#888">'+esc(c.image_side)+'</span></li>'; });
       h += '</ol></div>';
     }
     if(j.claims_high && j.claims_high.length){
       h += '<div class="ev"><b>文案里命中的高风险宣称</b><ol>';
-      j.claims_high.forEach(function(c){ h += '<li>'+c.text+' —— '+c.reason+'</li>'; });
+      j.claims_high.forEach(function(c){ h += '<li>'+esc(c.word)+' —— '+esc(c.context)+'</li>'; });
       h += '</ol></div>';
     }
     if(j.claims_medium && j.claims_medium.length){
       h += '<div class="ev"><b>中风险表述（绝对化/效果承诺）</b><ol>';
-      j.claims_medium.forEach(function(c){ h += '<li>'+c.text+' —— '+c.reason+'</li>'; });
+      j.claims_medium.forEach(function(c){ h += '<li>'+esc(c.word)+' —— '+esc(c.context)+'</li>'; });
       h += '</ol></div>';
     }
-    h += '<div class="ev"><b>这套系统不会替你定的事</b><div>'+j.cannot_prove.join('；')+'。</div></div>';
+    for(const claim of j.audit.claims){
+      h += '<div class="ev">'+esc(claim.status)+'｜'+esc(claim.quote)+'</div>';
+    }
+    h += '<div class="ev"><b>核验边界</b><div>'+esc(j.cannot_prove.join('；'))+'。</div></div>';
     h += '</div>';
     out.innerHTML = h;
   })
-  .catch(function(e){ out.innerHTML = '<div class="card warn">网络错误：'+e+'</div>'; })
+  .catch(function(e){ out.innerHTML = '<div class="card warn">网络错误：'+esc(e)+'</div>'; })
   .finally(function(){ btn.disabled = false; btn.textContent = '开始核验'; });
 });
 </script>

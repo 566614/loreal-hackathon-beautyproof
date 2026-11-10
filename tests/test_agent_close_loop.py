@@ -27,7 +27,7 @@ import build_trace_view      # noqa: E402
 
 # ---- 构造各档位证据（与 test_core 口径一致）----
 def ev_aigc(score):
-    return {"aigc": {"evidence": [{"aigc_score": score, "available": True}]}}
+    return {"aigc": {"evidence": [{"aigc_score": score, "available": True, "model": "beautyproof_aigen_v4"}]}}
 
 
 def ev_trufor(score, ratio=0.1):
@@ -138,7 +138,7 @@ class TestDecisionTrace(unittest.TestCase):
     def test_negative_signal_not_contributing(self):
         # aigc 给出 0.0（<0.2，否定信号）虽在 reasons 里，不应记成推动 high_risk 的元凶
         evidence = ev_trufor(0.95)
-        evidence["aigc"] = {"evidence": [{"aigc_score": 0.0, "available": True}]}
+        evidence["aigc"] = {"evidence": [{"aigc_score": 0.0, "available": True, "model": "beautyproof_aigen_v4"}]}
         reasons = [
             "AI 生成检测：AI 生成概率 0.0（<0.2）→ 看起来像真实拍摄/人工制作的图",
             "TruFor：篡改分数 0.95（≥0.9）→ 篡改痕迹非常明显",

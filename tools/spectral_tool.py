@@ -36,6 +36,7 @@
 """
 import json
 import sys
+import os
 from pathlib import Path
 
 import numpy as np
@@ -370,7 +371,7 @@ def main():
     calib = load_calib(repo_root)
     report = build_evidence(image_path, feats, calib=calib)
 
-    out_dir = repo_root / "outputs"
+    out_dir = Path(os.environ.get("BP_RUN_OUTPUT", repo_root / "outputs"))
     out_dir.mkdir(exist_ok=True)
     out_file = out_dir / f"spectral_{image_path.stem}.json"
     out_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

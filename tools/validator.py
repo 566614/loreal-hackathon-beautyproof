@@ -57,9 +57,9 @@ def load_json(p):
         return {}
 
 
-def load_evidence(stem):
+def load_evidence(stem, output_dir=None):
     ev = {}
-    for f in OUT_DIR.glob(f"*_{stem}.json"):
+    for f in (output_dir or OUT_DIR).glob(f"*_{stem}.json"):
         if f.name.startswith("verdict_"):
             continue
         data = load_json(f)
@@ -74,7 +74,10 @@ def check(stem):
     def add(name, ok, detail):
         results.append({"check": name, "passed": bool(ok), "detail": detail})
 
-    report_path = REPORT_DIR / f"report_{stem}.md"
+    from rule_engine import latest_run_dir
+    output_dir = latest_run_dir(REPO, stem)
+    report_dir = REPORT_DIR if output_dir == OUT_DIR else output_dir
+    report_path = report_dir / f"report_{stem}.md"
     if not report_path.exists():
         add("报告存在", False, f"找不到 {report_path}，先跑 report_generator.py")
         return results
@@ -85,7 +88,7 @@ def check(stem):
     add("段落齐全", not missing, "缺少段落: " + ", ".join(missing) if missing else "四个必需段落都在")
 
     # 关2：风险等级合法
-    verdict = load_json(OUT_DIR / f"verdict_{stem}.json")
+    verdict = load_json(output_dir / f"verdict_{stem}.json")
     risk = verdict.get("risk_level", "NO_VERDICT")
     add("风险等级合法", risk in VALID_RISK, f"risk_level={risk}")
 
@@ -96,7 +99,7 @@ def check(stem):
         name = TOOL_NAMES.get(tool, "")
         return (name and name in text) or (tool.upper() in text)
 
-    evidence = load_evidence(stem)
+    evidence = load_evidence(stem, output_dir)
     cited_tools = [t for t in evidence if cited(t)]
     uncited = [t for t in evidence if not cited(t)]
     add("工具有据可查", not uncited and len(evidence) > 0,

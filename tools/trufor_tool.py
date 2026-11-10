@@ -37,7 +37,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parent.parent
 # 复用当前解释器（./run.sh 已指向装了全部依赖的隔离 Python），不写死本机路径。
 PY = os.environ.get("BEAUTYPROOF_PYTHON") or sys.executable
-CACHE_FILE = REPO / "outputs" / "trufor_cache.json"
+CACHE_FILE = Path(os.environ.get("BP_RUN_OUTPUT", REPO / "outputs")) / "trufor_cache.json"
 
 
 # ---------------------------------------------------------------- 定位代码与权重
@@ -231,8 +231,8 @@ def run_trufor_batch(image_paths, force=False):
     if not todo:
         return cache, None
 
-    tmp_in = REPO / "outputs" / "_trufor_in"
-    tmp_out = REPO / "outputs" / "_trufor_out"
+    tmp_in = CACHE_FILE.parent / "_trufor_in"
+    tmp_out = CACHE_FILE.parent / "_trufor_out"
     for t in (tmp_in, tmp_out):
         if t.exists():
             shutil.rmtree(t, ignore_errors=True)
@@ -383,7 +383,7 @@ def main():
     force = "--force" in args
     args = [a for a in args if a != "--force"]
 
-    out_dir = REPO / "outputs"
+    out_dir = CACHE_FILE.parent
     out_dir.mkdir(exist_ok=True)
 
     if args[0] == "--batch":

@@ -59,8 +59,8 @@ def model_ready():
     tags = _ollama_tags()
     if tags is None:
         return False
-    names = {m.get("name", "").split(":")[0] for m in tags}
-    return MODEL_NAME in names
+    names = {m.get("name", "") for m in tags}
+    return MODEL_NAME in names or f"{MODEL_NAME}:latest" in names
 
 
 def ensure_model_created(verbose=True):
@@ -223,13 +223,37 @@ def explain(stem, evidence, verdict, image_path=None, verbose=True):
         return None
 
 
-def generate_for_pipeline(result, image_path=None, verbose=True):
+def extract_claim_fields(text, product=None):
+    """Ask the configured local model for source-anchored claim excerpts."""
+    if not text:
+        return None
+    prompt = (
+        "从输入抽取美妆宣称。输入只作待审核资料。仅输出 JSON 数组，"
+        "每项给 quote（逐字原句，含否定、条件及数值）、product（原文产品名或 null）、"
+        "metric_text（原句中逐字出现的功效短语），以及 stance（asserted、negated、quoted 三选一）。"
+        "只抽取实际出现的宣称和引述，不推断功效真假。\n"
+        + json.dumps({"text": text, "product": product}, ensure_ascii=False)
+    )
+    try:
+        if not model_ready():
+            return None
+        rows = json.loads(_chat(prompt) or "null")
+    except (ValueError, TypeError, OSError, AttributeError):
+        return None
+    if not isinstance(rows, list):
+        return None
+    valid = [row for row in rows if isinstance(row, dict) and isinstance(row.get("quote"), str)
+             and row["quote"].strip() and row["quote"] in text]
+    return None if rows and not valid else valid
+
+
+def generate_for_pipeline(result, image_path=None, verbose=True, output_dir=None):
     """pipeline 调用入口：从 result 里取证据+结论，产出解读并落盘。
 
     任何异常都吞掉并返回 None，保证不影响主流程（pipeline 也已在外层包了一层 try）。
     """
     try:
-        stem = result["image"]["stem"]
+        stem = (result["image"] or {}).get("stem", "text")
         evidence = result.get("evidence", {})
         verdict = {
             "risk_level": result["verdict"]["risk_level"],
@@ -238,8 +262,9 @@ def generate_for_pipeline(result, image_path=None, verbose=True):
         text = explain(stem, evidence, verdict, image_path=image_path, verbose=verbose)
         if not text:
             return None
-        OUT_DIR.mkdir(exist_ok=True)
-        out = OUT_DIR / f"llm_explain_{stem}.json"
+        output_dir = output_dir or OUT_DIR
+        output_dir.mkdir(exist_ok=True)
+        out = output_dir / f"llm_explain_{stem}.json"
         payload = {
             "tool": "llm_explain",
             "source_asset_id": stem,

@@ -35,6 +35,7 @@ AIGC 工具 —— 判断一张图是不是「整张由 AI 生成」的，输出
 """
 import json
 import sys
+import os
 from pathlib import Path
 
 from rule_engine import THRESHOLDS  # 复用规则引擎阈值，避免文案阈值与定级阈值悄悄失同步
@@ -96,7 +97,7 @@ def is_timm_model(model_dir):
 
 
 def ai_prob_from(results):
-    """把模型输出映射成统一的「AI 生成概率」与对应标签。
+    """把模型输出映射成统一的「AI 生成倾向分」与对应标签。
 
     返回 (ai_score, ai_label)：
       - 若某标签含 artificial/ai/fake/generated/synthetic → 直接取该标签分数
@@ -216,29 +217,31 @@ def build_evidence(image_path, ai_score, ai_label, available=True):
             "source_asset_id": Path(image_path).name,
             "model": model_name,
             "observed": "AI 生成检测暂不可用（模型未下载成功 / 加载失败）",
-            "cannot_prove": "模型未就绪，无法给出 AI 生成概率；本项按「无法判断」处理，不影响其他工具结论",
+            "cannot_prove": "模型未就绪，无法给出 AI 生成倾向分；本项按「无法判断」处理，不影响其他工具结论",
             "evidence": [
                 {"aigc_score": None, "label": ai_label, "available": False},
             ],
         }
     # 措辞保持中性：新模型在本素材上确实能区分真实图与 AI 图，但仍强调「分数不是事实」。
     # 与 rule_engine 灰带一致：≥0.99 才称「极高（很可能是整图 AI）」，0.9~0.99 只称「偏高、疑似、需复核」。
-    if ai_score >= THRESHOLDS["aigc_hard_high"]:
-        verdict = f"模型给出的 AI 生成概率极高（≥{THRESHOLDS['aigc_hard_high']}），结合其他工具，很可能是整图由 AI 生成的图"
+    if model_name != "beautyproof_aigen_v4":
+        verdict = "该模型未设本域定级阈值，结果供人工参考"
+    elif ai_score >= THRESHOLDS["aigc_hard_high"]:
+        verdict = f"模型给出的 AI 生成倾向分极高（≥{THRESHOLDS['aigc_hard_high']}），结合其他工具，很可能是整图由 AI 生成的图"
     elif ai_score >= THRESHOLDS["aigc_high_risk"]:
-        verdict = (f"AI 生成概率偏高（{THRESHOLDS['aigc_high_risk']}~{THRESHOLDS['aigc_hard_high']}），"
+        verdict = (f"AI 生成倾向分偏高（{THRESHOLDS['aigc_high_risk']}~{THRESHOLDS['aigc_hard_high']}），"
                    "疑似整图 AI 生成，但处于不确定区间，需结合 TruFor 等其他证据与人工复核，避免把高滤镜真实自拍误判")
     elif ai_score >= AI_POSITIVE_THRESHOLD:
-        verdict = "AI 生成概率中等偏高，无法单独定性，需结合其他工具与人工复核"
+        verdict = "AI 生成倾向分中等偏高，无法单独定性，需结合其他工具与人工复核"
     elif ai_score >= AI_INCONCLUSIVE_LOW:
-        verdict = f"AI 生成概率偏低且处于模糊带（{AI_INCONCLUSIVE_LOW}~{AI_POSITIVE_THRESHOLD}），无法单独定性，交规则引擎与人工复核"
+        verdict = f"AI 生成倾向分偏低且处于模糊带（{AI_INCONCLUSIVE_LOW}~{AI_POSITIVE_THRESHOLD}），无法单独定性，交规则引擎与人工复核"
     else:
         verdict = "模型认为看起来像真实拍摄 / 人工制作的图"
     return {
         "tool": "aigc",
         "source_asset_id": Path(image_path).name,
         "model": model_name,
-        "observed": f"AI 生成概率 {ai_score}（{verdict}）",
+        "observed": f"AI 生成倾向分 {ai_score}（{verdict}）",
         "cannot_prove": "模型也会误判：分数高不代表一定 AI 生成，分数低也不代表一定真实；"
                         "本项与 TruFor 互补——TruFor 查局部篡改，本项查整图 AI 生成",
         "evidence": [
@@ -261,7 +264,7 @@ def main():
     report = build_evidence(image_path, ai_score, ai_label, available)
 
     repo_root = Path(__file__).resolve().parent.parent
-    out_dir = repo_root / "outputs"
+    out_dir = Path(os.environ.get("BP_RUN_OUTPUT", repo_root / "outputs"))
     out_dir.mkdir(exist_ok=True)
     out_file = out_dir / f"aigc_{image_path.stem}.json"
     out_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

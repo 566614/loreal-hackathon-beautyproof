@@ -281,7 +281,7 @@ def main():
                             verified=verified, declares_ai=claim.get("declares_ai", False))
 
     repo_root = Path(__file__).resolve().parent.parent
-    out_dir = repo_root / "outputs"
+    out_dir = Path(os.environ.get("BP_RUN_OUTPUT", repo_root / "outputs"))
     out_dir.mkdir(exist_ok=True)
     out_file = out_dir / f"c2pa_{image_path.stem}.json"
     out_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

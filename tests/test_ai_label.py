@@ -87,38 +87,18 @@ def test_empty_input_is_safe():
 
 
 # ---------------------------------------------------------------- 规则引擎接入
-def test_judge_escalates_to_high_risk_on_label():
+def test_visible_label_is_a_disclosure_without_a_high_risk_verdict():
     ev = ai_label_tool.build_evidence("dummy.png", [line("AI生成", 0.99)])
     level, reasons = rule_engine.judge({"ai_label": ev})
-    assert level == "high_risk"
-    assert any("可见AI标识" in r for r in reasons)
+    assert level == "inconclusive"
+    assert any("素材来源声明" in r for r in reasons)
+    out = rule_engine.explain(level, {"ai_label": ev})
+    assert "AI 标识" in out["headline"]
+    assert "来源还需核对" in out["summary"]
 
 
 def test_judge_does_nothing_without_hit():
     ev = ai_label_tool.build_evidence("dummy.png", [line("口红试用装", 0.99)])
     level, reasons = rule_engine.judge({"ai_label": ev})
-    assert level != "high_risk"
-    assert any("可见AI标识" in r for r in reasons)
-
-
-def test_switch_off_keeps_judgement_neutral():
-    ev = ai_label_tool.build_evidence("dummy.png", [line("AI生成", 0.99)])
-    old = rule_engine.AI_LABEL_TRIGGERS_RISK
-    try:
-        rule_engine.AI_LABEL_TRIGGERS_RISK = False
-        level, reasons = rule_engine.judge({"ai_label": ev})
-        assert level != "high_risk"
-        assert any("不参与自动定级" in r for r in reasons)
-    finally:
-        rule_engine.AI_LABEL_TRIGGERS_RISK = old
-
-
-def test_explain_returns_all_fields_on_label_path():
-    """explain() 历史坑：按风险分支写文案，漏一个字段就 UnboundLocalError。这里钉死四字段齐全。"""
-    ev = ai_label_tool.build_evidence("dummy.png", [line("AI生成", 0.99)])
-    out = rule_engine.explain("high_risk", {"ai_label": ev})
-    for k in ("headline", "summary", "what_to_do", "caveat", "action_playbook"):
-        assert k in out and out[k], f"explain() 缺字段 {k}"
-    assert "AI生成" in out["headline"] or "AI生成" in out["summary"]
-    # 标识可伪造的边界必须出现在给用户看的提醒里
-    assert "伪造" in out["caveat"]
+    assert level == "inconclusive"
+    assert any("未在图上读到" in r for r in reasons)

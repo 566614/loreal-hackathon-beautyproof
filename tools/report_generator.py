@@ -14,12 +14,13 @@
     所以这里用**模板拼装**：报告里每一个字都能对应到某个工具的实际输出，
     没有任何一句是模型自己编的。可复现、可审计、答辩时讲得清。
 """
+import os
 import json
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-OUT_DIR = REPO / "outputs"
+OUT_DIR = Path(os.environ.get("BP_RUN_OUTPUT", REPO / "outputs"))
 REPORT_DIR = REPO / "reports"
 
 TOOL_NAMES = {
@@ -276,7 +277,11 @@ def main():
     if len(sys.argv) < 2:
         print("用法: python tools/report_generator.py <图片名不带后缀>")
         return 1
+    global OUT_DIR
     stem = Path(sys.argv[1]).stem
+    if "BP_RUN_OUTPUT" not in os.environ:
+        from rule_engine import latest_run_dir
+        OUT_DIR = latest_run_dir(REPO, stem)
     evidence = load_evidence(stem)
     if not evidence:
         print(f"outputs/ 下没找到 {stem} 的证据文件，先跑 batch_run.py")
@@ -284,8 +289,21 @@ def main():
     verdict = load_verdict(stem)
     report = build_report(stem, evidence, verdict)
 
-    REPORT_DIR.mkdir(exist_ok=True)
-    out = REPORT_DIR / f"report_{stem}.md"
+    snapshot = OUT_DIR / f"analysis_{stem}.json"
+    if snapshot.exists():
+        result = json.loads(snapshot.read_text(encoding="utf-8"))
+        claims = result.get("audit", {}).get("claims", [])
+        if claims:
+            report += "\n## 宣称核验\n\n"
+            for claim in claims:
+                report += f"- {claim['status']}｜{claim['quote']}\n"
+                for ref in claim["references"]:
+                    report += f"  - 参考资料 {ref['source']}｜{ref['quote']}\n"
+                for missing in claim["missing"]:
+                    report += f"  - 待补 {missing}\n"
+    report_dir = OUT_DIR if "BP_RUN_OUTPUT" in os.environ else REPORT_DIR
+    report_dir.mkdir(exist_ok=True)
+    out = report_dir / f"report_{stem}.md"
     out.write_text(report, encoding="utf-8")
     print(f"报告已生成: {out}")
     print(f"结论: {verdict.get('risk_level', 'NO_VERDICT')}")

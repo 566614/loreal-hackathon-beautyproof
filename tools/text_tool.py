@@ -101,6 +101,8 @@ DETAIL_SHADE = re.compile(r"[A-Za-z]*\d{2,3}\s*(号|色)?|(色号)|(#\w+)")
 
 def scan_claims(text):
     """逐条扫违禁宣称词典，返回命中列表（含位置与上下文，可人工核对）"""
+    from claim_review import stance_at
+
     hits = []
     for category, spec in CLAIM_LEXICON.items():
         for word in spec["words"]:
@@ -109,6 +111,9 @@ def scan_claims(text):
                 idx = text.find(word, start)
                 if idx < 0:
                     break
+                start = idx + len(word)
+                if stance_at(text, idx) != "asserted":
+                    continue
                 left = max(0, idx - 12)
                 right = min(len(text), idx + len(word) + 12)
                 hits.append({
@@ -120,7 +125,6 @@ def scan_claims(text):
                     "position": idx,
                     "context": text[left:right],
                 })
-                start = idx + len(word)
     hits.sort(key=lambda x: (-{"high": 2, "medium": 1}.get(x["severity"], 0), x["position"]))
     return hits
 

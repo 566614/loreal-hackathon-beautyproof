@@ -40,6 +40,11 @@ def main():
                     help="real=统计误报率（真实图被判成 AI 的比例）；ai=统计召回率")
     ap.add_argument("--tag", default=None, help="输出文件名标识（默认用模型名）")
     args = ap.parse_args()
+    folders = [(Path(d), collect(Path(d))) for d in args.dirs]
+    missing = [str(folder) for folder, images in folders if not images]
+    if missing:
+        print("缺少评测原图，未运行或写入结果：" + "、".join(missing), file=sys.stderr)
+        return 1
 
     sys.path.insert(0, str(REPO / "tools"))
     import aigc_tool
@@ -64,12 +69,7 @@ def main():
         "dirs": {},
     }
 
-    for d in args.dirs:
-        folder = Path(d)
-        imgs = collect(folder)
-        if not imgs:
-            print(f"[警告] 目录为空或不存在：{folder}", flush=True)
-            continue
+    for folder, imgs in folders:
         rows, unavailable = [], []
         for p in imgs:
             score, label, available = aigc_tool.run_aigc(p)
@@ -106,6 +106,9 @@ def main():
         if n:
             print(f"  {tag}_rate(≥{pos_thr}) = {entry.get('false_positive_rate_positive', entry.get('recall_positive'))}", flush=True)
 
+    if not any(entry["n"] for entry in report["dirs"].values()):
+        print("所有推理均不可用，未写入评测结果。", file=sys.stderr)
+        return 1
     tag = args.tag or args.model
     out = REPO / "results" / f"realworld_eval_{tag}.json"
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

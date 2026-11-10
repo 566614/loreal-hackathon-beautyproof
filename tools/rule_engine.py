@@ -36,9 +36,9 @@ THRESHOLDS = {
     #   真实图误报（realworld_heldout + filter_selfie_heldout）全部落在 0.9154~0.9842（灰带内）；
     #   被模型捕获的 AI 图（controlled_ai / ai_cross_native）最小为 0.9959（全在 hard_high 之上）。
     #   灰带 [0.9, 0.99) 把真实误报从「自动下架」降级为「人工复核」，且不丢失任何已捕获 AI 图。
-    "aigc_hard_high": 0.99,      # AI 生成概率 ≥ 这个 → high_risk（仅此极高风险区才自动定级）
-    "aigc_high_risk": 0.9,       # AI 生成概率 ≥ 这个但 < aigc_hard_high → 灰带：suspicious（人工复核，不自动下架）
-    "aigc_abstain": 0.2,         # AI 生成概率落在 [0.2, 0.9) → 本项弃权，不硬判
+    "aigc_hard_high": 0.99,      # AI 生成倾向分 ≥ 这个 → high_risk（仅此极高风险区才自动定级）
+    "aigc_high_risk": 0.9,       # AI 生成倾向分 ≥ 这个但 < aigc_hard_high → 灰带：suspicious（人工复核，不自动下架）
+    "aigc_abstain": 0.2,         # AI 生成倾向分落在 [0.2, 0.9) → 本项弃权，不硬判
     "ela_region_score": 2.0,     # 最可疑区域误差超过这个 → 可疑（注意：ELA 只查局部二次编辑，
                                   #   对整图 AI 生成无效，因此它只升 suspicious，绝不单独升 high_risk）
     # 频域（spectral / FFT）双阈值 —— 2026-10-02 新增，与 AIGC 三档同理：
@@ -61,9 +61,9 @@ THRESHOLDS = {
 # 早期用的 sdxl-detector 在本批素材上零区分度（真实图 0.9571 vs 篡改图 0.9621），
 # 因此长期关闭。2026-09-23 换成区分度更好的本域微调模型，在真实照片上分数明显低于 AI 生成图，
 # 故重新启用。2026-09-29 灰带重构后分三档（见 THRESHOLDS 注释）：
-#   AI 生成概率 ≥ aigc_hard_high(0.99) → high_risk（极可能是整图 AI 生成，TruFor 查不出，靠它兜底）
-#   AI 生成概率 ∈ [aigc_high_risk(0.9), aigc_hard_high) → suspicious（灰带，疑似但非极高，转人工复核，不自动下架）
-#   AI 生成概率 ∈ [aigc_abstain(0.2), aigc_high_risk) → 弃权（本项不硬判，交 TruFor / 人工）
+#   AI 生成倾向分 ≥ aigc_hard_high(0.99) → high_risk（极可能是整图 AI 生成，TruFor 查不出，靠它兜底）
+#   AI 生成倾向分 ∈ [aigc_high_risk(0.9), aigc_hard_high) → suspicious（灰带，疑似但非极高，转人工复核，不自动下架）
+#   AI 生成倾向分 ∈ [aigc_abstain(0.2), aigc_high_risk) → 弃权（本项不硬判，交 TruFor / 人工）
 # 灰带的关键作用：真实滤镜自拍常被误判到 0.9~0.99 区间，直接判 high_risk 会误伤（自动下架真实图）；
 # 而模型真正捕获的 AI 图几乎都在 0.99 以上，所以把灰带单独拆出来只升到 suspicious，既不丢 AI 召回、又压住误伤。
 # 仍保留「分数不是事实」的边界声明，high_risk / suspicious 都必人工复核。
@@ -110,7 +110,6 @@ TEXT_CLAIM_TRIGGERS_RISK = True
 # 为什么它可以单独定 high_risk（不像频域那样只能升 suspicious）：
 #   相机直出的真实照片不会有「AI生成」这种标识，它不是"某个分数偏高"，而是"图上自证"。
 # 诚实的边界（必须同时讲）：标识可被伪造/贴图；洗掉标识的 AI 图本工具发现不了。
-AI_LABEL_TRIGGERS_RISK = True
 
 RISK_LEVELS = ["high_risk", "suspicious", "credible", "inconclusive"]
 
@@ -157,12 +156,55 @@ def _first(ev, tool):
     return items[0] if items else {}
 
 
-def load_evidence(repo_root, stem):
+def image_signals(evidence):
+    """Report what each image tool observed and which score can inform rules."""
+    aigc = _first(evidence, "aigc")
+    trufor = _first(evidence, "trufor")
+    credential = _first(evidence, "c2pa")
+    label = _first(evidence, "ai_label")
+    score = aigc.get("aigc_score") if aigc.get("available", True) else None
+    model = aigc.get("model") or evidence.get("aigc", {}).get("model")
+    # The old operating thresholds were chosen for v4. They are provisional
+    # and do not apply to a model chosen by fallback.
+    threshold_profile = model if model == "beautyproof_aigen_v4" else None
+    return {
+        "origin": {
+            "model": model, "score": score, "threshold_profile": threshold_profile,
+            "decision_score": score if threshold_profile and AIGC_TRIGGERS_RISK else None,
+            "visible_ai_label": bool(label.get("ai_label_detected")),
+            "verified_ai": bool(credential.get("c2pa_verified") and credential.get("c2pa_declares_ai_generated")),
+            "credential_verified": bool(credential.get("c2pa_verified")),
+        },
+        "editing": {"score": trufor.get("trufor_score") if trufor.get("available", True) else None,
+                    "region": trufor.get("tampered_position"),
+                    "area_ratio": trufor.get("tampered_area_ratio"),
+                    "physical_makeup": "无法从当前编辑检测确定"},
+    }
+
+
+def latest_run_dir(repo_root, stem):
+    """Locate the run behind a named analysis snapshot, with legacy fallback."""
+    output = repo_root / "outputs"
+    try:
+        snapshot = json.loads((output / f"analysis_{stem}.json").read_text(encoding="utf-8"))
+        run_id = snapshot.get("run_id")
+    except (OSError, ValueError):
+        return output
+    if isinstance(run_id, str) and len(run_id) == 32 and all(c in "0123456789abcdef" for c in run_id):
+        run = output / "runs" / run_id
+        if run.is_dir():
+            return run
+    return output
+
+
+def load_evidence(repo_root, stem, output_dir=None):
     """读 outputs/ 下所有 <stem>_<tool>.json，按 tool 分类返回字典"""
-    out_dir = repo_root / "outputs"
+    out_dir = output_dir or repo_root / "outputs"
     evidence = {}
-    for f in out_dir.glob(f"*_{stem}.json"):
-        if "_run_" in f.name:
+    if not out_dir.is_dir():
+        return evidence
+    for f in out_dir.iterdir():
+        if not f.name.endswith(f"_{stem}.json") or (output_dir is None and "_run_" in f.name):
             continue
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
@@ -179,11 +221,14 @@ def judge(evidence):
     reasons = []
 
     # 信号0：图文交叉验证 —— 跨模态证据，优先级高于任何单侧分数
+    signals = image_signals(evidence)
     cross_medium = False
+    disclosed = False
     cross = evidence.get("crossmodal")
     if cross:
         c0 = (cross.get("evidence") or [{}])[0]
         level = c0.get("conflict_level")
+        disclosed = bool(c0.get("ai_illustration_disclosed"))
         cons = c0.get("contradictions") or []
         top = cons[0] if cons else {}
         if level == "hard" and CROSSMODAL_TRIGGERS_RISK:
@@ -210,33 +255,40 @@ def judge(evidence):
     if aigc:
         items = aigc.get("evidence", [])
         first = items[0] if items else {}
-        aigc_score = first.get("aigc_score")
+        aigc_score = signals["origin"]["decision_score"]
         available = first.get("available", True)
         if aigc_score is None:
             if not available:
                 reasons.append("AI 生成检测：模型未就绪（暂未下载成功），本项无法判断，已跳过")
+            elif signals["origin"]["score"] is not None:
+                reasons.append("AI 生成检测：该模型没有适用的定级阈值，分数仅供参考")
             else:
                 reasons.append("AI 生成检测：本次推理未返回分数，本项无法判断，已跳过")
         elif AIGC_TRIGGERS_RISK:
-            if aigc_score >= THRESHOLDS["aigc_hard_high"]:
+            if disclosed:
+                reasons.append("素材已声明为 AI 示意，生成倾向作为来源线索记录")
+            elif "text" in evidence and aigc_score >= THRESHOLDS["aigc_hard_high"]:
+                aigc_gray_flag = True
+                reasons.append(f"AI 生成检测：倾向分 {aigc_score}，需结合宣传用途核对来源")
+            elif aigc_score >= THRESHOLDS["aigc_hard_high"]:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {aigc_score}（≥{THRESHOLDS['aigc_hard_high']}）→ "
+                    f"AI 生成检测：AI 生成倾向分 {aigc_score}（≥{THRESHOLDS['aigc_hard_high']}）→ "
                     f"极可能是整图由 AI 生成的图")
                 return "high_risk", reasons
             elif aigc_score >= THRESHOLDS["aigc_high_risk"]:
                 aigc_gray_flag = True
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {aigc_score} 落在高分区但未到极高 "
+                    f"AI 生成检测：AI 生成倾向分 {aigc_score} 落在高分区但未到极高 "
                     f"[{THRESHOLDS['aigc_high_risk']}, {THRESHOLDS['aigc_hard_high']}) → "
                     f"疑似整图 AI 生成，需另一条独立证据佐证或人工复核")
             elif aigc_score >= THRESHOLDS["aigc_abstain"]:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {aigc_score} 落在不确定区间 "
+                    f"AI 生成检测：AI 生成倾向分 {aigc_score} 落在不确定区间 "
                     f"[{THRESHOLDS['aigc_abstain']}, {THRESHOLDS['aigc_high_risk']}) → "
                     f"本项模型拿不准，不做判定，交由其他证据与人工复核")
             else:
                 reasons.append(
-                    f"AI 生成检测：AI 生成概率 {aigc_score}（<{THRESHOLDS['aigc_abstain']}）→ "
+                    f"AI 生成检测：AI 生成倾向分 {aigc_score}（<{THRESHOLDS['aigc_abstain']}）→ "
                     f"看起来像真实拍摄/人工制作的图")
 
     # 信号1a：可见 AI 标识 —— 2026-10-02 新增。
@@ -250,16 +302,8 @@ def judge(evidence):
         best = a0.get("best_hit") or {}
         if not detected:
             reasons.append("可见AI标识：本项未在图上读到「AI生成/AI绘制/人工智能生成」这类标识（不排除是漏检）")
-        elif not AI_LABEL_TRIGGERS_RISK:
-            reasons.append(
-                f"可见AI标识：图上标有「{best.get('text', '')}」（按开关设置不参与自动定级）")
         else:
-            hint = f"，同区域还出现生成器/平台名「{best.get('generator_hint')}」" if best.get("generator_hint") else ""
-            reasons.append(
-                f"可见AI标识：图上明确标注「{best.get('text', '')}」"
-                f"（OCR 抄写置信度 {best.get('confidence')}，位置 {best.get('bbox')}{hint}）"
-                f"→ 图上自证为 AI 生成，模型分数再低也不改变这一事实")
-            return "high_risk", reasons
+            reasons.append(f"可见 AI 标识：图中读到「{best.get('text', '')}」，记录为素材来源声明")
 
     # 信号1b：频域取证 —— 与压缩历史无关的独立证据线，专治 AIGC 的跨生成器盲区
     spec = evidence.get("spectral")
@@ -287,19 +331,19 @@ def judge(evidence):
             reasons.append(f"频域取证：倾向分 {spec_score}（<{THRESHOLDS['spectral_gray']}）→ 频谱形态接近常规照片")
 
     # 级联判定：两条独立证据一致才自动下架（实测：捕获率 +5.3pt，自动下架误伤保持 0/20）
-    if aigc_gray_flag and spec_strong:
+    if not disclosed and "text" not in evidence and aigc_gray_flag and spec_strong:
         reasons.append(
             f"双证据一致：AIGC 高分区（{aigc_score}）+ 频域强信号（{spec_score}）→ "
             f"两条互相独立的证据都指向 AI 生成，自动定级高风险")
         return "high_risk", reasons
-    if aigc_score is not None and THRESHOLDS["aigc_abstain"] <= aigc_score < THRESHOLDS["aigc_high_risk"] \
+    if not disclosed and aigc_score is not None and THRESHOLDS["aigc_abstain"] <= aigc_score < THRESHOLDS["aigc_high_risk"] \
             and spec_strong:
         # AIGC 弃权但频域强 —— 这正是级联要捞回来的那批跨生成器漏检
         aigc_gray_flag = True
         reasons.append(
             f"级联捞回：AIGC 落在弃权区（{aigc_score}）本不判定，"
             f"但频域给出强信号（{spec_score}）→ 合并升为可疑，转人工复核")
-    if spec_gray:
+    if spec_gray and not disclosed:
         aigc_gray_flag = True
 
     # 信号2：TruFor 深度学习篡改检测 —— 真的查"有没有被人工改过"
@@ -314,11 +358,13 @@ def judge(evidence):
 
         if score is None or not available:
             reasons.append("TruFor 检测：模型未部署/未返回分数，本项无法判断，已跳过")
+        elif disclosed:
+            reasons.append(f"TruFor 检测：局部异常分 {score}，作为已声明示意素材的图像线索记录")
         elif not TRUFOR_TRIGGERS_RISK:
             reasons.append(f"TruFor：篡改分数 {score}（已检测，但按开关设置不参与自动定级）")
         elif score >= THRESHOLDS["trufor_high"]:
             reasons.append(f"TruFor：篡改分数 {score}（≥{THRESHOLDS['trufor_high']}）→ 篡改痕迹非常明显{extra}")
-            return "high_risk", reasons
+            return ("suspicious" if "text" in evidence else "high_risk"), reasons
         elif score >= THRESHOLDS["trufor_suspicious"]:
             reasons.append(f"TruFor：篡改分数 {score}（≥{THRESHOLDS['trufor_suspicious']}）→ 有明显篡改痕迹{extra}")
             return "suspicious", reasons
@@ -368,7 +414,7 @@ def judge(evidence):
     # （reviewer P0：旧逻辑把 present 直接升 credible，是「非空字符串即可信」的误判；
     #  现在只有 verified 且非 AI 声明的凭证才升 credible；AI 声明反而要标可疑。）
     c2pa = evidence.get("c2pa")
-    if c2pa:
+    if c2pa and not disclosed:
         e0 = c2pa.get("evidence", [{}])[0]
         status = e0.get("c2pa_status")
         verified = e0.get("c2pa_verified", False)
@@ -381,7 +427,7 @@ def judge(evidence):
                 "属 AI 生成证据，不提升来源可信度，转交人工确认")
             return "suspicious", reasons
 
-        if status in ("present", "present_verified", "present_unverified") and verified:
+        if status in ("present", "present_verified", "present_unverified") and verified and "text" not in evidence and not aigc_gray_flag:
             reasons.append("C2PA：凭证存在且通过验证，编辑历史可查 → 来源可信度较高")
             return "credible", reasons
 
@@ -441,9 +487,11 @@ def explain(risk_level, evidence):
     aigc_score = aigc.get("aigc_score")
     aigc_ready = bool(aigc.get("available", True)) and aigc_score is not None
     # high_risk 由 AIGC 触发，仅当分数达到 hard_high（≥0.99）—— 与 judge() 一致
-    aigc_triggered = aigc_ready and aigc_score >= THRESHOLDS["aigc_hard_high"]
+    aigc_triggered = (image_signals(evidence)["origin"]["decision_score"] is not None
+                      and aigc_score >= THRESHOLDS["aigc_hard_high"])
     # 灰带：分数落在 [0.9, 0.99)，疑似但非极高（高滤镜真实自拍也常落此区间）
-    aigc_gray = aigc_ready and THRESHOLDS["aigc_high_risk"] <= aigc_score < THRESHOLDS["aigc_hard_high"]
+    aigc_gray = (image_signals(evidence)["origin"]["decision_score"] is not None and
+                 THRESHOLDS["aigc_high_risk"] <= aigc_score < THRESHOLDS["aigc_hard_high"])
 
     # 频域证据（2026-10-02 新增）：生成器无关的独立信号，与 AIGC 互为补盲
     spc = _first(evidence, "spectral")
@@ -453,9 +501,6 @@ def explain(risk_level, evidence):
     spec_gray = spec_ready and THRESHOLDS["spectral_gray"] <= spec_score < THRESHOLDS["spectral_strong"]
 
     # 可见 AI 标识（2026-10-02 新增）：模型盲区的补偿手段
-    lbl = _first(evidence, "ai_label")
-    lbl_detected = bool(lbl.get("ai_label_detected"))
-    lbl_best = lbl.get("best_hit") or {}
 
     caveat = ("以上结论来自算法比对，不是法律意义上的鉴定意见。"
               "分数高不代表一定有罪（压缩、滤镜也会留痕），分数低也不代表绝对干净。")
@@ -469,23 +514,6 @@ def explain(risk_level, evidence):
     action_playbook = ACTION_PLAYBOOK[risk_level]
 
     if risk_level == "high_risk":
-        if lbl_detected:
-            # 可见 AI 标识：图上自证，优先于分数类解释（分数可能很低，必须先解释清楚为什么还是高风险）
-            headline = "图上带着「AI生成」标识，建议直接下架并追来源"
-            gen = lbl_best.get("generator_hint")
-            summary = (f"OCR 在图上读到「{lbl_best.get('text', '')}」"
-                       f"（抄写置信度 {lbl_best.get('confidence')}，位置 {lbl_best.get('bbox')}）"
-                       + (f"，同区域还有生成器/平台名「{gen}」" if gen else "")
-                       + "。这意味着图上已经自带了「这是 AI 生成的」的标注 —— "
-                         "相机拍的真实照片不会有这种字样，所以不需要再等模型分数。")
-            what_to_do = ("先按平台规则处理下架/限流，再顺着标识里的平台名去查这张图的生成来源与授权情况；"
-                          "如果这张图确实是品牌方自己买的 AI 素材，请补登记授权凭证再放行。")
-            return {
-                "headline": headline, "summary": summary,
-                "what_to_do": what_to_do,
-                "caveat": caveat + " 另外：标识本身可被伪造或贴图，若图上写着 AI 生成但内容与生成痕迹明显矛盾，请人工复核。",
-                "action_playbook": action_playbook,
-            }
         if cross_level == "hard":
             headline = "文案和图在互相打架，建议立即复核"
             summary = (f"{cross_top.get('text_side', '')}，"
@@ -501,9 +529,9 @@ def explain(risk_level, evidence):
             }
         elif aigc_triggered:
             # 整图 AI 生成：这是 TruFor 查不出的盲区，由本域微调的 AIGC 模型兜底
-            headline = "检测到整图由 AI 生成，建议人工复核"
+            headline = "整图生成倾向较高，建议核对素材来源"
             summary = (f"AI 生成检测给出 {aigc_score}"
-                       f"（≥{THRESHOLDS['aigc_high_risk']}），"
+                       f"（≥{THRESHOLDS['aigc_hard_high']}），"
                        "说明这张图很可能是整张由 AI 生成的，而不是相机拍出来的。")
             if spec_ready:
                 summary += (f"频域取证同时给出倾向分 {spec_score}"
@@ -513,7 +541,7 @@ def explain(risk_level, evidence):
                 summary += f"取证模型 TruFor 同时给出篡改分 {score}"
                 if ratio is not None:
                     summary += f"，可疑区域约占全图 {ratio:.1%}"
-                summary += "，与「整图 AI 生成」的判断方向一致。"
+                summary += "。该分数只提示局部图像异常。"
         elif tru_ready:
             headline = "发现明显篡改痕迹，建议人工复核"
             summary = f"取证模型给出的整图篡改分为 {score}（越接近 1.0 越可疑）"
@@ -521,7 +549,7 @@ def explain(risk_level, evidence):
                 summary += f"，可疑区域约占全图 {ratio:.1%}"
             pos = tru.get("tampered_position")
             if pos:
-                summary += f"。可疑痕迹主要集中在{pos}，很可能是这块区域被复制、拼接或改写过，对照定位热力图的红色区域即可确认。"
+                summary += f"。可疑痕迹主要集中在{pos}，可对照热力图核对原片和编辑记录。"
             else:
                 summary += "。说明图上很可能有区域被复制、拼接或改写过，配合定位热力图的红色区域可以大致看出是哪里。"
             # 关于「是否整图 AI 生成」：实测发现 AI 生成图也拿高分、但可疑区域极小（0.4%~0.9%），
@@ -599,8 +627,20 @@ def explain(risk_level, evidence):
             summary = "这张图带有 C2PA 内容凭证（相当于图片的「出生证」），拍摄来源和编辑历史可查。"
         else:
             summary = "现有信号显示这张图的来源和编辑历史比较清晰。"
-        what_to_do = "可以正常使用，建议把凭证一并留存备查。"
+        what_to_do = "保留来源凭证。若用于宣传，另核对对应的功效依据。"
 
+    elif _first(evidence, "crossmodal").get("ai_illustration_disclosed"):
+        headline = "素材已声明为 AI 示意"
+        summary = "示意素材按来源说明记录。具体功效仍需核对对应的原始依据。"
+        what_to_do = "按宣传用途保留标识并核对关联宣称。"
+    elif _first(evidence, "ai_label").get("ai_label_detected"):
+        headline = "图中读到 AI 标识"
+        summary = "记录为可见的来源声明。标识可能被复制或误读，来源还需核对。"
+        what_to_do = "核对原始素材和发布方的来源说明。"
+    elif "text" in evidence and not tru_ready:
+        headline = "现有证据不足以确认宣传宣称"
+        summary = "已检查正文。具体功效需核对对应产品、指标和条件的材料。"
+        what_to_do = "补充原始试验材料或相关凭证后复核。"
     else:  # inconclusive
         headline = "没查出篡改信号，但也无法证明一定真实"
         if not tru_ready:

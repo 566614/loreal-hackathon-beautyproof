@@ -235,7 +235,10 @@ def report(stem):
     if not _safe_stem(stem):
         return jsonify({"error": "未找到该图的报告"}), 404
     err = None   # 显式初始化：原写法 `err if 'err' in dir() else ''` 靠运行时自省探测变量是否存在
-    md_path = REPORTS / f"report_{stem}.md"
+    from rule_engine import latest_run_dir
+    output_dir = latest_run_dir(REPO, stem)
+    report_dir = REPORTS if output_dir == OUTPUTS else output_dir
+    md_path = report_dir / f"report_{stem}.md"
     if not md_path.is_file():
         return jsonify({"error": f"未找到该图的报告：reports/report_{stem}.md"}), 404
 
@@ -244,7 +247,7 @@ def report(stem):
         import export_pdf as ep  # noqa: E402
         ep._check_reportlab()
         body_font, mono_font, _ = ep.register_fonts()
-        pdf_path = REPORTS / f"report_{stem}.pdf"
+        pdf_path = md_path.with_suffix(".pdf")
         ep.export_one(md_path, pdf_path, body_font, mono_font)
         if pdf_path.is_file():
             return send_file(

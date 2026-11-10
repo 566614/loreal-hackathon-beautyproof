@@ -151,6 +151,17 @@ button.primary:disabled{opacity:.5;cursor:default}
       style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);
              border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;
              background:var(--card);color:var(--ink);line-height:1.6"></textarea>
+    <div id="auditInputs">
+      <details>
+        <summary>产品与功效依据（选填）</summary>
+        <label>宣传产品 <input id="product" placeholder="用于对齐图文所指的同一产品"></label>
+        <label>依据名称 <input id="referenceSource" placeholder="试验或原始资料名称"></label>
+        <label>依据对应产品 <input id="referenceProduct" placeholder="按依据原文填写"></label>
+        <label>依据原文 <textarea id="referenceExcerpt" rows="2"></textarea></label>
+        <label><input type="checkbox" id="claimLlm"> 使用已配置的本地模型辅助抽取</label>
+      </details>
+      <button id="auditText" type="button">只审核正文</button>
+    </div>
   </div>
 
   <div class="panel" id="status">
@@ -209,7 +220,7 @@ button.primary:disabled{opacity:.5;cursor:default}
     </div>
 
     <div class="panel card" id="bandCard" style="margin:0 0 16px">
-      <h3><span class="bar"></span>AI 判定不是「超过就下架」：三档阈值
+      <h3><span class="bar"></span>AI 生成倾向分参考区间
         <span style="font-weight:400;font-size:12.5px;color:var(--ink3);margin-left:4px">中间那段留给人</span>
       </h3>
       <div id="bandBody"></div>
@@ -242,6 +253,7 @@ button.primary:disabled{opacity:.5;cursor:default}
 
 <script>
 const $=s=>document.querySelector(s);
+const escapeText=value=>String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const RISK={
   high_risk:{zh:"高风险",en:"HIGH RISK",bg:"var(--red-bg)",fg:"var(--red)",
     head:"检测到明确篡改痕迹，建议人工复核后处理"},
@@ -263,18 +275,26 @@ drop.addEventListener("click",()=>fileInput.click());
 drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)start(f)});
 fileInput.addEventListener("change",()=>{if(fileInput.files[0])start(fileInput.files[0])});
 
+$("#auditText").addEventListener("click",()=>start(null));
+
 function start(file){
+  const tx=$("#text").value.trim();
+  const source=$("#referenceSource").value.trim(), excerpt=$("#referenceExcerpt").value.trim();
+  if(!file && !tx){showErr("请先填写正文");return;}
+  if(Boolean(source)!==Boolean(excerpt)){showErr("请同时填写依据名称和原文");return;}
   $("#err").style.display="none";
   $("#result").style.display="none";
   $("#status").style.display="block";
   $("#steps").innerHTML="";
-  $("#dropText").textContent="正在送检：" + file.name;
+  $("#dropText").textContent=file ? "正在送检：" + file.name : "正在审核正文";
   drop.classList.add("busy");
   const fd=new FormData();
-  fd.append("file",file);
+  if(file)fd.append("file",file);
   if($("#fast").checked)fd.append("fast","1");
-  const tx=($("#text")&&$("#text").value||"").trim();
   if(tx)fd.append("text",tx);
+  fd.append("product",$("#product").value.trim());
+  if(source)fd.append("references",JSON.stringify([{source,excerpt,product:$("#referenceProduct").value.trim() || null}]));
+  if($("#claimLlm").checked)fd.append("llm","1");
   fetch("/api/analyze",{method:"POST",body:fd})
     .then(r=>r.json())
     .then(d=>{
@@ -323,10 +343,43 @@ function render(res,fresh){
   $("#result").style.display="block";
   $("#vBadge").style.background=r.bg; $("#vText").style.color=r.fg;
   $("#vText").textContent=r.zh; $("#vEn").textContent=r.en;
-  $("#vHead").textContent=r.head;
-  $("#vMeta").textContent=`${res.image.name} · ${res.image.width||"?"}×${res.image.height||"?"} ·
-    ${(res.image.size_bytes/1024).toFixed(0)} KB · 用时 ${res.elapsed_seconds}s ·
-    ${v.tools_used.length} 件给出证据`;
+  $("#vHead").textContent=v.explain?.headline || r.head;
+  $("#vMeta").textContent=res.image
+    ? `${res.image.name} · ${res.image.width||"?"}×${res.image.height||"?"} · ${v.tools_used.length} 项证据`
+    : `正文审核 · ${v.tools_used.length} 项证据`;
+
+  let auditPanel=$("#claimAudit");
+  if(!auditPanel){
+    auditPanel=document.createElement("div");
+    auditPanel.id="claimAudit";
+    auditPanel.className="panel";
+    $("#result .verdict").after(auditPanel);
+  }
+  auditPanel.replaceChildren();
+  auditPanel.hidden=!res.audit;
+  if(res.audit){
+    const title=document.createElement("h3");
+    title.textContent="宣称核验";
+    auditPanel.append(title);
+    const statusLabels={completed:"已完成",insufficient_evidence:"证据不足",model_unavailable:"模型不可用"};
+    const info=document.createElement("p");
+    info.textContent=Object.entries(res.audit.checks)
+      .map(([tool,check])=>`${TOOLZH[tool] || tool}：${statusLabels[check.decision_status || check.status]}`).join(" · ");
+    auditPanel.append(info);
+    if(res.audit.ai_illustration_disclosed){
+      const disclosure=document.createElement("p");
+      disclosure.textContent="素材已标注为 AI 示意";
+      auditPanel.append(disclosure);
+    }
+    for(const claim of res.audit.claims){
+      const row=document.createElement("p");
+      row.textContent=`${claim.status}｜${claim.quote}` +
+        claim.references.map(ref=>`｜${ref.source}：${ref.quote}`).join("") +
+        claim.conflicts.map(c=>`｜图文冲突：${c.text_side} / ${c.image_side}`).join("") +
+        (claim.missing.length ? `｜待补 ${claim.missing.join("、")}` : "");
+      auditPanel.append(row);
+    }
+  }
 
   /* Agent 决策过程 —— 评委最想看的一段：它为什么跳过、判完之后要干什么 */
   const ag=res.agent;
@@ -341,14 +394,14 @@ function render(res,fresh){
         +`<span style="position:absolute;left:6px;top:12px;width:7px;height:7px;border-radius:50%;background:${col}"></span>`
         +`<b style="color:var(--ink)">${skip?"跳过":"处理"} ${d.tool}</b>`
         +`<span style="color:var(--ink3);font-size:12px"> · 规则 ${d.rule}</span>`
-        +`<div style="margin-top:3px">${d.reason}</div></div>`;
+        +`<div style="margin-top:3px">${escapeText(d.reason)}</div></div>`;
     });
     (ag.actions||[]).forEach(a=>{
       ah+=`<div style="padding:9px 0 9px 26px;position:relative;font-size:13.5px;color:var(--ink2);border-bottom:1px dashed var(--line)">`
         +`<span style="position:absolute;left:6px;top:12px;width:7px;height:7px;border-radius:50%;background:var(--amber)"></span>`
         +`<b style="color:var(--ink)">${a.action}</b>`
         +`<span style="color:var(--ink3);font-size:12px"> · 规则 ${a.rule}</span>`
-        +`<div style="margin-top:3px">${a.reason}</div></div>`;
+        +`<div style="margin-top:3px">${escapeText(a.reason)}</div></div>`;
     });
     $("#agentBody").innerHTML=ah;
   }else{
@@ -383,19 +436,19 @@ function render(res,fresh){
   /* 图：原图 + 热力叠加 */
   const im=$("#imgs");
   im.innerHTML="";
-  if(res.image.preview)im.appendChild(imgCard("送检原图",res.image.preview));
+  if(res.image?.preview)im.appendChild(imgCard("送检原图",res.image.preview));
   if(res.visuals&&res.visuals.overlay)im.appendChild(imgCard("TruFor 篡改定位（红 = 可疑区域）",res.visuals.overlay));
   else if(res.visuals&&res.visuals.heatmap)im.appendChild(imgCard("TruFor 篡改热力图",res.visuals.heatmap));
 
   /* 理由与边界 */
-  $("#reasons").innerHTML=v.reasons.map(x=>`<li>${x}</li>`).join("");
+  $("#reasons").innerHTML=v.reasons.map(x=>`<li>${escapeText(x)}</li>`).join("");
 
   /* 三档阈值可视化：把 0.2 / 0.9 / 0.99 三条线画成一条刻度带，标出本图落点。
      这条带子存在的意义：让评委 3 秒看懂「为什么 0.95 不自动下架」 */
   (function(){
     const av=(res.evidence.aigc||{}).evidence?.[0]||{};
     const sc=av.aigc_score;
-    const has=typeof sc==="number";
+    const has=typeof sc==="number" && (!res.audit || !!res.audit.image_signals.origin.threshold_profile);
     const col=!has?"var(--ink3)":(sc>=0.99?"var(--red)":(sc>=0.9?"var(--amber)":"var(--green)"));
     const seg=(a,b,c,txt,dim)=>`<div style="position:absolute;left:${a*100}%;width:${(b-a)*100}%;top:0;height:100%;`
       +`background:${c};display:flex;align-items:center;justify-content:center;overflow:hidden;${dim?'opacity:.5':''}">`
@@ -405,10 +458,10 @@ function render(res,fresh){
       +`font-size:11px;color:${c};white-space:nowrap;font-weight:500">${t}</div>`;
     $("#bandBody").innerHTML=
       `<div style="position:relative;height:46px;margin:28px 2px 0;border-radius:6px;box-shadow:inset 0 0 0 1px var(--line)">`
-      + seg(0,0.2,"var(--green)","弃权 / 判真实",1)
+      + seg(0,0.2,"var(--green)","低分 · 不作来源确认",1)
       + seg(0.2,0.9,"var(--ink3)","不确定区 · 本项不硬判",1)
-      + seg(0.9,0.99,"var(--amber)","灰带 · 判可疑",0)
-      + seg(0.99,1,"var(--red)","极高 · 判高风险",0)
+      + seg(0.9,0.99,"var(--amber)","灰带 · 待核对",0)
+      + seg(0.99,1,"var(--red)","高分",0)
       + mark(0.2,"var(--ink3)")+badge(0.2,"var(--ink3)","0.2",1)
       + mark(0.9,"var(--amber)")+badge(0.9,"var(--amber)","0.9",1)
       + mark(0.99,"var(--red)")+badge(0.99,"var(--red)","0.99",1)
@@ -416,25 +469,16 @@ function render(res,fresh){
       + `</div>`
       + (has?badge(sc,col,"本图 "+sc.toFixed(4),0):"")
       + (has?`<div style="text-align:center;margin-top:24px;font-size:12.5px;color:var(--ink2)">本图落在：<b style="color:${col}">`
-        +(sc>=0.99?"≥0.99 极高区 → 判高风险（自动下架级）"
-         :sc>=0.9?"0.9~0.99 灰带 → 判可疑（人工复核，不自动下架）"
+        +(sc>=0.99?"≥0.99 高分区 · 核对来源"
+         :sc>=0.9?"0.9~0.99 灰带 · 核对来源"
          :"<0.9 不确定区 → 不凭 AIGC 硬判")
         +`</b></div>`:"");
 
     const limits=[];
     Object.values(res.evidence).forEach(ev=>{if(ev.cannot_prove)limits.push(ev.cannot_prove)});
-    const grayNote=`<b>决策阈值是分档的，不是「超过就下架」：</b>`
-      +`整图 AI 分数 ≥ <b>0.99</b> 才判「高风险」（自动下架级）；`
-      +`落在 <b>0.9 ~ 0.99</b> 的灰带只判「可疑」并转人工复核，不自动下架；低于 0.9 不硬判。`
-      +`这么分是因为实测发现：真实滤镜自拍会被误判到 0.92~0.98，而真正确信的 AI 图几乎都在 0.996 以上——`
-      +`把中间那段单独拆出来，既不误伤真实图，也不漏掉 AI 图。`
-      +(has&&sc>=0.9&&sc<0.99
-        ?`<br><span style="color:var(--amber)">本图 AI 分数 ${sc} 正落在灰带内 → 因此判「可疑 / 待人工复核」而非「高风险」。</span>`
-        :(has&&sc>=0.99
-          ?`<br><span style="color:var(--red)">本图 AI 分数 ${sc} 已达极高置信区 → 判「高风险」。</span>`
-          :""));
+    const grayNote="生成倾向分是图像来源线索。宣称结论同时看配图用途、图文冲突和可核对的原始证据。";
     $("#limits").innerHTML=([grayNote].concat(limits.length?limits:["本次没有工具给出「不能证明什么」的说明。"]))
-      .map(x=>`<li>${x}</li>`).join("");
+      .map(x=>`<li>${escapeText(x)}</li>`).join("");
   })();
 
   /* 工具卡 */
@@ -450,7 +494,7 @@ function render(res,fresh){
       <div class="th"><span class="tstate ${on?(ok?"on":"off"):"off"}"></span>${TOOLZH[k]}
         <span style="color:var(--ink3);font-weight:400;font-size:11.5px">/ ${k}</span></div>
       <div class="tdesc">${desc}</div>
-      <div class="tobs">${obs}</div>
+      <div class="tobs">${escapeText(obs)}</div>
     </div>`;
   }).join("");
 
@@ -475,9 +519,12 @@ function buildMarkdown(res){
   L.push("");
   L.push("## 二、送检信息");
   L.push("");
-  L.push("- 文件名："+res.image.name);
-  L.push("- 尺寸："+(res.image.width||"?")+"×"+(res.image.height||"?"));
-  L.push("- 体积："+(res.image.size_bytes/1024).toFixed(0)+" KB");
+  if(res.image){
+    L.push("- 文件名："+res.image.name);
+    if(res.image.sha256)L.push("- SHA-256："+res.image.sha256);
+    L.push("- 尺寸："+(res.image.width||"?")+"×"+(res.image.height||"?"));
+    L.push("- 体积："+(res.image.size_bytes/1024).toFixed(0)+" KB");
+  }else L.push("- 输入：正文");
   L.push("- 鉴定用时："+res.elapsed_seconds+"s");
   L.push("- 给出证据的工具："+v.tools_used.length+" 件");
   L.push("");
@@ -492,6 +539,15 @@ function buildMarkdown(res){
     L.push("- 建议下一步："+ex.what_to_do);
     L.push("- 提醒："+ex.caveat);
     L.push("");
+  }
+  if(res.audit?.claims.length){
+    L.push("## 宣称核验");
+    for(const claim of res.audit.claims){
+      L.push("- "+claim.status+"｜"+claim.quote);
+      for(const ref of claim.references)L.push("  - "+ref.source+"｜"+ref.quote);
+      for(const c of claim.conflicts)L.push("  - "+c.text_side+" / "+c.image_side);
+      for(const missing of claim.missing)L.push("  - 待补 "+missing);
+    }
   }
   L.push("## 四、各工具证据");
   L.push("");
@@ -537,7 +593,7 @@ function buildMarkdown(res){
 
 function wireExport(res){
   const md=buildMarkdown(res);
-  const base=(res.image.name||"beautyproof_report").replace(/\.[^.]+$/,"");
+  const base=(res.image?.name||"beautyproof_report").replace(/\.[^.]+$/,"");
   $("#dlMd").onclick=()=>{
     const blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
     const url=URL.createObjectURL(blob);
@@ -611,6 +667,7 @@ function renderSamples(list, loadOne){
 }
 
 if(window.__DEMO_DATA__){
+  $("#auditInputs").hidden=true;
   /* 静态演示模式（tools/build_demo.py 注入数据）：离线可看，不需要后端 */
   const map={};
   const list=window.__DEMO_DATA__.samples;

@@ -24,7 +24,7 @@ def _ev(aigc=None, spectral=None, trufor=None, **extra):
     """构造一份最小证据字典，直接喂 rule_engine.judge()。"""
     ev = {}
     if aigc is not None:
-        ev["aigc"] = {"tool": "aigc", "evidence": [{"aigc_score": aigc, "available": True}]}
+        ev["aigc"] = {"tool": "aigc", "evidence": [{"aigc_score": aigc, "available": True, "model": "beautyproof_aigen_v4"}]}
     if spectral is not None:
         ev["spectral"] = {"tool": "spectral", "evidence": [{"spectral_score": spectral}]}
     if trufor is not None:

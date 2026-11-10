@@ -165,7 +165,7 @@ def judge_agent(image_brief, text_brief, source_brief, verdict):
 
 
 # ---------------------------------------------------------------- 编排
-def run_roundtable(stem, evidence, verdict):
+def run_roundtable(stem, evidence, verdict, output_dir=None):
     """跑完整圆桌，返回结构化共识并落盘。"""
     image_brief = image_agent(evidence)
     text_brief = text_agent(evidence)
@@ -184,8 +184,9 @@ def run_roundtable(stem, evidence, verdict):
             "judge": judge_brief,
         }],
     }
-    OUT_DIR.mkdir(exist_ok=True)
-    (OUT_DIR / f"roundtable_{stem}.json").write_text(
+    output_dir = output_dir or OUT_DIR
+    output_dir.mkdir(exist_ok=True)
+    (output_dir / f"roundtable_{stem}.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     return result
 

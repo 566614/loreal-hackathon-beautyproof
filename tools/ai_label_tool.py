@@ -25,6 +25,7 @@
 import json
 import re
 import sys
+import os
 from pathlib import Path
 
 # 强模式：命中即视为「图上明确标注了 AI 生成」——需要 AI 语义 + 生成动作，两者同现
@@ -72,7 +73,7 @@ def read_lines(image_path, reuse_ocr_evidence=True):
     没有 ocr 证据时（例如单独对本工具跑）才自己调 PaddleOCR。
     """
     if reuse_ocr_evidence:
-        p = Path(__file__).resolve().parent.parent / "outputs" / f"ocr_{Path(image_path).stem}.json"
+        p = Path(os.environ.get("BP_RUN_OUTPUT", Path(__file__).resolve().parent.parent / "outputs")) / f"ocr_{Path(image_path).stem}.json"
         if p.exists():
             try:
                 data = json.loads(p.read_text(encoding="utf-8"))
@@ -183,7 +184,7 @@ def main():
     report = run(p)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     repo_root = Path(__file__).resolve().parent.parent
-    out_dir = repo_root / "outputs"
+    out_dir = Path(os.environ.get("BP_RUN_OUTPUT", repo_root / "outputs"))
     out_dir.mkdir(exist_ok=True)
     (out_dir / f"ai_label_{p.stem}.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

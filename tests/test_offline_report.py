@@ -46,12 +46,7 @@ FOUR_SECTIONS = [
     "## 四、建议",
 ]
 
-# 每个 stem 会产生的临时文件，统一清理
-_TOOL_NAMES = ("hash", "c2pa", "ela", "ocr", "aigc", "trufor", "text", "crossmodal")
-_AUX_NAMES = ("analysis", "llm_explain", "verdict", "roundtable")
-
-
-def _fake_run_tool(script, image_path, timeout=900):
+def _fake_run_tool(script, image_path, timeout=900, output_dir=None):
     """桩：仅拦截 *_tool.py，按脚本名即时写一份最小但合法的 evidence JSON。
 
     其余脚本（report_generator.py / export_pdf.py）走真实实现，确保 Markdown 报告
@@ -61,7 +56,7 @@ def _fake_run_tool(script, image_path, timeout=900):
     if name.endswith("_tool"):
         tool = name[:-5]  # 'hash_tool' -> 'hash'
         stem = Path(image_path).stem
-        out = REPO / "outputs" / f"{tool}_{stem}.json"
+        out = output_dir / f"{tool}_{stem}.json"
         payload = {
             "tool": tool,
             "source_asset_id": stem,
@@ -72,44 +67,13 @@ def _fake_run_tool(script, image_path, timeout=900):
         out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
         return type("P", (), {"returncode": 0, "stdout": "", "stderr": ""})()
     # 其余脚本走真实实现
-    return REAL_RUN_TOOL(script, image_path, timeout=timeout)
+    return REAL_RUN_TOOL(script, image_path, timeout=timeout, output_dir=output_dir)
 
 
 @pytest.fixture
-def fake_tools(monkeypatch):
+def fake_tools(monkeypatch, tmp_path):
     monkeypatch.setattr(pipeline, "run_tool", _fake_run_tool)
-    stem = SAMPLE_IMAGE.stem
-    # ⚠️ 同 report 的坑（2026-10-02 实测踩坑，勿回退）：outputs/{tool}_{stem}.json 也是入库交付物
-    # —— demo/index.html 正是由 outputs/analysis_*.json 生成的（见 tools/build_demo.py）。
-    # 这里原本无条件 unlink，导致跑一次 pytest 就把 analysis_clean_01.json 删掉、
-    # 重建 demo 时样本从 7 掉回 6。修法与 reports 同一套：先快照、只删本次新建的、收尾原样恢复。
-    ev_before = {}
-    for t in _TOOL_NAMES + _AUX_NAMES:
-        f = REPO / "outputs" / f"{t}_{stem}.json"
-        ev_before[t] = f.read_bytes() if f.exists() else None
-        if f.exists():
-            f.unlink()
-    # ⚠️ 报告路径与仓库已提交的报告交付物同名（SAMPLE_IMAGE=clean_01 → report_clean_01.md）。
-    # 只清理「本测试新建」的报告；测试前就存在的文件（如已提交的交付物）测试后必须原样恢复，
-    # 否则每次 pytest 都会把仓库文件删掉、弄脏工作区（2026-09-26 实测踩坑，勿回退）。
-    # 注意用二进制读写：read_text/write_text 会做换行归一（CRLF→LF），恢复后仍会留下 diff。
-    rf = REPO / "reports" / f"report_{stem}.md"
-    rf_before = rf.read_bytes() if rf.exists() else None
-    yield
-    # 清理本测试产生的证据 / 结果，保持仓库干净；测试前就存在的证据文件原样恢复（勿回退）
-    for t in _TOOL_NAMES + _AUX_NAMES:
-        f = REPO / "outputs" / f"{t}_{stem}.json"
-        prev = ev_before.get(t)
-        if prev is None:
-            if f.exists():
-                f.unlink()
-        else:
-            f.write_bytes(prev)
-    if rf_before is None:
-        if rf.exists():
-            rf.unlink()
-    else:
-        rf.write_bytes(rf_before)
+    monkeypatch.setattr(pipeline, "REPO", tmp_path)
 
 
 def _run_llm_path(monkeypatch, ollama_patch, verbose=False):
@@ -131,7 +95,7 @@ def _assert_report_ok(result, md):
     json_path = Path(result["_output_file"])
     assert json_path.exists(), "未生成 analysis JSON"
     # 文字报告含四段式
-    md_path = REPO / "reports" / f"report_{result['image']['stem']}.md"
+    md_path = Path(md)
     assert md_path.exists(), "未生成 Markdown 报告"
     md_text = md_path.read_text(encoding="utf-8")
     for sec in FOUR_SECTIONS:

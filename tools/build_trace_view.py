@@ -46,16 +46,16 @@ def _esc(text):
     return html.escape(str(text if text is not None else ""))
 
 
-def _load_evidence(stem, tool):
+def _load_evidence(stem, tool, evidence_dir):
     """尽量读回该工具的原始证据文件，用于卡片下方展开细节（失败就返回 None）。"""
-    p = OUT_DIR / f"{tool}_{stem}.json"
+    p = evidence_dir / f"{tool}_{stem}.json"
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         return None
 
 
-def build_html(trace):
+def build_html(trace, evidence_dir=OUT_DIR):
     """把 decision_trace dict 渲染成自包含 HTML 字符串。
 
     trace 字段（见 pipeline.build_decision_trace）：
@@ -86,7 +86,7 @@ def build_html(trace):
 
         # 展开细节：读回原始证据，给复核者看 cannot_prove 与具体数值
         detail_rows = ""
-        ev = _load_evidence(stem, tool)
+        ev = _load_evidence(stem, tool, evidence_dir)
         if ev:
             cannot = ev.get("cannot_prove")
             if cannot:
@@ -215,13 +215,14 @@ def main(argv=None):
     # 参数既可以是 trace json 路径，也可以直接是图名（自动找）
     trace_path = Path(arg)
     if not trace_path.exists() and not arg.endswith(".json"):
-        trace_path = OUT_DIR / f"decision_trace_{arg}.json"
+        from rule_engine import latest_run_dir
+        trace_path = latest_run_dir(REPO, arg) / f"decision_trace_{arg}.json"
     if not trace_path.exists():
         print(f"找不到 trace 文件：{trace_path}")
         return 1
 
     trace = json.loads(trace_path.read_text(encoding="utf-8"))
-    html_text = build_html(trace)
+    html_text = build_html(trace, trace_path.resolve().parent)
     if not html_text.strip():
         print("生成的 HTML 为空，异常中止")
         return 1

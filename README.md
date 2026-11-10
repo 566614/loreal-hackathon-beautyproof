@@ -63,6 +63,8 @@ BeautyProof 把**八种取证手段**（六种看图 + 两种读字）交给**�
 
 ## 四种打开方式
 
+本地 Ant Design 工作台首次使用或修改前端后，在 `web/frontend` 执行 `npm ci` 和 `npm run build`，再启动 Flask。浏览器从本地服务读取构建产物。未构建时，Flask 会显示原工作台。
+
 ```bash
 # 0) 线上演示（无需安装任何东西）：
 #    https://beautyproof-demo.app.workbuddy.host/

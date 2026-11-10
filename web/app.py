@@ -75,7 +75,7 @@ RISK_ZH = {
 }
 
 
-def _run_job(job_id, image_path, fast, text=None):
+def _run_job(job_id, image_path, fast, text=None, product=None, references=None, llm=False):
     job = JOBS[job_id]
 
     def cb(tool, idx, total, state):
@@ -84,7 +84,7 @@ def _run_job(job_id, image_path, fast, text=None):
 
     try:
         res = pipeline.analyze(image_path, fast=fast, on_progress=cb,
-                               verbose=False, text=text)
+                               verbose=False, text=text, product=product, references=references, llm=llm)
         res["verdict"]["risk_zh"] = RISK_ZH.get(res["verdict"]["risk_level"],
                                                 res["verdict"]["risk_level"])
         res["tool_meta"] = pipeline.TOOL_META
@@ -100,6 +100,9 @@ def _run_job(job_id, image_path, fast, text=None):
 
 @app.get("/")
 def index():
+    bundle = Path(app.static_folder) / "workbench"
+    if all((bundle / name).is_file() for name in ("main.js", "main.css")):
+        return render_template("workbench.html")
     return render_template("index.html")
 
 
@@ -141,31 +144,39 @@ def sample(stem):
 
 @app.post("/api/analyze")
 def analyze():
+    from claim_review import normalize_references
+
     f = request.files.get("file")
-    if not f or not f.filename:
-        return jsonify({"error": "没收到图片，请重试"}), 400
-    fast = request.form.get("fast") == "1"
-    # 配套文案（选填）：填了才会跑文案体检 + 图文交叉验证
     text = (request.form.get("text") or "").strip() or None
-
-    safe = uuid.uuid4().hex[:8] + "_" + Path(f.filename).name
-    path = UPLOADS / safe
-    f.save(path)
-
-    # 先确认它真的是张图：否则六个工具会各自以奇怪的方式失败，前端只看到"鉴定失败"
+    if not text and not (f and f.filename):
+        return jsonify({"error": "请提供图片或正文"}), 400
+    fast = request.form.get("fast") == "1"
+    product = (request.form.get("product") or "").strip() or None
+    llm = request.form.get("llm") == "1"
     try:
+        references = normalize_references(json.loads(request.form.get("references", "null")))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    path = None
+    if f and f.filename:
+        safe = uuid.uuid4().hex[:8] + "_" + Path(f.filename).name
+        path = UPLOADS / safe
+        f.save(path)
         from PIL import Image
-        with Image.open(path) as im:
-            im.verify()
-    except Exception:  # noqa: BLE001
-        path.unlink(missing_ok=True)
-        return jsonify({"error": f"「{Path(f.filename).name}」不是一张能被识别的图片，请换一张 PNG / JPG"}), 400
+        try:
+            with Image.open(path) as im:
+                im.verify()
+        except (OSError, ValueError, Image.DecompressionBombError):
+            path.unlink(missing_ok=True)
+            return jsonify({"error": "无法读取所选图片，请换一张 PNG / JPG"}), 400
 
     job_id = uuid.uuid4().hex[:12]
     with JOBS_LOCK:
         JOBS[job_id] = {"status": "running", "steps": [], "result": None, "error": None}
     _prune_jobs()
-    threading.Thread(target=_run_job, args=(job_id, str(path), fast, text), daemon=True).start()
+    threading.Thread(target=_run_job, args=(job_id, path, fast, text, product, references, llm),
+                     daemon=True).start()
     return jsonify({"job_id": job_id})
 
 

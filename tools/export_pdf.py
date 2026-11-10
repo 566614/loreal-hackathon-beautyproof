@@ -13,12 +13,13 @@ from __future__ import annotations
 
 import argparse
 import re
+import os
 import sys
 from pathlib import Path
 
 TOOL_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = TOOL_DIR.parent
-REPORTS_DIR = PROJECT_ROOT / "reports"
+REPORTS_DIR = Path(os.environ.get("BP_RUN_OUTPUT", PROJECT_ROOT / "reports"))
 REPORT_PREFIX = "report_"
 
 # 每条对外输出都必须带的边界声明

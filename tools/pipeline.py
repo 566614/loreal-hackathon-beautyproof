@@ -37,6 +37,10 @@
     outputs/<tool>_frame_*.json             每帧的逐工具证据（与图片侧同一套格式）
 """
 import datetime as dt
+import hashlib
+import os
+import shutil
+import uuid
 import json
 import subprocess
 import sys
@@ -65,7 +69,7 @@ SLOW_TOOLS = {"aigc", "trufor"}
 # 视频扩展名 —— 命中就走视频流水线（抽帧 → 逐帧复用图像流水线 → 视频级聚合）
 VIDEO_EXTS = {".mp4", ".mov", ".avi", ".webm", ".mkv"}
 # 这些开关后面跟一个值，值不能被当成输入路径（--max-frames 6 里的 "6" 不是图片）
-VALUE_FLAGS = ("--text", "--text-file", "--max-frames", "--fps-sample")
+VALUE_FLAGS = ("--text", "--text-file", "--max-frames", "--fps-sample", "--product", "--references")
 
 # 每个工具的"人话说明" —— 报告页和网页都用它，避免各写一套口径
 TOOL_META = {
@@ -74,12 +78,12 @@ TOOL_META = {
     "ela": {"label": "压缩痕迹", "job": "把图压一遍再还原，看哪块区域的压缩反应跟周围不一样（注意：它只查『局部被二次编辑』，对整图 AI 生成基本无效，所以不能单独给 AI 图定案）"},
     "spectral": {"label": "频域取证", "job": "看这张图的高频能量和频谱规整度像不像相机直出照片 —— 这是与压缩历史无关的独立证据线，用来兜住 AIGC 模型换生成器就失效的盲区"},
     "ocr": {"label": "文字识别", "job": "把图上所有字抄下来，跟品牌方给的标准文案逐字比对"},
-    "ai_label": {"label": "可见AI标识", "job": "在图上找「AI生成 / AI绘制 / 人工智能生成」这类平台自打的水印 —— 相机直出的真实照片不会有这种字样，属于图上自证的硬证据，用来兜住 AIGC 模型在全新风格上掉分的盲区（局限：标识可被伪造，洗掉标识的 AI 图发现不了）"},
-    "aigc": {"label": "AI 生成检测", "job": "判断这张图是不是整张由 AI 生成的（用的是本域微调模型：拿 10 张真实美妆照 + 20 张即梦 AI 图专门练过，补 TruFor 查不出的「整图 AI 生成」盲区）"},
-    "trufor": {"label": "篡改痕迹检测", "job": "用 CVPR 2023 的取证模型查整图有没有被人工动过，并定位可疑区域"},
+    "ai_label": {"label": "可见AI标识", "job": "识别图上的 AI 来源标识。可见标识可能被复制、误读或缺失。"},
+    "aigc": {"label": "AI 生成检测", "job": "返回当前模型对整图生成的倾向分，并记录模型身份。"},
+    "trufor": {"label": "篡改痕迹检测", "job": "通过 TruFor 找局部异常线索，定位区域供原图复核。"},
     # 文案侧（只有传了 --text 才会跑，不影响原来只鉴定图片的用法）
     "text": {"label": "文案体检", "job": "查文案里有没有《广告法》《化妆品监督管理条例》点名的敏感宣称，逐条给出法律出处、命中位置和上下文"},
-    "crossmodal": {"label": "图文交叉验证", "job": "拿文案说的去跟图像侧结论对质 —— 文案声称原相机实拍、图却被判成 AI 生成的，这种自相矛盾比任何单侧分数都硬"},
+    "crossmodal": {"label": "图文交叉验证", "job": "核对配图用途和来源证据，并比较归属于同一产品、指标及条件的宣称。"},
 }
 
 
@@ -113,11 +117,12 @@ def image_info(path):
 
 
 # ---------------------------------------------------------------- 跑工具
-def run_tool(script, image_path, timeout=900):
+def run_tool(script, image_path, timeout=900, output_dir=None):
     """跑单个工具脚本，把它的输出 JSON 读回来"""
+    env = dict(os.environ, BP_RUN_OUTPUT=str(output_dir)) if output_dir else None
     proc = subprocess.run(
         [PY, str(TOOLS / script), str(image_path)],
-        cwd=str(REPO), capture_output=True, text=True,
+        cwd=str(REPO), env=env, capture_output=True, text=True,
         encoding="utf-8", errors="ignore", timeout=timeout,
     )
     return proc
@@ -133,9 +138,9 @@ def _import_rule_engine():
     return rule_engine
 
 
-def collect_evidence(stem):
+def collect_evidence(stem, output_dir=None):
     """收集 outputs/ 下所有 <tool>_<stem>.json —— 与规则引擎口径完全一致"""
-    return _import_rule_engine().load_evidence(REPO, stem)
+    return _import_rule_engine().load_evidence(REPO, stem, output_dir)
 
 
 def judge(evidence):
@@ -233,7 +238,8 @@ def build_decision_trace(stem, image_name, risk_level, reasons, evidence):
     }
 
 
-def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total=8):
+def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total=8,
+                   output_dir=None, product=None, body_claims=None, image_claims=None):
     """跑文案侧两个工具，结果写进 outputs/ —— 规则引擎随后就能和图像侧证据一起读到
 
     text_tool       只看文字本身：违禁宣称（硬规则，有法律出处）+ 写作特征（弱提示）
@@ -246,6 +252,7 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
     import text_tool  # noqa: E402
     import crossmodal_tool  # noqa: E402
 
+    output_dir = output_dir or REPO / "outputs"
     written = []
 
     # 1) 文案体检
@@ -255,7 +262,7 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
         on_progress("text", base_idx + 1, total, "running")
     try:
         rep = text_tool.build_evidence(text, source_id=stem, mode="single")
-        (REPO / "outputs" / f"text_{stem}.json").write_text(
+        (output_dir / f"text_{stem}.json").write_text(
             json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
         written.append("text")
         if verbose:
@@ -272,10 +279,10 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
     if on_progress:
         on_progress("crossmodal", base_idx + 2, total, "running")
     try:
-        img_ev = collect_evidence(stem)
-        cons, negated = crossmodal_tool.check(text, img_ev)
+        img_ev = collect_evidence(stem, output_dir)
+        cons, negated = crossmodal_tool.check(text, img_ev, product, body_claims=body_claims, image_claims=image_claims)
         rep = crossmodal_tool.build_evidence(text, cons, img_ev, stem, negated=negated)
-        (REPO / "outputs" / f"crossmodal_{stem}.json").write_text(
+        (output_dir / f"crossmodal_{stem}.json").write_text(
             json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
         written.append("crossmodal")
         if verbose:
@@ -290,44 +297,61 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
 
 
 # ---------------------------------------------------------------- 主流程
-def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
-            on_progress=None, text=None, llm=False, roundtable=False):
+def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
+            on_progress=None, text=None, llm=False, roundtable=False, *,
+            product=None, references=None, publish=True):
     """对一张图跑完整流水线，返回结构化结果
 
     on_progress: 可选回调 fn(tool, 第几个, 共几个, 状态) —— Web 界面靠它显示实时进度
     text:        可选的配套文案（种草文 / 评论）。传了才跑文案侧两个工具；
                  不传时行为与以前完全一致，仍是纯图片鉴定。
     """
-    image_path = Path(image_path).resolve()
-    if not image_path.exists():
-        raise FileNotFoundError(f"找不到这张图: {image_path}")
+    import claim_review
+    from tempfile import TemporaryDirectory
 
-    # 先确认它真的是一张能被读出来的图：否则后面六个工具会各自以奇怪的方式失败，
-    # 报错信息没法看。这里一次性说清楚。
-    try:
-        from PIL import Image
-        with Image.open(image_path) as im:
-            im.verify()
-    except Exception as e:  # noqa: BLE001
-        raise ValueError(
-            f"这不是一张能被识别的图片：{image_path.name}（{type(e).__name__}）"
-        ) from e
+    text = (text or "").strip()
+    product = (product or "").strip() or None
+    references = claim_review.normalize_references(references)
+    if not image_path and not text:
+        raise ValueError("至少提供图片或正文")
+    original = Path(image_path).resolve() if image_path else None
+    if original and not original.is_file():
+        raise FileNotFoundError(f"找不到图片: {original.name}")
 
-    stem = image_path.stem
-    info = image_info(image_path)  # 提前拿到格式/尺寸，Agent 要用它做判断
-
-    # 清掉这张图上一轮留下的证据文件。
-    # 否则两件事会出错：① Agent 以为某工具已经跑过，跳过规则失效；
-    # ② 某个工具本次失败了，judge 却拿上次的旧证据凑数，输出看起来正常。
-    # 失败就该表现为「没有这项证据」，而不是拿旧的冒充。
-    for _tool in [t for t, _, _ in TOOL_LIST] + ["text", "crossmodal"]:
-        _f = REPO / "outputs" / f"{_tool}_{stem}.json"
-        if _f.exists():
+    run_id = uuid.uuid4().hex
+    output_dir = REPO / "outputs" / "runs" / run_id
+    output_dir.mkdir(parents=True)
+    if original:
+        # Take a stable snapshot. Detectors and the file hash use identical bytes.
+        with TemporaryDirectory(dir=output_dir) as input_dir:
+            image_path = Path(input_dir) / original.name
+            shutil.copyfile(original, image_path)
             try:
-                _f.unlink()
-            except Exception:  # noqa: BLE001
-                pass
+                from PIL import Image
+                with Image.open(image_path) as im:
+                    im.verify()
+            except (OSError, ValueError) as e:
+                raise ValueError(f"这不是一张可读取的图片：{original.name}") from e
+            info = image_info(image_path)
+            with image_path.open("rb") as stream:
+                digest = hashlib.sha256()
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            info.update(path=str(original), sha256=digest.hexdigest())
+            return _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
+                                on_progress, text, llm, roundtable, product, references, publish)
 
+    return _analyze_run(None, None, output_dir, fast, skip, verbose, timeout,
+                        on_progress, text, llm, roundtable, product, references, publish)
+
+
+def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
+                 on_progress, text, llm, roundtable, product, references, publish):
+    import claim_review
+    import crossmodal_tool
+
+    stem = info["stem"] if info else "text"
+    image_info_fields = info or {}
     # ---------------------------------------------------------------- Agent 调度
     # 不再是「六个工具按固定顺序跑完」，而是分三波：每跑完一波，
     # 先问 Agent「根据已查到的东西，下一波哪些值得跑」，再决定跑不跑。
@@ -336,12 +360,12 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
 
     ctx = {
         "has_text": bool(text and text.strip()),
-        "image_format": info.get("format"),
-        "image_pixels": (info.get("width") or 0) * (info.get("height") or 0),
+        "image_format": image_info_fields.get("format"),
+        "image_pixels": (image_info_fields.get("width") or 0) * (image_info_fields.get("height") or 0),
     }
 
     script_of = {tool: script for tool, script, _ in TOOL_LIST}
-    enabled = {tool for tool, _, on in TOOL_LIST if on and tool not in skip}
+    enabled = {tool for tool, _, on in TOOL_LIST if image_path and on and tool not in skip}
 
     total = len([x for x in enabled]) + (2 if ctx["has_text"] else 0)
     t0 = time.time()
@@ -355,7 +379,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
             on_progress(tool, idx, total, state)
 
     for wave_name, wave_tools in planner.WAVES:
-        ev_now = collect_evidence(stem)
+        ev_now = collect_evidence(stem, output_dir)
         wave_skip, dec = planner.decide_next(ev_now, ctx, done=set(ran))
         decisions.extend(dec)
         skipped |= wave_skip
@@ -387,8 +411,8 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
             ts = time.time()
             proc = None
             try:
-                proc = run_tool(script_of[tool], image_path, timeout=timeout)
-                ok = proc.returncode == 0
+                proc = run_tool(script_of[tool], image_path, timeout=timeout, output_dir=output_dir)
+                ok = proc.returncode == 0 and (output_dir / f"{tool}_{stem}.json").is_file()
             except subprocess.TimeoutExpired:
                 ok = False
             if ok:
@@ -409,29 +433,86 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
                         print(" 跳过（工具报错或超时）")
             _note(tool, "done" if ok else "failed")
 
-    # 文案侧（可选）：只有传了 text 才跑，写完 outputs/ 后下面的 collect_evidence 会一起收上来
-    text_tools_ran = []
-    if text and text.strip():
-        idx += 1
-        text_tools_ran = run_text_tools(
-            stem, text.strip(), verbose=verbose, on_progress=on_progress,
-            base_idx=idx - 1, total=total,
-        )
-        idx += 1
-    else:
-        for _t in planner.TEXT_TOOLS:
-            skipped.add(_t)
+    evidence = collect_evidence(stem, output_dir)
+    ocr = evidence.get("ocr", {}).get("evidence") or []
+    image_text = "\n".join(line.get("text", "") for line in ocr if isinstance(line, dict))
+    body_claims = claim_review.extract(text, product)
+    image_claims = claim_review.extract(image_text, product, "image")
+    claim_model_status = "insufficient_evidence"
+    if llm and (text or image_text):
+        import llm_explainer
+        model_rows = [llm_explainer.extract_claim_fields(source, product)
+                      for source in (text, image_text) if source]
+        claim_model_status = "completed" if all(rows is not None for rows in model_rows) else "model_unavailable"
+        by_source = iter(model_rows)
+        for source, facts, kind in ((text, body_claims, "body"), (image_text, image_claims, "image")):
+            if source:
+                claim_review.enrich(facts, source, next(by_source) or [], kind)
 
-    evidence = collect_evidence(stem)
+    text_tools_ran = []
+    if text:
+        text_tools_ran = run_text_tools(
+            stem, text, verbose=verbose, on_progress=on_progress, base_idx=idx,
+            total=total, output_dir=output_dir, product=product,
+            body_claims=body_claims, image_claims=image_claims,
+        )
+        evidence = collect_evidence(stem, output_dir)
+    elif image_text:
+        import text_tool
+        evidence["text"] = text_tool.build_evidence(image_text, stem)
+        evidence["crossmodal"] = crossmodal_tool.build_evidence("", [], evidence, stem)
+        text_tools_ran.append("text")
+        skipped.add("crossmodal")
+    else:
+        skipped.update(planner.TEXT_TOOLS)
+
+    cross = (evidence.get("crossmodal", {}).get("evidence") or [{}])[0]
+    claims = claim_review.assess(body_claims, image_claims, references, cross.get("contradictions", []))
+    asset_hash = image_info_fields.get("sha256")
+    for tool, item in evidence.items():
+        item.update(run_id=output_dir.name, image_sha256=asset_hash)
+        (output_dir / f"{tool}_{stem}.json").write_text(
+            json.dumps(item, ensure_ascii=False, indent=2), encoding="utf-8")
+
     risk_level, reasons = judge(evidence)
+    if any(claim["status"] == "存在冲突" for claim in claims):
+        if risk_level != "high_risk":
+            risk_level = "suspicious"
+        reasons.append("宣称核验：图文或对应参考资料存在冲突")
+    if any(claim["status"] == "证据不足" for claim in claims):
+        reasons.append("宣称核验：部分宣称缺少对应产品、指标和条件的证据")
+    if risk_level == "credible" and (text or claims):
+        risk_level = "inconclusive"
+
+    signals = _import_rule_engine().image_signals(evidence)
+    checks = {}
+    for tool, _, _ in TOOL_LIST:
+        item = (evidence.get(tool, {}).get("evidence") or [{}])[0]
+        unavailable = tool in failed or item.get("available") is False
+        status = "completed" if tool in evidence and not unavailable else "insufficient_evidence"
+        if unavailable and tool in {"aigc", "trufor", "ocr"}:
+            status = "model_unavailable"
+        checks[tool] = {"status": status}
+        if tool in tool_errors:
+            checks[tool]["reason"] = tool_errors[tool]
+        if tool == "aigc" and signals["origin"]["score"] is not None and not signals["origin"]["threshold_profile"]:
+            checks[tool]["decision_status"] = "insufficient_evidence"
+    checks["claim_model"] = {"status": claim_model_status}
+    checks["text"] = {"status": "completed" if "text" in evidence else "insufficient_evidence"}
+    checks["crossmodal"] = {"status": "completed" if text and cross.get("conflict_level") in
+                            ("none", "medium", "hard") else "insufficient_evidence"}
     plain = explain_verdict(risk_level, evidence)
+    if any(c["status"] == "存在冲突" and c["references"] for c in claims) and risk_level == "suspicious":
+        plain.update(headline="宣传宣称与提供的依据不一致",
+                     summary="发现对应产品、指标和条件下的数值差异，详见宣称核验。",
+                     what_to_do="核对原始资料和文案后再决定是否发布。")
 
     # 把规则引擎的定级结论落盘为 verdict_<stem>.json —— 之前漏了这一步，
     # 导致 report_generator 读不到定级、样例报告一律显示「NO_VERDICT」，
     # 评委实测会以为流水线没出结论（交付一致性硬伤）。现在与 pipeline 的
     # judge 结论同源，报告页 / 网页 / PDF 读到的是同一份结论。
     try:
-        (REPO / "outputs" / f"verdict_{stem}.json").write_text(
+        (output_dir / f"verdict_{stem}.json").write_text(
             json.dumps({"risk_level": risk_level, "reasons": reasons},
                        ensure_ascii=False, indent=2),
             encoding="utf-8")
@@ -442,8 +523,10 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
     # 这一步零依赖，必须在写最终 analysis 之前完成，保证即使后续 roundtable/llm
     # 异常也不丢这条核心链路。
     decision_trace = build_decision_trace(
-        stem, info["name"], risk_level, reasons, evidence)
-    trace_path = REPO / "outputs" / f"decision_trace_{stem}.json"
+        stem, image_info_fields.get("name") or "正文", risk_level, reasons, evidence)
+    for item in decision_trace["trace"]:
+        item["evidence_ref"] = f"outputs/runs/{output_dir.name}/{item['tool']}_{stem}.json"
+    trace_path = output_dir / f"decision_trace_{stem}.json"
     trace_path.write_text(
         json.dumps(decision_trace, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -458,7 +541,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
     for key in ("heatmap", "overlay"):
         name = tru0.get(key)
         if name:
-            p = REPO / "outputs" / name
+            p = output_dir / name
             if p.exists():
                 visuals[key] = to_data_uri(p, max_side=1100, quality=90)
 
@@ -467,6 +550,9 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "elapsed_seconds": round(time.time() - t0, 1),
         "image": info,
+        "run_id": output_dir.name,
+        "audit": {"claims": claims, "checks": checks, "image_signals": signals,
+                  "ai_illustration_disclosed": bool(cross.get("ai_illustration_disclosed"))},
         "verdict": {
             "risk_level": risk_level,
             "explain": plain,
@@ -490,7 +576,8 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         try:
             import llm_explainer  # noqa: E402
             llm_text = llm_explainer.generate_for_pipeline(
-                result, image_path=str(image_path), verbose=verbose)
+                result, image_path=str(image_path) if image_path else None,
+                verbose=verbose, output_dir=output_dir)
             if llm_text:
                 result["llm_explanation"] = llm_text
         except Exception as e:  # noqa: BLE001
@@ -503,7 +590,7 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
         try:
             import roundtable  # noqa: E402
             rt = roundtable.run_roundtable(stem, evidence, {
-                "risk_level": risk_level, "reasons": reasons})
+                "risk_level": risk_level, "reasons": reasons}, output_dir=output_dir)
             if rt:
                 result["roundtable"] = rt
                 if verbose:
@@ -512,32 +599,44 @@ def analyze(image_path, fast=False, skip=(), verbose=True, timeout=900,
             if verbose:
                 print(f"  [圆桌] 复核异常，已跳过：{type(e).__name__}：{e}")
 
-    out = REPO / "outputs" / f"analysis_{stem}.json"
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    out = output_dir / f"analysis_{stem}.json"
+    payload = json.dumps(result, ensure_ascii=False, indent=2)
+    out.write_text(payload, encoding="utf-8")
+    if publish and info:
+        # Preserve the latest named snapshot for existing sample/review readers.
+        # Decisions and report generation always read the isolated run.
+        snapshot = output_dir / "publish.json"
+        snapshot.write_text(payload, encoding="utf-8")
+        snapshot.replace(REPO / "outputs" / out.name)
     result["_output_file"] = str(out)
     return result
 
 
 def write_markdown(result):
     """生成人能读的 Markdown 报告（复用现成的 report_generator.py）"""
-    stem = result["image"]["stem"]
+    stem = result["image"]["stem"] if result["image"] else "text"
     try:
-        run_tool("report_generator.py", stem, timeout=120)
-        p = REPO / "reports" / f"report_{stem}.md"
+        output_dir = Path(result["_output_file"]).parent
+        proc = run_tool("report_generator.py", stem, timeout=120, output_dir=output_dir)
+        if proc.returncode != 0:
+            return None
+        p = output_dir / f"report_{stem}.md"
         return str(p) if p.exists() else None
     except Exception as e:  # noqa: BLE001
         return f"（Markdown 报告生成失败：{type(e).__name__}：{e}）"
 
 
-def write_pdf(stem):
+def write_pdf(stem, output_dir=None):
     """把 Markdown 报告转成 PDF（复用 tools/export_pdf.py）
 
     为什么要这一步：法务和品牌方要的是一份能存档、能转发、带页脚边界声明的文件，
     Markdown 对他们不方便。导出失败不影响主流程，所以这里吞掉异常只返回 None。
     """
     try:
-        run_tool("export_pdf.py", stem, timeout=180)
-        f = REPO / "reports" / f"report_{stem}.pdf"
+        proc = run_tool("export_pdf.py", stem, timeout=180, output_dir=output_dir)
+        if proc.returncode != 0:
+            return None
+        f = (output_dir or REPO / "reports") / f"report_{stem}.pdf"
         return str(f) if f.exists() else None
     except Exception:  # noqa: BLE001
         return None
@@ -648,6 +747,26 @@ def main():
         if not a.startswith("--"):
             paths.append(a)
 
+    for flag in ("--product", "--references"):
+        if flag in args and (args.index(flag) + 1 == len(args) or args[args.index(flag) + 1].startswith("--")):
+            print(f"{flag} 需要一个值", file=sys.stderr)
+            return 1
+
+    def option(flag):
+        return args[args.index(flag) + 1] if flag in args else None
+
+    product = option("--product")
+    references_path = option("--references")
+    references = json.loads(Path(references_path).read_text(encoding="utf-8")) if references_path else None
+    if not paths and text:
+        result = analyze(text=text, product=product, references=references, verbose=False, llm=want_llm)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    if not paths:
+        print("请提供图片路径或 --text 正文", file=sys.stderr)
+        return 1
+
     rc = 0
     for p in paths:
         # ---------------------------------------------------------- 输入类型路由
@@ -670,7 +789,8 @@ def main():
 
         print(f"\n=== 鉴定：{Path(p).name} ===")
         res = analyze(p, fast=fast, verbose=not json_only, text=text,
-                       llm=want_llm, roundtable=want_roundtable)
+                       llm=want_llm, roundtable=want_roundtable,
+                          product=product, references=references)
         v = res["verdict"]
         if json_only:
             print(json.dumps({"image": res["image"]["name"], "risk_level": v["risk_level"]},
@@ -693,7 +813,7 @@ def main():
             if md:
                 print(f"  文字报告：{md}")
             if want_pdf:
-                pf = write_pdf(Path(p).stem)
+                pf = write_pdf(Path(p).stem, Path(res["_output_file"]).parent)
                 print(f"  PDF 报告：{pf}" if pf else "  PDF 报告：导出失败（可手动跑 tools/export_pdf.py）")
     return rc
 

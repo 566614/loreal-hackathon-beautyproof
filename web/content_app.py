@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
-"""种草内容核验 · 可交互 Agent（独立 Flask 应用，端口 5001）
-
-为什么独立一个 app
-------------------
-原来的 web/app.py 是图导向（拖一张图进去判图）。这个页面把入口换成"先贴文案、再选配图"，
-对应赛题点名的三个场景里的第一个：种草内容核验。
-独立跑 5001，不碰 app.py、不碰 pipeline 核心，避免影响早鸟版本。
-
-启动： python web/content_app.py  →  http://127.0.0.1:5001
-"""
+"""Local content workbench using the shared BeautyProof audit."""
 from __future__ import annotations
 
 import json
@@ -43,11 +34,16 @@ def _samples() -> list[dict]:
         stem = Path(s.get("path", "")).stem
         if not stem:
             continue
-        if not (REPO / "outputs" / f"analysis_{stem}.json").exists():
+        recorded = str(s.get("path", "")).replace("\\", "/")
+        _, sep, suffix = recorded.rpartition("/data/")
+        if not sep and recorded.startswith("data/"):
+            suffix = recorded[5:]
+        if not suffix:
             continue
-        out.append({"id": s.get("id") or stem, "stem": stem,
-                    "img": str(s.get("path", "")).replace("\\", "/"),
-                    "label": s.get("ground_truth", "")})
+        path = (REPO / "data" / suffix).resolve()
+        if path.is_relative_to(REPO / "data") and path.is_file():
+            out.append({"id": s.get("id") or stem, "stem": stem,
+                        "img": path.relative_to(REPO).as_posix(), "label": s.get("ground_truth", "")})
     return out
 
 
@@ -75,19 +71,23 @@ def index():
 
 @app.post("/check")
 def check():
-    payload = request.get_json(force=True, silent=True) or {}
-    text = (payload.get("text") or "").strip()
-    img = (payload.get("image") or "").strip()
-    if not text or not img:
-        return jsonify({"error": "文案和配图都要有"}), 400
-    image_path = Path(img.replace("\\", "/"))
-    if not image_path.exists():
-        return jsonify({"error": f"找不到配图：{img}"}), 400
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "需要 JSON 对象"}), 400
+    text, img, product = (payload.get(key) or "" for key in ("text", "image", "product"))
+    if not all(isinstance(field, str) for field in (text, img, product)):
+        return jsonify({"error": "text、image、product 应为文本"}), 400
+    if not text.strip() and not img:
+        return jsonify({"error": "请提供图片或正文"}), 400
+    if img and img not in {item["img"] for item in _samples()}:
+        return jsonify({"error": "图片不在可用示例清单中，请从上传入口选择自有图片"}), 400
     try:
         import content_check
-        res = content_check.check_one(text, image_path, tag=payload.get("tag", "web"))
-    except Exception as exc:
-        return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
+        res = content_check.check_one(text, REPO / img if img else None, tag="web",
+                                      product=product, references=payload.get("references"),
+                                      llm=payload.get("llm") is True)
+    except (ValueError, FileNotFoundError) as exc:
+        return jsonify({"error": str(exc)}), 400
     return jsonify(res)
 
 
