@@ -45,11 +45,13 @@ import json
 import subprocess
 import sys
 import time
+import threading
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TOOLS = REPO / "tools"
 PY = sys.executable
+PUBLISH_LOCK = threading.Lock()
 
 # 七个工具：(证据里的名字, 脚本名, 是否默认开启)
 # 深度学习那两个（aigc / trufor）要加载几百 MB 的模型，慢，所以支持 --fast 跳过
@@ -300,7 +302,8 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
 # ---------------------------------------------------------------- 主流程
 def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
             on_progress=None, text=None, llm=False, roundtable=False, *,
-            product=None, references=None, publish=True, verified_references=()):
+            product=None, references=None, publish=True, verified_references=(), market=None,
+            reference_image=None):
     """对一张图跑完整流水线，返回结构化结果
 
     on_progress: 可选回调 fn(tool, 第几个, 共几个, 状态) —— Web 界面靠它显示实时进度
@@ -312,9 +315,12 @@ def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
 
     text = (text or "").strip()
     product = (product or "").strip() or None
+    market = (market or "").strip() or None
     references = claim_review.normalize_references(references)
     if not image_path and not text:
         raise ValueError("至少提供图片或正文")
+    if reference_image and not image_path:
+        raise ValueError("参考图片需要与宣传图片一起提交")
     original = Path(image_path).resolve() if image_path else None
     if original and not original.is_file():
         raise FileNotFoundError(f"找不到图片: {original.name}")
@@ -339,15 +345,25 @@ def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
                 for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                     digest.update(chunk)
             info.update(path=str(original), sha256=digest.hexdigest())
+            visual_match = None
+            if reference_image:
+                ref_path = Path(input_dir) / "reference_image"
+                shutil.copyfile(reference_image, ref_path)
+                try:
+                    import package_match
+                    visual_match = package_match.locate(image_path, ref_path)
+                except Exception:  # Optional OpenCV decoding/matching must not abort the remaining checks.
+                    visual_match = {"status": "无法判断", "regions": [],
+                                    "reason": "参考图无法读取或本地定位组件不可用。"}
             return _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
-                                on_progress, text, llm, roundtable, product, references, publish, verified_references)
+                                on_progress, text, llm, roundtable, product, references, publish, verified_references, market, visual_match)
 
     return _analyze_run(None, None, output_dir, fast, skip, verbose, timeout,
-                        on_progress, text, llm, roundtable, product, references, publish, verified_references)
+                        on_progress, text, llm, roundtable, product, references, publish, verified_references, market)
 
 
 def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
-                 on_progress, text, llm, roundtable, product, references, publish, verified_references):
+                 on_progress, text, llm, roundtable, product, references, publish, verified_references, market, visual_match=None):
     import claim_review
     import crossmodal_tool
 
@@ -440,6 +456,9 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
 
     evidence = collect_evidence(stem, output_dir)
     ocr = claim_review.ocr_lines(evidence)
+    uncertain_ocr = [row for row in evidence.get("ocr", {}).get("evidence", [])
+                     if isinstance(row, dict) and isinstance(row.get("text"), str)
+                     and isinstance(row.get("confidence"), (int, float)) and row["confidence"] < .70]
     image_text = "\n".join(line.get("text", "") for line in ocr if isinstance(line, dict))
     body_claims = claim_review.extract(text, product)
     image_claims = claim_review.extract(image_text, product, "image")
@@ -474,14 +493,38 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         skipped.update(planner.TEXT_TOOLS)
 
     cross = (evidence.get("crossmodal", {}).get("evidence") or [{}])[0]
+    if visual_match is not None:
+        cross["package_reference"] = visual_match
     if text and image_path:
         cross["alignment"] = crossmodal_tool.alignment(body_claims, image_claims)
-        if llm and claim_review.EFFICACY_PHOTO.search(text) and not claim_review.EFFICACY_PHOTO.search(image_text):
-            import llm_explainer
-            cross["visual_observation"] = llm_explainer.observe_comparison_layout(
-                image_path, image_info_fields.get("width"), image_info_fields.get("height"))
+    catalog = claim_review.verified_catalog()
+    selected = {ref["id"]: ref for ref in verified_references}
+    selected.update(catalog)
     claims = claim_review.assess(body_claims, image_claims, references, cross.get("contradictions", []),
-                                 verified_references=verified_references)
+                                 verified_references=selected.values(), market=market)
+    context_conflicts = claim_review.context_conflicts(body_claims)
+    semantic_findings, semantic_status = [], "insufficient_evidence"
+    semantic_reference_count = None
+    semantic_reference_total = None
+    if llm and text and os.environ.get("BP_TEXT_API_ONLY") == "1":
+        import llm_explainer
+        products = {c["product"] for c in body_claims if c.get("product")}
+        if product:
+            products.add(product)
+        versions = set(claim_review.PRODUCT_VERSION.findall(text))
+        manual_ids = list(dict.fromkeys(ref["id"] for ref in verified_references if ref["id"] in catalog))
+        ordered = [catalog[key] for key in manual_ids] + [ref for key, ref in catalog.items() if key not in manual_ids]
+        eligible = [ref for ref in ordered if len(products) == 1 and ref["product"] in products
+                    and market and ref.get("market") == market
+                    and (len(versions) != 1 or not ref.get("product_version")
+                         or ref["product_version"] in versions)]
+        semantic_reference_total = len(eligible)
+        relevant = [{k: ref[k] for k in ("id", "source", "excerpt", "product", "market", "source_type", "version", "product_version", "locator", "method", "sample", "population", "period", "conditions") if k in ref}
+                    for ref in eligible[:8]]
+        semantic_reference_count = len(relevant)
+        result = llm_explainer.semantic_review(text, relevant)
+        semantic_status = "completed" if result is not None else "model_unavailable"
+        semantic_findings = result or []
     asset_hash = image_info_fields.get("sha256")
     for tool, item in evidence.items():
         item.update(run_id=output_dir.name, image_sha256=asset_hash)
@@ -495,6 +538,10 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         reasons.append("宣称核验：图文或对应参考资料存在冲突")
     if any(claim["status"] == "证据不足" for claim in claims):
         reasons.append("宣称核验：部分宣称缺少对应产品、指标和条件的证据")
+    if context_conflicts:
+        if risk_level != "high_risk":
+            risk_level = "suspicious"
+        reasons.append("正文核验：同一产品及条件下存在不同数值，请核对原文")
     if risk_level == "credible":
         risk_level = "inconclusive"
 
@@ -514,6 +561,21 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         if tool == "aigc" and signals["origin"]["score"] is not None and not signals["origin"]["threshold_profile"]:
             checks[tool]["decision_status"] = "insufficient_evidence"
     checks["claim_model"] = {"status": claim_model_status}
+    checks["semantic_review"] = {"status": semantic_status}
+    if semantic_reference_count is not None:
+        checks["semantic_review"]["reference_count"] = semantic_reference_count
+        checks["semantic_review"]["reference_total"] = semantic_reference_total
+        if semantic_status == "model_unavailable":
+            checks["semantic_review"]["reason"] = "DeepSeek 未配置、请求失败或结果无法解析。"
+        elif semantic_reference_count == 0:
+            checks["semantic_review"]["reason"] = "未找到产品及市场一致的资料；仅检查正文上下文。"
+        elif semantic_reference_total > semantic_reference_count:
+            checks["semantic_review"]["reason"] = f"符合条件的 {semantic_reference_total} 条资料中仅审核了前 {semantic_reference_count} 条；手选资料优先。"
+    if llm and os.environ.get("BP_TEXT_API_ONLY") == "1":
+        checks["claim_model"]["model"] = os.environ.get("BP_DEEPSEEK_MODEL", "deepseek-flash")
+        if claim_model_status == "model_unavailable":
+            checks["claim_model"]["reason"] = ("DeepSeek 请求失败或返回内容无法解析" if os.environ.get("DEEPSEEK_API_KEY")
+                                                 else "尚未配置 DEEPSEEK_API_KEY")
     checks["text"] = {"status": "completed" if "text" in evidence else "insufficient_evidence"}
     checks["crossmodal"] = {"status": "completed" if text and cross.get("conflict_level") in
                             ("none", "medium", "hard") else "insufficient_evidence"}
@@ -567,7 +629,8 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         "elapsed_seconds": round(time.time() - t0, 1),
         "image": info,
         "run_id": output_dir.name,
-        "audit": {"claims": claims, "checks": checks, "image_signals": signals,
+        "audit": {"claims": claims, "context_conflicts": context_conflicts, "semantic_findings": semantic_findings,
+                  "uncertain_ocr": uncertain_ocr, "checks": checks, "image_signals": signals,
                   "crossmodal": cross,
                   "ai_illustration_disclosed": bool(cross.get("ai_illustration_disclosed"))},
         "verdict": {
@@ -589,7 +652,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
 
     # 可选：方案 C 的大模型人话解读层（默认关闭，--llm 开启）。
     # 模型不可用时自动降级，不影响主流程。
-    if llm:
+    if llm and not os.environ.get("DEEPSEEK_API_KEY") and os.environ.get("BP_TEXT_API_ONLY") != "1":
         try:
             import llm_explainer  # noqa: E402
             llm_text = llm_explainer.generate_for_pipeline(
@@ -624,7 +687,8 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         # Decisions and report generation always read the isolated run.
         snapshot = output_dir / "publish.json"
         snapshot.write_text(payload, encoding="utf-8")
-        snapshot.replace(REPO / "outputs" / out.name)
+        with PUBLISH_LOCK:
+            snapshot.replace(REPO / "outputs" / out.name)
     result["_output_file"] = str(out)
     return result
 

@@ -34,7 +34,8 @@ def validate(manifest):
     if not isinstance(rows, list) or not rows:
         raise ValueError("清单须为非空 JSON 数组")
     root = manifest.parent
-    ids, ownership, hashes, fingerprints = set(), {}, {}, {}
+    ids, ownership, hashes, fingerprints, originals = set(), {}, {}, {}, set()
+    edits = []
     for row in rows:
         name = row.get("id")
         if any(not isinstance(row.get(k), str) or not row[k].strip() for k in ("id", "group", "authorization")):
@@ -59,11 +60,16 @@ def validate(manifest):
         for key in ("group", "identity", "campaign", "study", "original_sha256", "generator"):
             if not row.get(key):
                 continue
-            # Development can share generator families; blind must be wholly unseen.
-            partition = ("blind" if split == "blind" else "development") if key == "generator" else split
+            if not isinstance(row[key], str):
+                raise ValueError(f"{name} 的 {key} 须为字符串")
+            # Generator families may contain many groups, but blind families must be unseen.
+            partition = (("blind" if split == "blind" else "development") if key == "generator"
+                         else (split, row["group"]))
             owner = (key, row[key])
             if ownership.setdefault(owner, partition) != partition:
-                raise ValueError(f"{name}：{key} 跨分区：{row[key]}")
+                raise ValueError(f"{name}：{key} 跨分区或来源组：{row[key]}")
+        if kind == "edited":
+            edits.append((name, split, row["group"], row["original_sha256"]))
         if not row.get("image"):
             if kind != "claim" or not row.get("text"):
                 raise ValueError(f"{name} 缺少输入图片或正文")
@@ -72,10 +78,13 @@ def validate(manifest):
         digest = sha256(image)
         if digest != row.get("sha256"):
             raise ValueError(f"{name} 图片 SHA-256 不匹配")
-        if hashes.setdefault(digest, split) != split:
-            raise ValueError(f"{name} 图片跨分区重复")
-        if ownership.setdefault(("original_sha256", digest), split) != split:
-            raise ValueError(f"{name} 的原图和衍生图跨分区")
+        location = (split, row["group"])
+        if hashes.setdefault(digest, location) != location:
+            raise ValueError(f"{name} 图片跨分区或来源组重复")
+        if ownership.setdefault(("original_sha256", digest), location) != location:
+            raise ValueError(f"{name} 的 original_sha256 原图和衍生图跨分区或来源组")
+        if kind in ("real", "generated"):
+            originals.add((split, row["group"], digest))
         with Image.open(image) as raw:
             gray = list(ImageOps.grayscale(raw).resize((9, 8)).getdata())
             fingerprint = sum((gray[i] > gray[i + 1]) << (8 * (i // 9) + i % 9)
@@ -94,10 +103,18 @@ def validate(manifest):
             with Image.open(mask) as raw:
                 if raw.size != size or raw.convert("L").getextrema() != (0, 255):
                     raise ValueError(f"{name} 掩码须与原图同尺寸，且含前景和背景")
+    for name, split, group, original_hash in edits:
+        if (split, group, original_hash) not in originals:
+            raise ValueError(f"{name} 的 original_sha256 找不到同组原图记录")
     return rows
 
 
 def run(manifest, rows, llm):
+    unchecked = [row["id"] for row in rows if row["split"] != "smoke" and row["kind"] in ("real", "generated", "edited")
+                 and (row.get("visible_ai_label_reviewed") is not True or
+                      row.get("visible_ai_label_present") is not False)]
+    if unchecked:
+        raise ValueError("评测图片须复核并去除可见 AI 标识：" + ", ".join(unchecked[:5]))
     import claim_review
     import pipeline
 
@@ -106,6 +123,7 @@ def run(manifest, rows, llm):
     for row in rows:
         image = local_file(manifest.parent, row["image"]) if row.get("image") else None
         result = pipeline.analyze(image, text=row.get("text"), product=row.get("product"),
+                                  market=row.get("market"),
                                   references=row.get("references"), llm=llm,
                                   verified_references=[catalog[i] for i in row.get("reference_ids", [])],
                                   timeout=120, verbose=False, publish=False)
@@ -114,6 +132,8 @@ def run(manifest, rows, llm):
                         "run_id": result["run_id"], "analysis": result["_output_file"],
                         "seconds": result["elapsed_seconds"], "checks": audit["checks"],
                         "signals": audit["image_signals"], "claims": audit["claims"],
+                        "context_conflicts": audit.get("context_conflicts", []),
+                        "semantic_findings": audit.get("semantic_findings", []),
                         "crossmodal": result["evidence"].get("crossmodal", {}).get("evidence", [{}])[0]})
     return reports
 
@@ -140,11 +160,14 @@ def groups(rows, predicate):
 def origin_report(rows, low, high):
     real = [(row, score) for row, score in rows if row["kind"] == "real"]
     fake = [(row, score) for row, score in rows if row["kind"] == "generated"]
-    positive = lambda row, score: score is not None and score >= high
+    complete_real = [g for g in groups(real, lambda row, score: score) if all(score is not None for score in g)]
+    complete_fake = [g for g in groups(fake, lambda row, score: score) if all(score is not None for score in g)]
     uncertain = lambda row, score: score is None or low <= score < high
-    return {"false_positive": rate(any(g) for g in groups(real, positive)),
-            "recall": rate(all(g) for g in groups(fake, positive)),
-            "uncertain": rate(any(g) for g in groups(real + fake, uncertain))}
+    return {"false_positive": rate(any(score >= high for score in g) for g in complete_real),
+            "recall": rate(all(score >= high for score in g) for g in complete_fake),
+            "uncertain": rate(any(g) for g in groups(real + fake, uncertain)),
+            "missing_scores": {"real": sum(score is None for _, score in real),
+                               "generated": sum(score is None for _, score in fake)}}
 
 
 def calibrate(rows, manifest_hash):
@@ -194,19 +217,35 @@ def evaluate(rows, profile, root):
     def summarize(items):
         return origin_report(items, profile["low"], profile["high"])
     ious, clean, field_hits = defaultdict(list), [], [0, 0, 0]
-    conflict_pairs = []
-    fields = ("source", "quote", "product", "metric", "value", "unit", "duration_days", "variant",
+    missing_edit_scores, missing_masks, untracked_edit_scores = 0, 0, 0
+    edit_models = set()
+    conflict_pairs, context_pairs = [], []
+    context_model_unavailable = 0
+    fields = ("source", "quote", "product", "product_version", "metric", "value", "unit", "duration_days", "variant",
               "population", "conditions")
     unsupported = 0
     for row, report in rows:
         edit = report["signals"]["editing"]
         # The mask threshold and image operating point are fixed before blind evaluation.
-        detected = edit.get("score") is not None and edit["score"] >= .5
+        score = edit.get("score")
+        detected = score is not None and score >= .5
+        if row["kind"] == "real" or row.get("mask"):
+            if score is None:
+                missing_edit_scores += 1
+            else:
+                identity = tuple(edit.get(k) for k in ("model", "weights_sha256", "preprocessing"))
+                if not all(identity):
+                    untracked_edit_scores += 1
+                else:
+                    edit_models.add(identity)
         if row["kind"] == "real":
-            clean.append((row, detected))
+            if score is not None:
+                clean.append((row, detected))
         if row.get("mask"):
             predicted = edit.get("mask")
             iou = 0
+            if detected and (not predicted or not Path(predicted).is_file()):
+                missing_masks += 1
             if detected and predicted and Path(predicted).is_file():
                 with Image.open(local_file(root, row["mask"])) as truth, Image.open(predicted) as output:
                     a, b = np.asarray(truth.convert("L")) > 127, np.asarray(output.convert("L")) > 127
@@ -216,9 +255,22 @@ def evaluate(rows, profile, root):
             ious[row["group"]].append(iou)
         if row["kind"] != "claim":
             continue
+        if "context_conflict" in row:
+            if type(row["context_conflict"]) is not bool:
+                raise ValueError(f"{row['id']} 的 context_conflict 须为布尔值")
+            if "context_conflicts" not in report or "semantic_findings" not in report:
+                raise ValueError(f"{row['id']} 的预测缺少正文上下文结果，请重新运行")
+            if report["checks"].get("semantic_review", {}).get("status") != "completed":
+                context_model_unavailable += 1
+            context_pairs.append((row["context_conflict"], bool(report.get("context_conflicts") or
+                                                                  report.get("semantic_findings"))))
         for claim in report["claims"]:
-            if claim["status"] == "有证据支持" and not any(r.get("verification") == "reviewer_verified" and
-                                                            r.get("locator") for r in claim.get("references", [])):
+            if claim["status"] == "有证据支持" and not any(
+                    r.get("verification") == "reviewer_verified" and r.get("source_type") == "efficacy_study"
+                    and r.get("source") and r.get("locator") and r.get("matches") is True
+                    and row.get("market") and r.get("market") == row["market"]
+                    and r.get("product_version") and r["product_version"] == claim.get("product_version")
+                    for r in claim.get("references", [])):
                 unsupported += 1
         expected = {(k, json.dumps(c[k], sort_keys=True), c["quote"]) for c in row["claims"]
                     for k in fields if c.get(k) not in (None, [])}
@@ -242,11 +294,18 @@ def evaluate(rows, profile, root):
         "slices": {k: summarize(v) for k, v in sorted(slices.items())} if profile else {},
         "localization": {"mask_groups": len(ious), "mean_iou": iou,
                          "iou_ci95": [bootstrap[25], bootstrap[974]] if bootstrap else None,
+                         "missing_scores": missing_edit_scores, "missing_masks": missing_masks,
+                         "untracked_scores": untracked_edit_scores,
+                         "models": [{"model": m, "weights_sha256": w, "preprocessing": p}
+                                    for m, w, p in sorted(edit_models)],
                          "clean_false_positive": rate(any(g) for g in groups(clean, lambda _, flag: flag))},
         "claims": {"field_f1": 2 * tp / (labels + guesses) if labels + guesses else None,
                    "labels": labels, "predicted": guesses, "matched": tp, "unsupported": unsupported},
         "crossmodal": {"precision": rate(a for a, b in conflict_pairs if b),
                        "recall": rate(b for a, b in conflict_pairs if a), "cases": len(conflict_pairs)},
+        "context": {"precision": rate(a for a, b in context_pairs if b),
+                    "recall": rate(b for a, b in context_pairs if a), "cases": len(context_pairs),
+                    "semantic_unavailable": context_model_unavailable},
         "unavailable": {tool: sum(r["checks"].get(tool, {}).get("status") == "model_unavailable" for _, r in rows)
                         for tool in ("aigc", "trufor", "ocr", "claim_model")},
         "seconds": [r["seconds"] for _, r in rows],
@@ -258,18 +317,24 @@ def release_checks(metrics):
     edit = metrics["localization"]
     claims = metrics["claims"]
     cross = metrics["crossmodal"]
+    context = metrics["context"]
     families = metrics["generator_families"].values()
     return {
         "origin": bool(origin and origin["false_positive"]["n"] >= 100 and origin["recall"]["n"] >= 100
                        and len(families) >= 2 and all(g["n"] >= 50 and g["rate"] >= .70 for g in families)
                        and origin["false_positive"]["rate"] <= .05 and origin["recall"]["rate"] >= .80
-                       and origin["uncertain"]["rate"] <= .25 and metrics["unavailable"]["aigc"] == 0),
+                       and origin["uncertain"]["rate"] <= .25 and not any(origin["missing_scores"].values())
+                       and metrics["unavailable"]["aigc"] == 0),
         "editing": bool(edit["mask_groups"] >= 60 and edit["clean_false_positive"]["n"] >= 100
                         and edit["mean_iou"] >= .40 and edit["clean_false_positive"]["rate"] <= .10
+                        and edit["missing_scores"] == 0 and edit["missing_masks"] == 0
+                        and edit["untracked_scores"] == 0 and len(edit["models"]) == 1
                         and metrics["unavailable"]["trufor"] == 0),
         "claims": bool(cross["cases"] >= 120 and (claims["field_f1"] or 0) >= .85 and claims["unsupported"] == 0),
         "crossmodal": bool(cross["cases"] >= 120 and (cross["precision"]["rate"] or 0) >= .90
                            and (cross["recall"]["rate"] or 0) >= .80),
+        "context": bool(context["cases"] >= 60 and (context["precision"]["rate"] or 0) >= .90
+                        and (context["recall"]["rate"] or 0) >= .80 and context["semantic_unavailable"] == 0),
     }
 
 

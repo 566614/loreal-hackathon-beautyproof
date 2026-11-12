@@ -19,6 +19,7 @@
     GET  /api/job/<id>     轮询任务进度与结果
 """
 import json
+import os
 import re
 import sys
 import threading
@@ -42,6 +43,7 @@ UPLOADS.mkdir(exist_ok=True)
 JOBS = {}          # job_id -> {status, steps, result, error}
 JOBS_LOCK = threading.Lock()
 MODEL_LOCK = threading.Lock()
+CATALOG_LOCK = threading.Lock()
 
 # 任务结果里存着完整 analysis（含原图 data URI，单个可达数 MB）。
 # 演示时长跑或接口被反复调用时 JOBS 会无限增长，故设上限并淘汰最旧的已完结任务。
@@ -77,7 +79,7 @@ RISK_ZH = {
 
 
 def _run_job(job_id, image_path, fast, text=None, product=None, references=None, llm=False,
-             verified_references=()):
+             verified_references=(), market=None, reference_image=None):
     job = JOBS[job_id]
 
     def cb(tool, idx, total, state):
@@ -89,7 +91,8 @@ def _run_job(job_id, image_path, fast, text=None, product=None, references=None,
         with MODEL_LOCK if image_path or llm else nullcontext():
             res = pipeline.analyze(image_path, fast=fast, on_progress=cb, timeout=120,
                                    verbose=False, text=text, product=product, references=references, llm=llm,
-                                   verified_references=verified_references)
+                                   verified_references=verified_references, market=market,
+                                   reference_image=reference_image)
         res["verdict"]["risk_zh"] = RISK_ZH.get(res["verdict"]["risk_level"],
                                                 res["verdict"]["risk_level"])
         res["tool_meta"] = pipeline.TOOL_META
@@ -158,16 +161,38 @@ def reference_catalog():
                                    for row in rows]})
 
 
+@app.get("/api/config")
+def config():
+    return jsonify({"deepseek_configured": bool(os.environ.get("DEEPSEEK_API_KEY"))})
+
+
+@app.post("/api/reference-catalog")
+def add_reference():
+    from claim_review import add_verified_reference
+    try:
+        with CATALOG_LOCK:
+            row = add_verified_reference(request.get_json(silent=True))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except OSError:
+        return jsonify({"error": "无法保存本地依据，请检查文件权限"}), 503
+    return jsonify({"reference": {k: row[k] for k in ("id", "source", "product", "version", "locator")}}), 201
+
+
 @app.post("/api/analyze")
 def analyze():
     from claim_review import normalize_references, verified_catalog
 
     f = request.files.get("file")
+    reference_file = request.files.get("reference_image")
     text = (request.form.get("text") or "").strip() or None
     if not text and not (f and f.filename):
         return jsonify({"error": "请提供图片或正文"}), 400
+    if reference_file and reference_file.filename and not (f and f.filename):
+        return jsonify({"error": "请同时上传宣传图片和包装参考图"}), 400
     fast = request.form.get("fast") == "1"
     product = (request.form.get("product") or "").strip() or None
+    market = (request.form.get("market") or "").strip() or None
     llm = request.form.get("llm") == "1"
     try:
         references = normalize_references(json.loads(request.form.get("references", "null")))
@@ -185,6 +210,7 @@ def analyze():
     verified_references = [catalog[i] for i in dict.fromkeys(ids)]
 
     path = None
+    reference_path = None
     if f and f.filename:
         safe = uuid.uuid4().hex[:8] + "_" + Path(f.filename).name
         path = UPLOADS / safe
@@ -197,11 +223,22 @@ def analyze():
             path.unlink(missing_ok=True)
             return jsonify({"error": "无法读取所选图片，请换一张 PNG / JPG"}), 400
 
+    if reference_file and reference_file.filename:
+        reference_path = UPLOADS / (uuid.uuid4().hex[:8] + "_" + Path(reference_file.filename).name)
+        reference_file.save(reference_path)
+        try:
+            with Image.open(reference_path) as im:
+                im.verify()
+        except (OSError, ValueError, Image.DecompressionBombError):
+            reference_path.unlink(missing_ok=True)
+            path.unlink(missing_ok=True)
+            return jsonify({"error": "无法读取包装参考图，请换一张 PNG / JPG"}), 400
+
     job_id = uuid.uuid4().hex[:12]
     with JOBS_LOCK:
         JOBS[job_id] = {"status": "running", "steps": [], "result": None, "error": None}
     _prune_jobs()
-    threading.Thread(target=_run_job, args=(job_id, path, fast, text, product, references, llm, verified_references),
+    threading.Thread(target=_run_job, args=(job_id, path, fast, text, product, references, llm, verified_references, market, reference_path),
                      daemon=True).start()
     return jsonify({"job_id": job_id})
 

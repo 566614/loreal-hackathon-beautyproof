@@ -50,7 +50,7 @@ CLAIM_LEXICON = {
         "basis": "《化妆品监督管理条例》第43条 / 《广告法》第17条",
         "severity": "high",
         "words": [
-            "治疗", "治愈", "疗效", "根治", "根治", "消除炎症", "消炎", "抗菌", "杀菌",
+            "治疗", "治愈", "疗效", "根治", "消除炎症", "消炎", "抗菌", "杀菌",
             "灭菌", "抗病毒", "药用", "药效", "处方", "麻醉", "解毒", "抗过敏",
             "祛痘印", "祛疤", "去疤", "牛皮癣", "湿疹", "皮炎", "激素", "抗生素",
             "医用", "临床验证", "遵医嘱",
@@ -112,7 +112,8 @@ def scan_claims(text):
                 if idx < 0:
                     break
                 start = idx + len(word)
-                if stance_at(text, idx) != "asserted":
+                stance = stance_at(text, idx)
+                if stance not in ("asserted", "question"):
                     continue
                 left = max(0, idx - 12)
                 right = min(len(text), idx + len(word) + 12)
@@ -120,7 +121,10 @@ def scan_claims(text):
                     "category": category,
                     "category_label": spec["label"],
                     "basis": spec["basis"],
-                    "severity": spec["severity"],
+                    "severity": "review" if stance == "question" or word == "临床验证" else spec["severity"],
+                    "stance": stance,
+                    "review_reason": ("疑问句尚不能作为已作出的承诺" if stance == "question" else
+                                      "临床验证本身不等同于医疗功效，需核对试验内容" if word == "临床验证" else None),
                     "word": word,
                     "position": idx,
                     "context": text[left:right],
@@ -190,6 +194,7 @@ def build_evidence(text, source_id="inline", mode="single"):
 
     high = sum(1 for c in claims if c["severity"] == "high")
     medium = sum(1 for c in claims if c["severity"] == "medium")
+    review = sum(1 for c in claims if c["severity"] == "review")
     if high:
         claim_level = "high"
     elif medium:
@@ -199,10 +204,11 @@ def build_evidence(text, source_id="inline", mode="single"):
 
     if claims:
         top = claims[0]
-        observed = (f"文案共 {style.get('char_count', 0)} 字，命中 {len(claims)} 处敏感宣称"
-                    f"（高风险 {high} 处、中风险 {medium} 处）。"
-                    f"最扎眼的一处：「{top['word']}」（{top['category_label']}，依据 {top['basis']}），"
-                    f"上下文 …{top['context']}…")
+        observed = (f"文案共 {style.get('char_count', 0)} 字，发现 {len(claims)} 处敏感词线索"
+                    f"（高风险 {high} 处、中风险 {medium} 处、待复核 {review} 处）。")
+        observed += (f"例如「{top['word']}」：{top['review_reason']}，上下文 …{top['context']}…"
+                     if top["severity"] == "review" else
+                     f"例如「{top['word']}」（{top['category_label']}，依据 {top['basis']}），上下文 …{top['context']}…")
     else:
         observed = f"文案共 {style.get('char_count', 0)} 字，未命中违禁宣称词典中的任何词条。"
 

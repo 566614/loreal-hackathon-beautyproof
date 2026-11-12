@@ -1,0 +1,42 @@
+{
+  "status": "公开监管案例候选；非冻结金标，需复核语境并补充反例",
+  "scope": "记录监管部门对特定广告和事实的处理，不对其他产品或同一句话脱离语境作违法判断。按案件分组，同案改写不可跨分区。",
+  "cases": [
+    {
+      "group": "gz-2024-cosmetics-ad",
+      "input_excerpt": "从根源清除色素沉淀",
+      "case_context": "广州市监管部门披露的化妆品虚假宣传案件，需结合其查明的广告、证书和图片事实。",
+      "source": "https://scjgj.gz.gov.cn/gkmlpt/content/10/10161/post_10161823.html"
+    },
+    {
+      "group": "sz-xilaiya-ad",
+      "input_excerpt": "一瓶解决肌肤10大问题",
+      "case_context": "监管部门披露的化妆品虚假广告案，结论取决于该案产品宣传和事实。",
+      "source": "https://www.samr.gov.cn/xw/zj/art/2023/art_700a4e21915a4261b00a7da7bdfb1c04.html"
+    },
+    {
+      "group": "helius-2023-ad",
+      "input_excerpt": "专研抗老",
+      "case_context": "监管通报认定该案相关产品没有所宣称的抗老功能；单靠这四个字不能推断其他广告违法。",
+      "source": "https://www.samr.gov.cn/zt/pgt/art/2023/art_08dc533f6f054fc382e7c2bd97f90ed1.html"
+    },
+    {
+      "group": "chengdu-gankangyuan-2023",
+      "input_excerpt": "有效治疗预防青春痘、牛皮癣、过敏等恶性皮肤病",
+      "case_context": "监管通报中该句用于化妆品精华液；同案另有消毒产品，不能混同其类别。",
+      "source": "https://www.samr.gov.cn/xw/zj/art/2024/art_245b3b07dfea49b9b41981fc07bc6133.html"
+    },
+    {
+      "group": "shishi-ruifanka-ad",
+      "input_excerpt": "解决真皮斑、老年斑、黄褐斑、雀斑、铅汞斑、胎记、太田痣、红血丝、汗管瘤、扁平疣",
+      "case_context": "监管通报称该案相关化妆品登记功效为保湿等，商家无法提供对应广告事实依据。",
+      "source": "https://www.samr.gov.cn/zt/pgt/art/2023/art_1c3cb3e01cbf49b69352980a70e4bf40.html"
+    },
+    {
+      "group": "longhai-eyecream-ad",
+      "input_excerpt": "无惧时光让眼周肌肤就此冻龄",
+      "case_context": "监管通报称涉案图文广告的相关内容无法提供证明材料；此处保留该案范围。",
+      "source": "https://www.samr.gov.cn/zt/pgt/art/2023/art_1c3cb3e01cbf49b69352980a70e4bf40.html"
+    }
+  ]
+}

@@ -282,6 +282,8 @@ def main():
         report = build_evidence(image_path, ai_score, ai_label, available)
         item = report["evidence"][0]
         item["review_only"] = True
+        if available:
+            report["observed"] = f"AI 生成倾向分 {ai_score}，该模型尚未通过本项目独立盲测，供人工复核"
         path = model_path()
         if path and available and is_timm_model(path):
             item.update(weights_sha256=file_hash(Path(path) / "model.pt"),
