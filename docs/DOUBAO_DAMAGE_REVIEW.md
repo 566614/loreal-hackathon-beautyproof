@@ -2,9 +2,29 @@
 
 在 BeautyProof 顶栏选择「退款破损审核」，上传 JPG 或 PNG，点击「开始检查」。可以框选裂痕、碎粉或包装破口。结果包含整图和选区的检测分、复核阈值、像素线索与来源标识。橙色覆盖图显示候选边缘，可能包含印刷线、接缝与反光。
 
-v3 优先检出疑似 AI 生成破损图。首次检查用 256 像素短边，未命中时额外检查 288 像素短边。入口独立在 CPU 运行，使用 NumPy、OpenCV 和 Pillow。模型 30,140 字节。对 56 张图片测速，整图 P95 为 233 ms，框选 P95 为 275 ms。权重默认从 `models/doubao_damage/model.json` 加载。
+v4 优先提高平衡准确率，也就是对豆包破损检出率与完好实拍正确放过率取平均。整图用色度和再压缩响应，框选同时使用局部噪声与裂纹叠片，在统一的 288 像素短边提取特征。模型使用 CPU，权重为 17,221 字节，默认从 `models/doubao_damage/model.json` 读取。v3 权重保存在 `outputs/runs/doubao-damage-v3/dual-scale/model.json`，用于比较高召回表现。
 
-## 扩展训练与评测
+## v4 准确率对照
+
+55 对图按 31 个商品组划分，完整保留过去的五个留出折。阈值只在各训练折的内层开发组校准。原文件、外部 JPEG 质量 60 和缩略图 JPEG 质量 45 均经过与线上一致的推理预处理。
+
+| 同一批留出图 | v3 整图 | v4 整图 | v3 框选 | v4 框选 |
+| --- | ---: | ---: | ---: | ---: |
+| 原文件 | 53.6% | 71.8% | 56.4% | 69.1% |
+| 长边最多 1024、JPEG Q60 后上传 | 50.9% | 75.5% | 57.3% | 77.3% |
+| 短边最多 256、JPEG Q45 后上传 | 65.5% | 64.5% | 60.9% | 65.5% |
+
+原文件整图 55 张豆包破损中的检出从 55 降到 41，55 个完好对照中的误报从 51 降到 17。Q60 上传时，v4 整图为 48 个检出和 20 个误报；重用 v3 特征并重新校准的对照为 40 个检出和 24 个误报。Q45 缩略图是整图模式的主要难点。开发时已查看这些商品组的结果，新的采集来源需要独立盲测确认。
+
+两批素材轮流留出时，v4 在原文件和 Q60 的四个整图对照上均提高了平衡准确率。框选原文件在其中一批从 57.7% 降至 55.8%。本机 CPU 对 56 张图实测，整图 P95 为 0.365 秒，框选 P95 为 0.394 秒。
+
+v4 最终权重、商品分组和跨批次评测在 `outputs/runs/doubao-damage-accuracy/reproduced/`。额外样本检查与 CPU 测速在 `outputs/runs/doubao-damage-accuracy/release/`。
+
+```powershell
+python tools/train_doubao_damage_accuracy.py --annotations outputs/runs/doubao-damage-v3/annotations.csv --real-dir $realDir --ai-dir $aiDir --v3-report outputs/runs/doubao-damage-v3/dual-scale/evaluation.json --v3-predictions outputs/runs/doubao-damage-v3/dual-scale/predictions.csv --output outputs/runs/doubao-damage-accuracy/reproduced
+```
+
+## v3 扩展训练与评测
 
 对 93 张处理图重新查看，70 张可见破损。其中 55 张有高或中置信的实拍参照（32 高、23 中），形成 31 个商品组。15 张能看到破损但缺少可靠原图，单独检查整图模型。与旧图同源及重复的文件归入同组或去重。
 
@@ -20,7 +40,7 @@ v3 优先检出疑似 AI 生成破损图。首次检查用 256 像素短边，�
 - 有原图时另做了对齐实验。55 张处理中，有 34 张能可靠对齐，框选定位变化检出其中 32 张。模拟正常 JPEG、裁剪、旋转调色与锐化的 217 个可对齐对照中有 11 个触发。这个实验度量相对原图的变化，来源归因还需结合证据复核。
 - 这批图已用于模型开发。群组留出与跨批次结果用于对照候选。验证更高召回需要新的商品、编辑批次和转发链路。
 
-记录保存在 `outputs/runs/doubao-damage-v3/`。当前权重与逐图分数见 `dual-scale/`，复核标注见 `annotations.csv`。其余包含微型 CNN、无可靠原图的 15 张诊断和原图对齐实验。v2 原始评测保留在 `outputs/runs/doubao-damage-v2/`。
+记录保存在 `outputs/runs/doubao-damage-v3/`。v3 权重与逐图分数见 `dual-scale/`，复核标注见 `annotations.csv`。其余包含微型 CNN、无可靠原图的 15 张诊断和原图对齐实验。v2 原始评测保留在 `outputs/runs/doubao-damage-v2/`。
 
 ## 复跑
 
@@ -42,7 +62,7 @@ python tools/doubao_damage.py $aiDir
 
 数学模型分两部分。图上量端点、分叉、闭环、线段迂曲程度和三叉角偏差。像素上沿法线采样，分别拟合背景斜坡、阶跃边缘和窄线剖面 i(n) = a + b·n + c·exp(−n²/(2σ²))，看窄线模型能解释多少误差。宽度和角度都是图像量。光照、透视、材料与外力条件会改变真实裂纹的形态和投影。 [曲线提取](https://ieeexplore.ieee.org/document/659930/) · [干裂分叉实验](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.74.021405)
 
-在相同的 55 对、31 个留出商品组上比较，其中 30 对按标注含可见裂线。JPEG 质量 60 时，只用几何量的整图和框选 AUROC 分别为 0.460 和 0.537。加入原有分类器后有小幅收益，模型权重仍使用已验证的 v3，叠片和曲线拟合通过独立诊断命令提供。
+在相同的 55 对、31 个留出商品组上比较，其中 30 对按标注含可见裂线。JPEG 质量 60 时，只用几何量的整图和框选 AUROC 分别为 0.460 和 0.537。加入原有分类器后有小幅收益，该轮在 v3 基础上测试，叠片和曲线拟合通过独立诊断命令提供。
 
 | JPEG 质量 60 | AI 破损检出 | 完好配对触发 | AUROC |
 | --- | ---: | ---: | ---: |

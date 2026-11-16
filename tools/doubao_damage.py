@@ -12,6 +12,7 @@ from PIL import Image, ImageOps
 
 MODEL_PATH = Path(__file__).resolve().parents[1] / "models" / "doubao_damage" / "model.json"
 SCHEMA = "beautyproof/doubao-damage@1"
+BALANCED_SCHEMA = "beautyproof/doubao-damage@2"
 MAX_PIXELS = 20_000_000
 MIN_SHORT_SIDE = 256
 DETAIL_SHORT_SIDE = 288
@@ -31,6 +32,12 @@ FAMILY_LABELS = {
     "fine_edges": "细暗线、亮碎屑与裂纹边缘",
     "edges": "边缘连通形态",
     "texture_conditioned": "同等纹理上的色度和噪声差异",
+}
+CUE_LABELS = {
+    **FAMILY_LABELS,
+    "noise_consistency": "相邻同亮度纹理的噪声一致性",
+    "codec_response": "同一图像在不同压缩强度下的像素响应",
+    "fracture_stacked": "叠片提取的候选裂纹与边界",
 }
 FREQ = np.fft.fftfreq(TILE)
 RADIUS = np.hypot(FREQ[:, None], FREQ)
@@ -251,6 +258,41 @@ def _extra_tile_statistics(tiles, gray, gaussian, directional, laplacian, textur
     return result
 
 
+
+def _neighbor_noise(tiles, gray_tiles, residual, gaussian, texture, columns):
+    """Compare neighboring tiles only after matching brightness and texture strength."""
+    brightness = gray_tiles.mean(axis=(1, 2))
+    luma = np.mean(np.abs(residual), axis=(1, 2))
+    noise = np.column_stack((np.log1p(luma) - texture,
+                            np.log((np.mean(np.abs(tiles(gaussian[..., 1])), axis=(1, 2))+0.2)/(luma+0.2)),
+                            np.log((np.mean(np.abs(tiles(gaussian[..., 2])), axis=(1, 2))+0.2)/(luma+0.2))))
+    indices = np.arange(len(brightness)).reshape(-1, columns)
+    li = np.r_[indices[:, :-1].ravel(), indices[:-1, :].ravel()]
+    ri = np.r_[indices[:, 1:].ravel(), indices[1:, :].ravel()]
+    close = (np.abs(brightness[li] - brightness[ri]) <= 24) & (np.abs(texture[li] - texture[ri]) <= 0.55)
+    li, ri = li[close], ri[close]
+    diff = np.abs(noise[li] - noise[ri])
+    differences = np.zeros_like(noise)
+    np.add.at(differences, li, diff)
+    np.add.at(differences, ri, diff)
+    counts = np.bincount(np.r_[li, ri], minlength=len(noise))
+    return np.column_stack((noise, differences / np.maximum(counts[:, None], 1)))
+
+
+def _codec_sensitivity(image, gray, tiles, residual):
+    """Re-encode the normalized input itself at two fixed qualities."""
+    bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    luma = np.mean(np.abs(residual), axis=(1, 2))
+    responses = []
+    for quality in (55, 72):
+        _, stream = cv2.imencode(".jpg", bgr, [cv2.IMWRITE_JPEG_QUALITY, quality])
+        recovered = cv2.imdecode(stream, cv2.IMREAD_GRAYSCALE).astype(np.float32)
+        error = tiles(gray - recovered)
+        amplitude = np.mean(np.abs(error), axis=(1, 2))
+        responses.extend((np.log1p(amplitude), np.log((amplitude+0.2)/(luma+0.2)),
+                          _channel_corr(error, residual)))
+    return np.column_stack(responses)
+
 def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()):
     """Extract image and optional region vectors; no metadata or dimensions in vectors."""
     height, width = image.shape[:2]
@@ -259,6 +301,7 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()
     ycrcb = cv2.cvtColor(rgb / 255.0, cv2.COLOR_RGB2YCrCb) * 255.0
     xx, yy = np.meshgrid(np.arange(TILE//2, width - TILE//2 + 1, STRIDE),
                          np.arange(TILE//2, height - TILE//2 + 1, STRIDE))
+    columns = xx.shape[1]
     xx, yy = xx.ravel(), yy.ravel()
     tile_y = yy[:, None, None] - TILE//2 + np.arange(TILE)[None, :, None]
     tile_x = xx[:, None, None] - TILE//2 + np.arange(TILE)[None, None, :]
@@ -306,6 +349,11 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()
         all_stats.update(_extra_tile_statistics(
             tiles, gray, gaussian, (horizontal, vertical), laplacian, texture, proportions[:, 2:]
         ))
+
+    if "noise_consistency" in extra:
+        all_stats["noise_consistency"] = _neighbor_noise(tiles, gray_tiles, residual, gaussian, texture, columns)
+    if "codec_response" in extra:
+        all_stats["codec_response"] = _codec_sensitivity(image, gray, tiles, residual)
 
     conditioned = None
     if "texture_conditioned" in extra:
@@ -425,7 +473,7 @@ def _prediction(head, features, default_reason):
     cues = []
     for key in head["families"]:
         stop = offset + len(features[key])
-        cues.append((float(contributions[offset:stop].sum()), FAMILY_LABELS[key]))
+        cues.append((float(contributions[offset:stop].sum()), CUE_LABELS[key]))
         offset = stop
     result.update(score=round(score, 4), threshold=round(threshold, 4) if threshold is not None else None,
                   reason=reason,
@@ -438,21 +486,23 @@ def _prediction(head, features, default_reason):
 def load_model(model_path):
     with Path(model_path).open(encoding="utf-8") as stream:
         model = json.load(stream)
-    if (not isinstance(model, dict) or model.get("schema") != SCHEMA
+    if (not isinstance(model, dict) or model.get("schema") not in (SCHEMA, BALANCED_SCHEMA)
             or not isinstance(model.get("heads"), dict) or not isinstance(model.get("id"), str)):
         raise ValueError("破损审核模型格式不匹配。")
     return model
+
 
 
 def analyze_image(data, roi=None, *, model_path=MODEL_PATH):
     roi = validate_roi(roi)
     image, marker = decode(data)
     width, height = image.size
-    prepared = prepare(image)
     try:
         model = load_model(model_path)
     except (OSError, ValueError, KeyError):
         model = None
+    short_side = DETAIL_SHORT_SIDE if model is not None and model["schema"] == BALANCED_SCHEMA else MIN_SHORT_SIDE
+    prepared = prepare(image, short_side=short_side)
     whole, region, preview, edge_summary = (None, None, None, None)
     if prepared is not None and (model is not None or roi is not None):
         extra = {key for head in model["heads"].values() for key in head["families"]} if model else ()

@@ -131,3 +131,35 @@ def test_detail_scale_can_recover_a_missed_image(tmp_path):
     assert result["whole"]["status"] == "similar"
     assert result["whole"]["threshold"] == 0.4
     assert result["region"] is None
+
+
+
+def test_v4_uses_the_trained_resolution(tmp_path, monkeypatch):
+    head = {"families": ["rgb"], "mean": [0]*8, "scale": [1]*8, "weights": [0]*8,
+            "intercept": 0.0, "threshold": 0.6}
+    package = {"schema": doubao_damage.BALANCED_SCHEMA, "id": "balanced-fixture", "heads": {"whole": head}}
+    path = tmp_path / "balanced.json"
+    path.write_text(json.dumps(package), encoding="utf-8")
+    prepare = doubao_damage.prepare
+    called = []
+
+    def observed(image, **kwargs):
+        called.append(kwargs.get("short_side"))
+        return prepare(image, **kwargs)
+
+    monkeypatch.setattr(doubao_damage, "prepare", observed)
+    result = doubao_damage.analyze_image(encode(sample_image()), model_path=path)
+    assert called == [288]
+    assert result["whole"]["score"] == 0.5
+    assert result["whole"]["status"] == "weak"
+
+
+def test_balanced_calibration_accounts_for_intact_photos_at_each_upload_quality():
+    from train_doubao_damage_accuracy import CONDITIONS, pick_cut
+    rows = []
+    for form, offset in zip(CONDITIONS, (0.0, -0.01, -0.03)):
+        rows.extend({"condition": form, "label": 0, "score": value+offset} for value in (0.28, 0.47, 0.49))
+        rows.extend({"condition": form, "label": 1, "score": value+offset} for value in (0.60, 0.62, 0.68))
+    cut, score = pick_cut(rows)
+    assert 0.49 < cut <= 0.57
+    assert score == pytest.approx(1.0)

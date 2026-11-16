@@ -93,7 +93,7 @@ export default function DamageReview({ readJson }) {
   return <>
     <div className="intro">
       <h1>退款破损审核</h1>
-      <p>上传送审图查看生成线索，可框选裂痕、碎粉或包装破口。优先检出疑似图片，结果用于人工复核。</p>
+      <p>上传送审图查看生成线索，可框选裂痕、碎粉或包装破口。评分用于人工复核。</p>
     </div>
     <div className="workbench-grid damage-grid">
       <Card className="surface intake-surface" title="送审图片">
