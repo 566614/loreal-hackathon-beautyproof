@@ -24,6 +24,11 @@ FAMILY_LABELS = {
     "laplacian": "拉普拉斯高频残差",
     "directional": "方向高通残差",
     "spectrum": "频谱与周期性",
+    "residual_shape": "残差形状与边缘锐度",
+    "cooccurrence": "相邻噪声的排列",
+    "chroma": "颜色与高频纹理的关系",
+    "fine_edges": "细暗线、亮碎屑与裂纹边缘",
+    "edges": "边缘连通形态",
 }
 FREQ = np.fft.fftfreq(TILE)
 RADIUS = np.hypot(FREQ[:, None], FREQ)
@@ -190,7 +195,61 @@ def _edge_features(gray, roi, preview):
     return features, encoded, summary
 
 
-def extract(image, roi=None, *, preview=False, study_periodicity=False):
+def _extra_tile_statistics(tiles, gray, gaussian, directional, laplacian, texture, spectrum):
+    """Compare fine structure at the scale of a few pixels without file attributes."""
+    fine = tiles(gray - cv2.GaussianBlur(gray, (3, 3), 0.65))
+    coarse = tiles(gray - cv2.GaussianBlur(gray, (9, 9), 2.0))
+    abs_fine = np.abs(fine)
+    abs_coarse = np.abs(coarse)
+    fine_mean = abs_fine.mean(axis=(1, 2))
+    coarse_mean = abs_coarse.mean(axis=(1, 2))
+    laplace = np.abs(tiles(laplacian))
+    gx, gy = (np.abs(tiles(value)) for value in directional)
+    scale = fine_mean[:, None, None] + 0.2
+    abs_area = np.abs(tiles(gaussian[..., 0]))
+    chroma = [tiles(gaussian[..., channel]) for channel in (1, 2)]
+    signs_x, signs_y = (np.clip(np.rint(tiles(value) / (scale * 2)), -3, 3)
+                        for value in directional)
+
+    def cooccurrence(values, axis):
+        a, b = (values[:, :, 1:], values[:, :, :-1]) if axis == 2 else (values[:, 1:], values[:, :-1])
+        return [(a == b).mean(axis=(1, 2)), (a * b < 0).mean(axis=(1, 2)),
+                (np.abs(a - b) >= 3).mean(axis=(1, 2))]
+
+    black = tiles(cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT,
+                                  cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))))
+    white = tiles(cv2.morphologyEx(gray, cv2.MORPH_TOPHAT,
+                                  cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))))
+    result = {
+        "residual_shape": np.column_stack((
+            np.log((fine_mean+0.15)/(coarse_mean+0.15)),
+            np.log((laplace.mean(axis=(1, 2))+0.15)/(coarse_mean+0.15)),
+            (abs_fine < 0.5).mean(axis=(1, 2)),
+            (abs_fine > scale * 3).mean(axis=(1, 2)),
+            _channel_corr(gx, gy), spectrum[:, 0], spectrum[:, 1],
+            np.log1p(coarse_mean) - texture,
+        )),
+        "cooccurrence": np.column_stack([*cooccurrence(signs_x, 2), *cooccurrence(signs_y, 1)]),
+        "chroma": np.column_stack([
+            value for channel in chroma for value in (
+                np.log((np.abs(channel).mean(axis=(1, 2))+0.15)/(coarse_mean+0.15)),
+                _channel_corr(abs_area, np.abs(channel)),
+                (np.abs(channel) < 0.4).mean(axis=(1, 2)),
+            )
+        ]),
+        "fine_edges": np.column_stack([
+            value for residual in (black, white) for value in (
+                np.log1p(residual.mean(axis=(1, 2))),
+                (residual > 8).mean(axis=(1, 2)),
+                (residual > scale * 5).mean(axis=(1, 2)),
+                np.log((residual.mean(axis=(1, 2))+0.15)/(coarse_mean+0.15)),
+            )
+        ]),
+    }
+    return result
+
+
+def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()):
     """Extract image and optional region vectors; no metadata or dimensions in vectors."""
     height, width = image.shape[:2]
     rgb = image.astype(np.float32)
@@ -240,14 +299,21 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False):
         "texture": texture[:, None],
     }
 
+    tile_families = {"residual_shape", "cooccurrence", "chroma", "fine_edges"}
+    if tile_families.intersection(extra):
+        all_stats.update(_extra_tile_statistics(
+            tiles, gray, gaussian, (horizontal, vertical), laplacian, texture, proportions[:, 2:]
+        ))
+
     def summarize(indices, surroundings=None):
         flat = indices[np.argsort(texture[indices], kind="stable")[:max(2, (len(indices)+2)//3)]]
         return {key: _summarize(values, flat, indices, surroundings)
                 for key, values in all_stats.items()}
 
     whole = summarize(np.arange(len(xx)))
-    if study_periodicity:
+    if study_periodicity or "edges" in extra:
         whole["edges"], _, _ = _edge_features(gray, None, False)
+    if study_periodicity:
         flat = np.argsort(texture, kind="stable")[:max(2, len(texture)//3)]
         tile_power = power[flat]
         normalized_power = tile_power / np.maximum(tile_power.sum(axis=(1, 2), keepdims=True), 1e-9)
@@ -270,12 +336,25 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False):
     return whole, region, overlay, edge_summary
 
 
+def _contributions(head, vector):
+    x = np.asarray(vector)
+    if "stumps" in head:
+        contributions = np.zeros(x.shape)
+        for index, cut, strength in head["stumps"]:
+            contributions[..., index] += np.where(x[..., index] >= cut, strength, -strength)
+        return contributions, 0.0
+    z = np.clip((x - head["mean"]) / head["scale"], -8, 8)
+    return z * head["weights"], head["intercept"]
+
+
 def predict_vector(head, features):
-    keys = head["families"]
-    vector = np.concatenate([features[key] for key in keys])
-    z = np.clip((vector - head["mean"]) / head["scale"], -8, 8)
-    weights = np.asarray(head["weights"])
-    logit = float(np.clip(z @ weights + head["intercept"], -25, 25))
+    vector = np.concatenate([features[key] for key in head["families"]])
+    return predict_matrix(head, vector)
+
+
+def predict_matrix(head, values):
+    contributions, base = _contributions(head, values)
+    logit = np.clip(contributions.sum(axis=-1) + base, -25, 25)
     return 1 / (1 + np.exp(-logit))
 
 
@@ -292,14 +371,15 @@ def _prediction(head, features, default_reason):
     else:
         result["status"], reason = "weak", "本次未检出明显的相似生成线索。"
     vector = np.concatenate([features[key] for key in head["families"]])
-    contributions = np.clip((vector - head["mean"]) / head["scale"], -8, 8) * head["weights"]
+    contributions, _ = _contributions(head, vector)
     offset = 0
     cues = []
     for key in head["families"]:
         stop = offset + len(features[key])
         cues.append((float(contributions[offset:stop].sum()), FAMILY_LABELS[key]))
         offset = stop
-    result.update(score=round(score, 4), reason=reason,
+    result.update(score=round(score, 4), threshold=round(threshold, 4) if threshold is not None else None,
+                  reason=reason,
                   cues=[{"label": label, "direction": "raises" if effect > 0 else "lowers"}
                         for effect, label in sorted(cues, key=lambda row: -abs(row[0]))[:3]
                         if abs(effect) >= 0.05])
@@ -326,7 +406,8 @@ def analyze_image(data, roi=None, *, model_path=MODEL_PATH):
         model = None
     whole, region, preview, edge_summary = (None, None, None, None)
     if prepared is not None and (model is not None or roi is not None):
-        whole, region, preview, edge_summary = extract(prepared, roi, preview=roi is not None)
+        extra = {key for head in model["heads"].values() for key in head["families"]} if model else ()
+        whole, region, preview, edge_summary = extract(prepared, roi, preview=roi is not None, extra=extra)
     if prepared is None:
         reason = "有效像素不足，建议用清晰原图复核。"
         region_reason = reason

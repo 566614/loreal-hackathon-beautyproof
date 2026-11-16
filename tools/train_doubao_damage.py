@@ -12,17 +12,48 @@ from tempfile import NamedTemporaryFile
 import cv2
 import numpy as np
 
-from doubao_damage import FAMILY_LABELS, MODEL_PATH, SCHEMA, TILE, decode, extract, prepare, predict_vector, validate_roi
+from doubao_damage import (FAMILY_LABELS, MODEL_PATH, SCHEMA, TILE, decode, extract, prepare,
+                           predict_matrix, validate_roi)
 
 CONDITIONS = {"matched": (85, False), "recompressed": (60, False), "reduced_detail": (85, True)}
-MODEL_CANDIDATES = {
-    **{key: [key] for key in FAMILY_LABELS},
-    "residuals": ["rgb", "gaussian", "median", "laplacian", "directional"],
-    "all_pixel_cues": list(FAMILY_LABELS),
-}
-CONTROLS = {"texture": ["texture"], "edges": ["edges"]}
-PENALTIES = (0.1, 1.0)
 MODE_NAMES = ("whole", "region")
+LEGACY_FAMILIES = ("rgb", "gaussian", "median", "laplacian", "directional", "spectrum")
+RESIDUALS = ("gaussian", "laplacian", "directional", "residual_shape", "cooccurrence")
+COLOR = ("rgb", "chroma")
+SHAPE = ("fine_edges", "edges")
+RECALL_TARGET = 0.90
+
+
+@dataclass(frozen=True)
+class Candidate:
+    name: str
+    families: tuple
+    penalty: float = 0.5
+    method: str = "linear"
+    augmented: bool = False
+    auxiliary: bool = False
+
+
+LEGACY = [
+    Candidate(f"{name}:{penalty:g}", keys, penalty)
+    for name, keys in {**{key: (key,) for key in LEGACY_FAMILIES},
+                       "residuals": LEGACY_FAMILIES[:-1], "all_pixel_cues": LEGACY_FAMILIES}.items()
+    for penalty in (0.1, 1.0)
+]
+EXTENDED = [
+    Candidate("relative-residuals", RESIDUALS, method="paired", augmented=True),
+    Candidate("relative-color", COLOR, method="paired", augmented=True),
+    Candidate("relative-spectrum", ("spectrum", "residual_shape"), method="paired", augmented=True),
+    Candidate("relative-contour", SHAPE, method="paired", augmented=True),
+    Candidate("relative-residuals-color", RESIDUALS + COLOR, method="paired", augmented=True),
+    Candidate("relative-residuals-shape", RESIDUALS + SHAPE, method="paired", augmented=True),
+    Candidate("relative-all", RESIDUALS + COLOR + SHAPE + ("spectrum",), method="paired", augmented=True),
+    Candidate("boost-residuals", RESIDUALS + COLOR, method="boost", augmented=True),
+    Candidate("boost-contour", SHAPE, method="boost", augmented=True),
+    Candidate("boost-all", RESIDUALS + COLOR + SHAPE + ("spectrum",), method="boost", augmented=True),
+    Candidate("auxiliary-residuals", RESIDUALS + COLOR, method="paired", augmented=True, auxiliary=True),
+    Candidate("auxiliary-boost", RESIDUALS + COLOR, method="boost", augmented=True, auxiliary=True),
+]
 
 
 @dataclass
@@ -34,6 +65,7 @@ class Pair:
     confidence: str
     views: dict
     original_bytes: tuple
+    annotation: str
 
 
 def read_pairs(path, real_dir, ai_dir):
@@ -41,8 +73,13 @@ def read_pairs(path, real_dir, ai_dir):
         rows = list(csv.DictReader(stream))
     pairs, seen_ai, original_groups = [], set(), {}
     excluded = Counter()
-    for row in rows:
-        if row["label"] != "damage" or row["confidence"] not in ("high", "medium"):
+    # Prefer a labeled damage example if an export appears under two names.
+    for row in sorted(rows, key=lambda row: (row["label"] != "damage", row["confidence"] != "high")):
+        usable = row["label"] == "damage" or (
+            row["label"] == "outside" and row["confidence"] == "high"
+            and "版本" not in row["reason"] and "多商品" not in row["reason"]
+        )
+        if not usable or row["confidence"] not in ("high", "medium"):
             excluded[row["label"]] += 1
             continue
         if not row["group"]:
@@ -63,14 +100,16 @@ def read_pairs(path, real_dir, ai_dir):
             roi = validate_roi(json.loads(row[field]))
             for condition, (quality, smaller) in CONDITIONS.items():
                 prepared = prepare(image, quality=quality, smaller=smaller)
-                whole, region, _, _ = extract(prepared, roi, study_periodicity=True) if prepared is not None else (None,) * 4
+                whole, region, _, _ = (extract(prepared, roi, study_periodicity=row["label"] == "damage",
+                                                     extra=FAMILY_LABELS)
+                                      if prepared is not None else (None,) * 4)
                 views[condition]["whole"].append(whole)
                 views[condition]["region"].append(region)
         if any(v is None for v in views["matched"]["whole"]):
             excluded["too_small"] += 1
             continue
         pairs.append(Pair(row["ai_file"], row["real_file"], row["group"], row["batch"],
-                          row["confidence"], views, (len(original), len(edited))))
+                          row["confidence"], views, (len(original), len(edited)), row["label"]))
     return pairs, dict(excluded)
 
 
@@ -94,25 +133,73 @@ def grouped_folds(pairs, k):
         yield [pair for j, other in enumerate(folds) if i != j for pair in other], fold
 
 
-def train_head(pairs, mode, families, penalty):
-    counts = Counter(pair.group for pair in pairs)
-    rows, labels, weights = [], [], []
-    for pair in pairs:
-        for label, values in enumerate(pair.views["matched"][mode]):
-            rows.append(np.concatenate([values[key] for key in families]))
-            labels.append(label)
-            weights.append(1 / counts[pair.group])
-    x = np.asarray(rows)
-    y = np.asarray(labels)
-    weights = np.asarray(weights)
+def _eligible_auxiliary(primary, auxiliary):
+    training_groups = {pair.group for pair in primary}
+    return [pair for pair in auxiliary if pair.group in training_groups]
+
+
+def _training_vectors(primary, auxiliary, mode, candidate):
+    pairs = [(pair, 1.0) for pair in primary]
+    if candidate.auxiliary:
+        pairs.extend((pair, 0.35) for pair in _eligible_auxiliary(primary, auxiliary))
+    group_weights = Counter()
+    for pair, weight in pairs:
+        group_weights[pair.group] += weight
+    conditions = CONDITIONS if candidate.augmented else ("matched",)
+    rows, weights = [], []
+    for pair, weight in pairs:
+        for condition in conditions:
+            features = pair.views[condition][mode]
+            if all(value is not None for value in features):
+                rows.append([np.concatenate([value[key] for key in candidate.families]) for value in features])
+                weights.append(weight / (len(conditions) * group_weights[pair.group]))
+    return np.asarray(rows), np.asarray(weights)
+
+
+def _boosted_stumps(x, labels, weights, limit=18):
+    cuts = np.quantile(x, np.linspace(0.1, 0.9, 9), axis=0)
+    indices = np.tile(np.arange(x.shape[1]), len(cuts))
+    cuts = cuts.ravel()
+    comparisons = np.where(x[:, indices] >= cuts, 1.0, -1.0)
+    signal = labels * 2.0 - 1.0
+    stumps = []
+    for _ in range(limit):
+        edges = (weights * signal) @ comparisons
+        index = int(np.argmax(np.abs(edges)))
+        edge = float(np.clip(edges[index], -0.995, 0.995))
+        if abs(edge) < 1e-8:
+            break
+        strength = np.arctanh(edge) * 0.5
+        stumps.append([int(indices[index]), float(cuts[index]), float(strength)])
+        weights *= np.exp(-signal * comparisons[:, index] * strength)
+        weights /= weights.sum()
+    return stumps
+
+
+def train_head(pairs, mode, candidate, auxiliary=()):
+    pair_rows, pair_weights = _training_vectors(pairs, auxiliary, mode, candidate)
+    x = pair_rows.reshape(-1, pair_rows.shape[-1])
+    y = np.tile([0, 1], len(pair_rows))
+    weights = np.repeat(pair_weights, 2)
     weights /= weights.sum()
+    head = {"families": candidate.families, "threshold": None}
+    if candidate.method == "boost":
+        return {**head, "stumps": _boosted_stumps(x, y, weights)}
+
     mean = weights @ x
     scale = np.sqrt(weights @ ((x - mean) ** 2)).clip(1e-4)
-    z = np.column_stack((np.ones(len(x)), np.clip((x - mean) / scale, -8, 8)))
+    standardized = np.clip((x - mean) / scale, -8, 8)
+    z = np.column_stack((np.ones(len(x)), standardized))
+    if candidate.method == "paired":
+        delta = standardized[1::2] - standardized[::2]
+        pair_design = np.column_stack((np.zeros(len(z)), np.stack((-delta, delta), axis=1).reshape(x.shape)))
+        z = np.concatenate((z, pair_design))
+        y = np.concatenate((y, y))
+        weights = np.concatenate((weights, 0.7 * weights))
+        weights /= weights.sum()
     parameters = np.zeros(z.shape[1])
-    regularizer = np.eye(len(parameters)) * penalty
+    regularizer = np.eye(len(parameters)) * candidate.penalty
     regularizer[0, 0] = 0
-    # Newton steps for L2 logistic regression with a balanced weight per product.
     for _ in range(25):
         p = 1 / (1 + np.exp(-np.clip(z @ parameters, -25, 25)))
         gradient = z.T @ ((p - y) * weights) + regularizer @ parameters
@@ -121,20 +208,24 @@ def train_head(pairs, mode, families, penalty):
         parameters -= step
         if np.max(np.abs(step)) < 1e-7:
             break
-    return {"families": families, "mean": mean.tolist(), "scale": scale.tolist(),
-            "weights": parameters[1:].tolist(), "intercept": float(parameters[0]), "threshold": None}
+    return {**head, "mean": mean.tolist(), "scale": scale.tolist(),
+            "weights": parameters[1:].tolist(), "intercept": float(parameters[0])}
 
 
 def score_rows(head, pairs, mode, conditions=CONDITIONS, *, threshold=None):
-    rows = []
+    rows, vectors = [], []
     for pair in pairs:
         for condition in conditions:
             for label, values in enumerate(pair.views[condition][mode]):
                 rows.append({"file": pair.name if label else pair.real_name, "pair": pair.name,
                              "group": pair.group, "batch": pair.batch, "confidence": pair.confidence,
-                             "condition": condition, "label": label,
-                             "score": float(predict_vector(head, values)) if values is not None else None,
-                             "threshold": threshold})
+                             "condition": condition, "label": label, "score": None, "threshold": threshold})
+                if values is not None:
+                    vectors.append((rows[-1], np.concatenate([values[key] for key in head["families"]])))
+    if vectors:
+        outputs = predict_matrix(head, np.stack([vector for _, vector in vectors]))
+        for (row, _), score in zip(vectors, outputs):
+            row["score"] = float(score)
     return rows
 
 
@@ -169,69 +260,79 @@ def metrics(rows, *, threshold=None):
 
 
 def choose_threshold(rows):
-    choices = [1.0] + sorted({row["score"] for row in rows if row["score"] is not None})
-    candidates = []
-    for threshold in choices:
-        record = metrics(rows, threshold=threshold)
-        if record["false_positive_rate"] is not None and record["false_positive_rate"] <= 0.10:
-            candidates.append((record["recall"], -record["false_positive_rate"], threshold))
-    return max(candidates)[2] if candidates else None
+    """Pick the highest cutoff that reaches the sensitivity target on every development view."""
+    cuts = []
+    for condition in CONDITIONS:
+        positives = sorted((row["score"] for row in rows if row["label"] and row["score"] is not None
+                            and row["condition"] == condition), reverse=True)
+        if not positives:
+            return None
+        cuts.append(positives[int(np.ceil(RECALL_TARGET * len(positives))) - 1])
+    return min(cuts)
 
 
-def by_condition(rows):
-    return {condition: metrics([row for row in rows if row["condition"] == condition])
+def by_condition(rows, *, threshold=None):
+    return {condition: metrics([row for row in rows if row["condition"] == condition], threshold=threshold)
             for condition in CONDITIONS}
 
 
-def compare_candidates(pairs, mode):
-    k = min(4, len({pair.group for pair in pairs}))
-    ranking = []
-    comparison = {}
-    for name, families in {**MODEL_CANDIDATES, **CONTROLS}.items():
-        for penalty in PENALTIES if name in MODEL_CANDIDATES else (0.1,):
-            scores = []
-            for train, held in grouped_folds(pairs, k):
-                head = train_head(train, mode, families, penalty)
-                scores.extend(score_rows(head, held, mode))
-            result = by_condition(scores)
-            comparison[f"{name}:{penalty:g}"] = result
-            nominal = [row for row in scores if row["condition"] == "matched"]
-            aucs = [r["auc"] for r in result.values()]
-            if name in MODEL_CANDIDATES and all(auc is not None for auc in aucs):
-                ranking.append((min(aucs), result["matched"]["auc"], -len(families), name, penalty, nominal))
-    _, _, _, name, penalty, nominal = max(ranking, key=lambda row: row[:5])
-    return name, penalty, choose_threshold(nominal), comparison
+def compare_candidates(pairs, mode, auxiliary=(), *, include_legacy_control=False):
+    plans = list(grouped_folds(pairs, min(4, len({pair.group for pair in pairs}))))
+    ranking, baseline_ranking, comparison = [], [], {}
+    for candidate in LEGACY + EXTENDED:
+        scores = []
+        for train, held in plans:
+            head = train_head(train, mode, candidate, auxiliary)
+            scores.extend(score_rows(head, held, mode))
+        threshold = choose_threshold(scores)
+        result = by_condition(scores, threshold=threshold)
+        comparison[candidate.name] = result
+        aucs = [r["auc"] for r in result.values()]
+        rates = [r["false_positive_rate"] for r in result.values()]
+        if threshold is None or any(value is None for value in aucs + rates):
+            continue
+        rank = (min(aucs), result["matched"]["auc"], -len(candidate.families))
+        # Prefer strong ranking across transformations; use the high-recall operating point as a secondary signal.
+        ranking.append(((min(aucs) + 0.20 * (1 - np.mean(rates)), np.mean(aucs), -len(candidate.families)),
+                        candidate, threshold))
+        if candidate in LEGACY:
+            baseline_ranking.append((rank, candidate, threshold))
+    _, candidate, threshold = max(ranking, key=lambda row: row[0])
+    baseline = max(baseline_ranking, key=lambda row: row[0])[1:] if include_legacy_control else None
+    return candidate, threshold, comparison, baseline
 
 
 def evaluate(pairs, mode):
     usable = [p for p in pairs if all(v is not None for v in p.views["matched"][mode])]
-    primary = [p for p in usable if p.confidence == "high"]
-    medium = [p for p in usable if p.confidence == "medium"]
+    primary = [p for p in usable if p.confidence == "high" and p.annotation == "damage"]
+    medium = [p for p in usable if p.confidence == "medium" and p.annotation == "damage"]
+    auxiliary = [p for p in usable if p.confidence != "high" or p.annotation != "damage"]
     group_count = len({p.group for p in primary})
     if group_count < 4:
         return None, {"reason": "高置信独立商品组少于 4 个", "primary_pairs": len(primary)}, []
-    scores, secondary_scores, selected = [], [], Counter()
+    scores, legacy_scores, secondary_scores, selected = [], [], [], Counter()
     for fold, (train, held) in enumerate(grouped_folds(primary, min(5, group_count)), 1):
-        candidate, penalty, threshold, _ = compare_candidates(train, mode)
-        selected[candidate] += 1
-        head = train_head(train, mode, MODEL_CANDIDATES[candidate], penalty)
+        candidate, threshold, _, (legacy, legacy_threshold) = compare_candidates(
+            train, mode, auxiliary, include_legacy_control=True
+        )
+        selected[candidate.name] += 1
+        head = train_head(train, mode, candidate, auxiliary)
         rows = score_rows(head, held, mode, threshold=threshold)
         scores.extend({**row, "fold": fold, "eval": "primary"} for row in rows)
+        legacy_head = train_head(train, mode, legacy)
+        rows = score_rows(legacy_head, held, mode, threshold=legacy_threshold)
+        legacy_scores.extend({**row, "fold": fold, "eval": "legacy_high_recall"} for row in rows)
         held_groups = {pair.group for pair in held}
         rows = score_rows(head, [p for p in medium if p.group in held_groups], mode, threshold=threshold)
         secondary_scores.extend({**row, "fold": fold, "eval": "medium"} for row in rows)
 
-    candidate, penalty, threshold, comparison = compare_candidates(primary, mode)
-    head = train_head(primary, mode, MODEL_CANDIDATES[candidate], penalty)
-    unseen_group = {p.group for p in primary}
-    rows = score_rows(head, [p for p in medium if p.group not in unseen_group], mode, threshold=threshold)
+    candidate, threshold, comparison, _ = compare_candidates(primary, mode, auxiliary)
+    head = train_head(primary, mode, candidate, auxiliary)
+    seen_groups = {p.group for p in primary}
+    rows = score_rows(head, [p for p in medium if p.group not in seen_groups], mode, threshold=threshold)
     secondary_scores.extend({**row, "fold": None, "eval": "medium"} for row in rows)
     summary = by_condition(scores)
-    main = summary["matched"]
-    accepted = (group_count >= 10 and main["recall"] is not None and main["recall"] >= 0.60
-                and main["false_positive_rate"] <= 0.10 and threshold is not None)
-    if accepted:
-        head["threshold"] = threshold
+    head["threshold"] = threshold
     batches = sorted({pair.batch for pair in primary})
     batch_transfer = {}
     for batch in batches:
@@ -240,17 +341,20 @@ def evaluate(pairs, mode):
         train = [p for p in primary if p.batch != batch and p.group not in held_groups]
         if len({p.group for p in train}) < 4:
             continue
-        name, reg, cut, _ = compare_candidates(train, mode)
-        model = train_head(train, mode, MODEL_CANDIDATES[name], reg)
+        transfer_auxiliary = [pair for pair in auxiliary if pair.batch != batch]
+        variant, cut, _, _ = compare_candidates(train, mode, transfer_auxiliary)
+        model = train_head(train, mode, variant, transfer_auxiliary)
         batch_transfer[batch] = by_condition(score_rows(model, held, mode, threshold=cut))
     return head, {
         "primary_pairs": len(primary), "medium_pairs": len(medium), "group_count": group_count,
-        "nested_group_cv": summary,
+        "auxiliary_pairs_in_final_pool": len(_eligible_auxiliary(primary, auxiliary)) if candidate.auxiliary else 0,
+        "nested_group_cv": summary, "legacy_high_recall": by_condition(legacy_scores),
         "by_batch": {batch: by_condition([row for row in scores if row["batch"] == batch]) for batch in batches},
         "heldout_batch": batch_transfer, "medium_group_disjoint": by_condition(secondary_scores),
-        "fold_winners": dict(selected), "final_candidate": candidate, "penalty": penalty,
-        "candidate_comparison": comparison, "trial_threshold": threshold, "threshold_enabled": accepted,
-    }, scores + secondary_scores
+        "fold_winners": dict(selected), "final_candidate": candidate.name,
+        "final_families": candidate.families, "target_dev_recall": RECALL_TARGET,
+        "candidate_comparison": comparison, "review_threshold": threshold,
+    }, scores + legacy_scores + secondary_scores
 
 
 def paired_spectrum_study(pairs):
@@ -304,14 +408,15 @@ def main():
     args = parser.parse_args()
     cv2.setNumThreads(1)
     pairs, excluded = read_pairs(args.annotations, args.real_dir, args.ai_dir)
-    summary = {"included": dict(Counter(p.confidence for p in pairs)), "excluded": excluded, "modes": {}}
-    primary = [p for p in pairs if p.confidence == "high"]
+    summary = {"included": dict(Counter(p.confidence for p in pairs if p.annotation == "damage")),
+               "origin_auxiliary": sum(p.annotation != "damage" for p in pairs), "excluded": excluded, "modes": {}}
+    primary = [p for p in pairs if p.confidence == "high" and p.annotation == "damage"]
     leaking_scores = [{"score": -size, "label": label, "threshold": None, "file": name, "group": p.group}
                       for p in primary for label, (size, name) in
                       enumerate(zip(p.original_bytes, (p.real_name, p.name)))]
     summary["file_size_shortcut_diagnostic"] = metrics(leaking_scores)
     summary["periodicity_study"] = paired_spectrum_study(primary)
-    model = {"schema": SCHEMA, "id": "doubao-damage-cpu-v1", "heads": {}}
+    model = {"schema": SCHEMA, "id": "doubao-damage-cpu-v2", "heads": {}}
     all_scores = []
     for mode in MODE_NAMES:
         head, result, scores = evaluate(pairs, mode)

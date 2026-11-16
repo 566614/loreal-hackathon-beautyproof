@@ -10,10 +10,11 @@ const SOURCE_LABELS = {
 
 function Assessment({ title, data }) {
   if (!data) return null;
-  const status = { similar: "发现相似生成痕迹", weak: "未见明显相似线索", insufficient: "证据不足" }[data.status];
+  const status = { similar: "疑似 AI 生成破损", weak: "未见明显相似线索", insufficient: "证据不足" }[data.status];
   return <article className="claim">
     <h3>{title}</h3>
-    <p><strong>{status}</strong>{data.score != null && " · 实验评分 " + data.score.toFixed(3)}</p>
+    <p><strong>{status}</strong>{data.score != null && " · 检测分 " + data.score.toFixed(3)}
+      {data.threshold != null && " · 复核阈值 " + data.threshold.toFixed(3)}</p>
     <p>{data.reason}</p>
     {data.cues.length > 0 && <ul>{data.cues.map(cue =>
       <li key={cue.label}>{cue.label} · {cue.direction === "raises" ? "推高评分" : "拉低评分"}</li>
@@ -92,7 +93,7 @@ export default function DamageReview({ readJson }) {
   return <>
     <div className="intro">
       <h1>退款破损审核</h1>
-      <p>上传送审图查看生成线索，可框选裂痕、碎粉或包装破口。评分用于人工复核。</p>
+      <p>上传送审图查看生成线索，可框选裂痕、碎粉或包装破口。优先检出疑似图片，结果用于人工复核。</p>
     </div>
     <div className="workbench-grid damage-grid">
       <Card className="surface intake-surface" title="送审图片">

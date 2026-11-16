@@ -60,3 +60,28 @@ def test_metadata_survives_image_too_small_for_scoring(tmp_path):
 def test_invalid_region_fails_before_image_decode(roi):
     with pytest.raises(ValueError, match="坐标"):
         doubao_damage.analyze_image(b"", roi)
+
+
+def test_v2_contour_head_activates_review_at_its_own_threshold(tmp_path):
+    model = tmp_path / "v2.json"
+    model.write_text(json.dumps({"schema": doubao_damage.SCHEMA, "id": "doubao-damage-cpu-v2",
+                                 "heads": {"whole": {"families": ["fine_edges"],
+                                                     "threshold": 0.3, "stumps": [[0, 0.0, 1.0]]}}}),
+                     encoding="utf-8")
+    result = doubao_damage.analyze_image(encode(sample_image()), model_path=model)
+    assert result["whole"]["status"] == "similar"
+    assert result["whole"]["score"] > 0.5
+    assert result["whole"]["threshold"] == 0.3
+    assert result["whole"]["cues"] == [{"label": doubao_damage.FAMILY_LABELS["fine_edges"],
+                                      "direction": "raises"}]
+
+
+def test_recall_threshold_uses_weakest_development_condition():
+    from train_doubao_damage import CONDITIONS, choose_threshold
+    positives = [(condition, score / 100 - 0.1 * offset)
+                 for offset, condition in enumerate(CONDITIONS)
+                 for score in range(50, 60)]
+    rows = [{"condition": condition, "label": 1, "score": score} for condition, score in positives]
+    # Overlapping negatives are allowed at this operating point.
+    rows.extend({"condition": condition, "label": 0, "score": 0.59} for condition in CONDITIONS)
+    assert choose_threshold(rows) == pytest.approx(0.31)

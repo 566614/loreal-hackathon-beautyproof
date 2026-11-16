@@ -1,36 +1,36 @@
 # 退款破损审核
 
-在 BeautyProof 顶栏选择「退款破损审核」，上传一张 JPG 或 PNG，再点击「开始检查」。需要检查局部时，先点击「框选破损」，拖动包住裂痕或碎粉及其邻近纹理。结果会显示整图和选区评分、贡献较大的像素特征、文件来源标识和候选边缘。
+在 BeautyProof 顶栏选择「退款破损审核」，上传 JPG 或 PNG，点击「开始检查」。可选「框选破损」，拖动包住裂痕、碎粉及其邻近纹理。页面会显示整图和选区状态、检测分、主要像素线索及来源标识。橙色覆盖图是选区候选边缘，可能包含印刷、接缝与反光。
 
-这个入口独立运行 CPU 模型，推理使用 NumPy、OpenCV 与 Pillow。权重默认从项目下的 `models/doubao_damage/model.json` 加载。文件内的来源标识是元数据线索，页面按是否声明 AI 或待核验显示。橙色覆盖图是候选边缘，正常印刷、包装接缝与反光也会被增强。
+v2 优先检出疑似 AI 生成破损图，超过阈值即进入人工复核。该入口独立运行 CPU 模型，推理使用 NumPy、OpenCV 与 Pillow，权重默认从 `models/doubao_damage/model.json` 加载。
 
-## 本次数据和结果
+## v2 评测
 
-从 127 张完好实拍与 93 张处理图的配对清单中，逐张检查高、中置信配对的破损变化。28 对高置信破损样本分在 17 个商品组，用于训练和分组评测。15 对中置信破损样本用于补充对照。其余 29 张高、中置信处理图未纳入破损训练，21 张低置信图保留待复核。两张双色粉盘处理图在训练标注中重新指向了相同粉盘的实拍图。
+主评测沿用 28 对高置信样本与 17 个独立商品组。15 对中置信样本作补充；额外检查了 19 对高置信同源但未确认破损的处理图。候选模型可以用与训练折商品同组的补充图训练，整个商品组及其 JPEG 变体一起留出。阈值在内层开发折上选择，目标是三种视图都达到至少 90% 召回。表中数字来自外层留出。
 
-| 高置信商品留出 | AUROC | 豆包破损图召回 | 完好实拍误报 |
+| 模式 | AUROC | 豆包破损图检出 | 完好实拍触发复核 |
 | --- | ---: | ---: | ---: |
-| 整图 | 0.672 | 8/28（28.6%） | 6/28（21.4%） |
-| 框选 | 0.647 | 9/28（32.1%） | 6/28（21.4%） |
+| v2 整图 | 0.847 | 28/28 | 23/28 |
+| v2 框选 | 0.726 | 27/28 | 20/28 |
+| v1 整图，仅按同一规则降低阈值 | 0.672 | 28/28 | 28/28 |
+| v1 框选，仅按同一规则降低阈值 | 0.647 | 28/28 | 26/28 |
 
-评测阈值在各训练折内部按完好实拍误报不高于 10% 设定。门槛要求留出召回至少 60%、完好实拍误报不高于 10%。本次两个模式均未通过，工作台只给实验评分和「证据不足」。
+- JPEG 质量 60 的对照中，v2 整图检出 25/28，框选检出 23/28。只用另一批数据训练时，较大批次的整图 AUROC 降至 0.525，接近随机排序。这批资料已用于研发，结果属于内部实验。
+- 整图选中高频 RGB 通道关系、色度与纹理关系。框选选中这些线索加残差形状、相邻残差排列及框内外对照。候选覆盖成对训练、浅层提升树、FFT、细裂纹形态，以及有无辅助样本的训练。
+- 对同一图片的不同压缩视图做平均，整图从 28/28 降至 27/28，完好实拍触发从 23/28 降至 18/28。默认沿用召回更高的单视图。
+- 裂纹形态只作为展示与实验对照，最终分类器按留出表现选了残差和色度。当前实拍对照都是完好品，真实破损照片的结果未知。跨两批和压缩条件未找到稳定的非 JPEG 周期峰。来源元数据单独显示。
 
-- 文件字节数单独区分两类的 AUROC 为 1.000，说明采集链路差异极大。模型统一缩放并用同一 JPEG 参数重编码，文件大小和元数据没有输入模型。统一编码也无法消除文件此前经历的处理。
-- 整图模型最终使用方向高通残差，框选模型使用拉普拉斯残差和框内外差异。评测同时比较 RGB、Gaussian、中值、其他残差组合、FFT、边缘及灰度纹理对照。
-- 边缘与灰度纹理在部分验证折也有区分度。当前对照样本都是完好实拍，指标只覆盖这批样本，无法估计真实破损照片的误报。
-- 对两批图分别检查高频能量、自相关、二维峰和 JPEG 网格，未找到达到本次预设复核标准并跨压缩条件重复的非 JPEG 频谱峰。现有图的像素统计不足以确认隐藏水印或豆包专有指纹。
-
-完整本地报告在 `outputs/runs/doubao-damage/evaluation.json`，包含各算子的开发对照、批次留出和压缩退化结果。逐图样本与分数在同目录的 `annotations.csv` 和 `predictions.csv`，CPU 测速在 `benchmark.json`。这些文件与权重存放在本地忽略目录。
+数据来自本地两份目录，标注在 `outputs/runs/doubao-damage/annotations.csv`。v2 的候选、跨批次结果、逐图评分、测速和模型副本在 `outputs/runs/doubao-damage-v2/`。原版评测在 `outputs/runs/doubao-damage/`。
 
 ## 复跑
 
-将 `$realDir` 和 `$aiDir` 设为配对后图片的两个目录。使用含 NumPy、OpenCV 与 Pillow 的本地 Python 即可重新训练。
+将 `$realDir` 和 `$aiDir` 设为配对后的图片目录。使用含 NumPy、OpenCV 与 Pillow 的本地 Python。
 
 ```powershell
-python tools/train_doubao_damage.py --annotations outputs/runs/doubao-damage/annotations.csv --real-dir $realDir --ai-dir $aiDir --output-dir outputs/runs/doubao-damage
+python tools/train_doubao_damage.py --annotations outputs/runs/doubao-damage/annotations.csv --real-dir $realDir --ai-dir $aiDir --output-dir outputs/runs/doubao-damage-v2
 python tools/doubao_damage.py "样图.jpg"
 python tools/doubao_damage.py "样图.jpg" --roi "[0.25,0.4,0.7,0.85]"
 python tools/doubao_damage.py $aiDir
 ```
 
-接口 `POST /api/damage-review` 接收 multipart 表单，`file` 为原图，`roi` 可传 JSON 数组 `[左, 上, 右, 下]`，坐标为相对 EXIF 纠正后图像的 0 到 1。结果中的 `whole` 与 `region` 分别包含状态、评分、原因与线索；框选时还会返回候选边缘 PNG 和边缘统计。
+接口 `POST /api/damage-review` 接收 multipart 表单，`file` 为原图，`roi` 可传 JSON 数组 `[左, 上, 右, 下]`，坐标为相对 EXIF 纠正后图像的 0 到 1。结果中的 `whole` 与 `region` 分别包含状态、评分、原因与线索。框选时还会返回候选边缘 PNG 和边缘统计。
