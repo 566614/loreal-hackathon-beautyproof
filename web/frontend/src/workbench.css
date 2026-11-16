@@ -135,3 +135,13 @@ body { background: #f3f7f4; color: var(--ink); min-width: 0; }
 .evidence-detail summary { cursor: pointer; color: #246752; }
 .evidence-detail svg { display: block; width: 100%; max-height: 420px; margin-top: 8px; }
 .claim mark { color: inherit; background: #e0f0e8; }
+
+.damage-grid { padding-bottom: 28px; }
+.damage-selection, .damage-submit, .damage-message { margin-top: 14px; }
+.damage-photo { position: relative; width: fit-content; max-width: 100%; margin-top: 10px; }
+.damage-photo > img { display: block; width: auto; max-width: 100%; height: auto; max-height: 560px; }
+.damage-photo > svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.damage-selecting > svg { pointer-events: auto; cursor: crosshair; touch-action: none; }
+.damage-photo > .damage-edge-overlay { position: absolute; max-height: none; pointer-events: none; }
+.damage-edge { margin: 0; }
+.damage-edge figcaption { margin-top: 8px; color: #4e6661; }

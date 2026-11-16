@@ -179,6 +179,25 @@ def add_reference():
     return jsonify({"reference": {k: row[k] for k in ("id", "source", "product", "version", "locator")}}), 201
 
 
+@app.post("/api/damage-review")
+def damage_review():
+    upload = request.files.get("file")
+    if not upload or not upload.filename:
+        return jsonify({"error": "请上传一张 JPG 或 PNG 图片。"}), 400
+
+    from doubao_damage import analyze_image
+
+    try:
+        roi = json.loads(request.form["roi"]) if "roi" in request.form else None
+    except ValueError:
+        return jsonify({"error": "无法读取框选坐标。"}), 400
+    try:
+        result = analyze_image(upload.read(), roi)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(result)
+
+
 @app.post("/api/analyze")
 def analyze():
     from claim_review import normalize_references, verified_catalog
