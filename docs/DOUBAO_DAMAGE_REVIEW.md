@@ -34,3 +34,26 @@ python tools/doubao_damage.py $aiDir
 ```
 
 训练命令写模型副本到指定输出目录，可用 `--model` 指向该文件单独评分。工作台默认权重路径维持不变。接口 `POST /api/damage-review` 的 multipart 表单接收 `file` 和可选的归一化 EXIF 坐标 `roi`，响应包含 `whole`、`region` 和候选边缘叠图。
+
+
+## 裂纹算子叠片和数学建模
+
+可用裂纹诊断命令生成六格图，分别显示输入、Hessian 中心线、黑帽与白帽增强、Scharr 对向梯度、成对 Canny 边界和融合中心线。绿线是候选线，橙点是候选分叉。融合用每个位置的各层强度给中心线加权，再用连通弱线连接断续段。选区里的木纹、印刷和包装边也可能被提取。
+
+数学模型分两部分。图上量端点、分叉、闭环、线段迂曲程度和三叉角偏差。像素上沿法线采样，分别拟合背景斜坡、阶跃边缘和窄线剖面 i(n) = a + b·n + c·exp(−n²/(2σ²))，看窄线模型能解释多少误差。宽度和角度都是图像量。光照、透视、材料与外力条件会改变真实裂纹的形态和投影。 [曲线提取](https://ieeexplore.ieee.org/document/659930/) · [干裂分叉实验](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.74.021405)
+
+在相同的 55 对、31 个留出商品组上比较，其中 30 对按标注含可见裂线。JPEG 质量 60 时，只用几何量的整图和框选 AUROC 分别为 0.460 和 0.537。加入原有分类器后有小幅收益，模型权重仍使用已验证的 v3，叠片和曲线拟合通过独立诊断命令提供。
+
+| JPEG 质量 60 | AI 破损检出 | 完好配对触发 | AUROC |
+| --- | ---: | ---: | ---: |
+| v3 整图 | 51/55 | 34/55 | 0.754 |
+| 整图复查尺度加入叠片 | 53/55 | 36/55 | 0.753 |
+| v3 框选 | 49/55 | 40/55 | 0.751 |
+| 框选先裁材料，再叠片和拟合剖面 | 50/55 | 38/55 | 0.769 |
+
+对发丝裂纹，先裁材料表面再缩放保留了更多线条。当前完好实拍对照没有真实破损，归因能力需用同材料的真实裂纹与豆包裂纹对照。完整候选及每图评分见 outputs/runs/doubao-damage-geometry/crop-first/。
+
+```powershell
+python tools/fracture_geometry.py "样图.jpg" --roi "[0.57,0.34,0.75,0.516]" --crop-first --quality 60 --output "裂纹叠片.png"
+python tools/evaluate_damage_geometry.py --annotations outputs/runs/doubao-damage-v3/annotations.csv --real-dir $realDir --ai-dir $aiDir --v3-predictions outputs/runs/doubao-damage-v3/dual-scale/predictions.csv --output outputs/runs/doubao-damage-geometry/crop-first --crop-first
+```

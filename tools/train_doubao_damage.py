@@ -68,7 +68,7 @@ class Pair:
     annotation: str
 
 
-def read_pairs(path, real_dir, ai_dir, *, short_side=MIN_SHORT_SIDE):
+def read_pairs(path, real_dir, ai_dir, *, short_side=MIN_SHORT_SIDE, extra=FAMILY_LABELS):
     with path.open(encoding="utf-8-sig", newline="") as stream:
         rows = list(csv.DictReader(stream))
     pairs, seen_ai, original_groups = [], set(), {}
@@ -101,7 +101,7 @@ def read_pairs(path, real_dir, ai_dir, *, short_side=MIN_SHORT_SIDE):
             for condition, (quality, smaller) in CONDITIONS.items():
                 prepared = prepare(image, quality=quality, smaller=smaller, short_side=short_side)
                 whole, region, _, _ = (extract(prepared, roi, study_periodicity=row["label"] == "damage",
-                                                     extra=FAMILY_LABELS)
+                                                     extra=extra)
                                       if prepared is not None else (None,) * 4)
                 views[condition]["whole"].append(whole)
                 views[condition]["region"].append(region)

@@ -331,6 +331,32 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()
         return summary
 
     whole = summarize(np.arange(len(xx)))
+    single = {"fracture_presence", "fracture_geometry", "fracture_profile"}.intersection(extra)
+    stacked = {"fracture_stacked", "fracture_surface"}.intersection(extra)
+    if single or stacked:
+        from fracture_geometry import fit_surface_sections, ridge_maps, stack_operator_maps, trace_fracture
+
+        fracture_maps = ridge_maps(gray)
+        fused_maps = stack_operator_maps(gray, fracture_maps)[0] if stacked else None
+
+        def add_fracture_features(values, box=None):
+            if single:
+                trace = trace_fracture(fracture_maps, box)
+                values.update(fracture_presence=trace.presence, fracture_geometry=trace.geometry,
+                              fracture_profile=trace.profile)
+            if fused_maps is not None:
+                trace = trace_fracture(fused_maps, box)
+                values["fracture_stacked"] = np.concatenate((trace.presence, trace.geometry, trace.profile))
+                if "fracture_surface" in stacked:
+                    angle = fused_maps["angle"]
+                    if box is None:
+                        section = (slice(None), slice(None))
+                    else:
+                        left, top, right, bottom = box
+                        section = (slice(top, bottom), slice(left, right))
+                    values["fracture_surface"] = fit_surface_sections(gray[section], angle[section], trace.skeleton)
+
+        add_fracture_features(whole)
     if study_periodicity or "edges" in extra:
         whole["edges"], _, _ = _edge_features(gray, None, False)
     if study_periodicity:
@@ -353,6 +379,9 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()
         return whole, None, overlay, edge_summary
     region = summarize(*indices)
     region["edges"] = edge_values
+    if single or stacked:
+        box = np.rint(np.array(roi) * [width, height, width, height]).astype(int)
+        add_fracture_features(region, box)
     return whole, region, overlay, edge_summary
 
 
