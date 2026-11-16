@@ -14,6 +14,7 @@ import "antd/dist/reset.css";
 import "./workbench.css";
 import { observations, assessSkin } from "./skin-profile.mjs";
 import { recommend } from "./product-recommendations.mjs";
+import DamageReview from "./damage-review.jsx";
 
 const toolLabels = {
   hash: "文件指纹", c2pa: "来源凭证", ela: "压缩痕迹", spectral: "频域取证",
@@ -515,11 +516,12 @@ function Workbench() {
       <div className="brand"><div className="brand-mark"><SafetyCertificateOutlined /></div>
         <span>BeautyProof</span>
       </div>
-      <Space><Button type={section === "audit" ? "primary" : "text"} onClick={() => setSection("audit")}>内容审核</Button>
-        <Button type={section === "skin" ? "primary" : "text"} onClick={() => setSection("skin")}>肤质自测</Button></Space>
+      <Space wrap><Button type={section === "audit" ? "primary" : "text"} onClick={() => setSection("audit")}>内容审核</Button>
+        <Button type={section === "skin" ? "primary" : "text"} onClick={() => setSection("skin")}>肤质自测</Button>
+        <Button type={section === "damage" ? "primary" : "text"} onClick={() => setSection("damage")}>退款破损审核</Button></Space>
     </div></header>
     <main className="page-width">
-      {section === "skin" ? <SkinProfile /> : <>
+      {section === "skin" ? <SkinProfile /> : section === "damage" ? <DamageReview readJson={readJson} /> : <>
       <div className="intro">
         <span className="eyebrow"><span /> 审核工作台</span>
         <h1>美妆宣传核验台</h1>
