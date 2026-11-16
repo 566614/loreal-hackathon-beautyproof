@@ -2,7 +2,7 @@
 import argparse
 from collections import defaultdict
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import hashlib
 import io
 import json
@@ -66,6 +66,8 @@ CHOICES = [
 
 RELEASE_RECIPES = {mode: next(choice for choice in CHOICES if choice.candidate.name == name)
                    for mode, name in (("whole", "reencode-color"), ("region", "reencode-and-lines"))}
+# L2 penalty, emphasis for high-scoring real photos, and margin above the balanced cutoff.
+LOW_FP_SETTINGS = {"whole": (0.5, 2.5, 0.05), "region": (0.15, 1.5, 0.065)}
 
 
 def _upload_views(photo):
@@ -136,8 +138,9 @@ def _pairs(store, side, samples):
     return [store[side][sample.name] for sample in samples]
 
 
-def fit(choice, mode, store, samples):
-    return {side: train_head(_pairs(store, side, samples), mode, choice.candidate)
+def fit(choice, mode, store, samples, *, hard_negative_weight=0.0):
+    return {side: train_head(_pairs(store, side, samples), mode, choice.candidate,
+                             hard_negative_weight=hard_negative_weight)
             for side in choice.scales}
 
 
@@ -193,12 +196,21 @@ def pick_cut(rows):
     return float(cuts[best]), float(ranking[best])
 
 
-def _calibrate_choice(choice, mode, store, samples):
+def _calibrate_choice(choice, mode, store, samples, *, hard_negative_weight=0.0):
     predicted = []
     for train, held in grouped_folds(samples, 4):
-        predicted.extend(score(fit(choice, mode, store, train), mode, store, held))
+        heads = fit(choice, mode, store, train, hard_negative_weight=hard_negative_weight)
+        predicted.extend(score(heads, mode, store, held))
     threshold, objective = pick_cut(predicted)
     return threshold, objective, assessment(predicted, threshold=threshold)
+
+
+def _fit_low_fp(choice, mode, store, samples):
+    penalty, hard_weight, margin = LOW_FP_SETTINGS[mode]
+    recipe = replace(choice, candidate=replace(choice.candidate, penalty=penalty))
+    cutoff, _, _ = _calibrate_choice(recipe, mode, store, samples, hard_negative_weight=hard_weight)
+    heads = fit(recipe, mode, store, samples, hard_negative_weight=hard_weight)
+    return heads, cutoff + margin
 
 
 def _baseline_heads(mode, train, legacy, *, v3_report=None, v3_cuts=None, fold=None):
@@ -222,13 +234,14 @@ def _filter(samples, upload, mode):
     )]
 
 
-def run(upload, legacy, cohorts, v3_report, v3_cuts):
+def run(upload, legacy, cohorts, v3_report, v3_cuts, *, low_fp=False):
     evaluations, predictions = {}, []
-    model = {"schema": BALANCED_SCHEMA, "id": "doubao-damage-cpu-v4", "heads": {}}
+    model = {"schema": BALANCED_SCHEMA, "id": f"doubao-damage-cpu-v{5 if low_fp else 4}", "heads": {}}
     for mode in MODES:
         samples = _filter(list(upload[SCALES[0]].values()), upload, mode)
         anchor = [sample for sample in samples if cohorts[sample.name] == "original_high"]
         test_records, baseline_records, calibrated_records = [], [], []
+        low_fp_records = []
         recipe = RELEASE_RECIPES[mode]
         final_v3_families = {side: V3_CANDIDATES[v3_report["scales"][str(side)]["modes"][mode]["final"]]
                              for side in SCALES}
@@ -241,6 +254,10 @@ def run(upload, legacy, cohorts, v3_report, v3_cuts):
             preferred = score(fit(recipe, mode, upload, train), mode, upload, held)
             test_records.extend({**row, "threshold": cutoff, "protocol": "group", "method": "v4",
                                  "mode": mode, "fold": fold} for row in preferred)
+            if low_fp:
+                heads, strict_cutoff = _fit_low_fp(recipe, mode, upload, train)
+                low_fp_records.extend({**row, "threshold": strict_cutoff, "protocol": "group", "method": "v5",
+                                       "mode": mode, "fold": fold} for row in score(heads, mode, upload, held))
             controls = _baseline_heads(mode, train, legacy, v3_report=v3_report, v3_cuts=v3_cuts, fold=fold)
             old = score(controls, mode, upload, held, v3=True)
             baseline_records.extend({**row, "protocol": "group", "method": "v3", "mode": mode, "fold": fold} for row in old)
@@ -252,9 +269,12 @@ def run(upload, legacy, cohorts, v3_report, v3_cuts):
             alternate = score(refit_fixed(train), mode, upload, held)
             calibrated_records.extend({**row, "threshold": alternative_cut, "protocol": "group",
                                        "method": "v3_recalibrated", "mode": mode, "fold": fold} for row in alternate)
-        predictions.extend(test_records+baseline_records+calibrated_records)
-        final_cutoff, _, _ = _calibrate_choice(recipe, mode, upload, samples)
-        final = fit(recipe, mode, upload, samples)
+        predictions.extend(test_records+baseline_records+calibrated_records+low_fp_records)
+        if low_fp:
+            final, final_cutoff = _fit_low_fp(recipe, mode, upload, samples)
+        else:
+            final_cutoff, _, _ = _calibrate_choice(recipe, mode, upload, samples)
+            final = fit(recipe, mode, upload, samples)
         primary = recipe.scales[0]
         model["heads"][mode] = {**final[primary], "threshold": final_cutoff}
 
@@ -271,12 +291,23 @@ def run(upload, legacy, cohorts, v3_report, v3_cuts):
                                 "mode": mode, "fold": None} for row in new_rows)
             predictions.extend({**row, "protocol": batch, "method": "v3",
                                 "mode": mode, "fold": None} for row in old_rows)
+            if low_fp:
+                heads, strict_cutoff = _fit_low_fp(recipe, mode, upload, train)
+                rows = score(heads, mode, upload, held)
+                transfer[batch]["v5"] = assessment(rows, threshold=strict_cutoff)
+                predictions.extend({**row, "threshold": strict_cutoff, "protocol": batch, "method": "v5",
+                                    "mode": mode, "fold": None} for row in rows)
         evaluations[mode] = {
             "pairs": len(samples), "final": recipe.label, "cutoff": final_cutoff,
             "group_holdout": {"v3": assessment(baseline_records), "v3_recalibrated": assessment(calibrated_records),
                               "v4": assessment(test_records)},
             "batch_holdout": transfer,
         }
+        if low_fp:
+            penalty, emphasis, margin = LOW_FP_SETTINGS[mode]
+            evaluations[mode]["low_fp_settings"] = {"penalty": penalty, "hard_negative_weight": emphasis,
+                                                     "cutoff_margin": margin}
+            evaluations[mode]["group_holdout"]["v5"] = assessment(low_fp_records)
         print(mode, recipe.label, evaluations[mode]["group_holdout"], flush=True)
     return model, evaluations, predictions
 
@@ -285,6 +316,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for key in ("annotations", "real-dir", "ai-dir", "v3-report", "v3-predictions", "output"):
         parser.add_argument("--" + key, type=Path, required=True)
+    parser.add_argument("--low-false-positives", action="store_true", help="训练较少误报的 v5 权重")
     args = parser.parse_args()
     cv2.setNumThreads(1)
     v3_report = json.loads(args.v3_report.read_text(encoding="utf-8"))
@@ -295,7 +327,8 @@ def main():
         cuts = {(int(row["short_side"]), row["mode"], int(row["fold"])): float(row["threshold"])
                 for row in csv.DictReader(stream) if row["method"] == "expanded" and row["threshold"]}
     upload, original = read_features(args.annotations, args.real_dir, args.ai_dir)
-    model, results, records = run(upload, original, read_cohorts(args.annotations), v3_report, cuts)
+    model, results, records = run(upload, original, read_cohorts(args.annotations), v3_report, cuts,
+                                  low_fp=args.low_false_positives)
     args.output.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(model, separators=(",", ":"), allow_nan=False).encode("utf-8")
     evaluation = {"annotations_sha256": annotation_hash, "weights_bytes": len(blob),

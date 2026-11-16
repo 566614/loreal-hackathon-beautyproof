@@ -176,7 +176,21 @@ def _boosted_stumps(x, labels, weights, limit=18):
     return stumps
 
 
-def train_head(pairs, mode, candidate, auxiliary=()):
+def _solve_logit(z, y, weights, penalty, parameters):
+    regularizer = np.eye(len(parameters)) * penalty
+    regularizer[0, 0] = 0
+    for _ in range(25):
+        p = 1 / (1 + np.exp(-np.clip(z @ parameters, -25, 25)))
+        gradient = z.T @ ((p - y) * weights) + regularizer @ parameters
+        hessian = (z.T * (p * (1 - p) * weights)) @ z + regularizer
+        step = np.linalg.solve(hessian, gradient)
+        parameters -= step
+        if np.max(np.abs(step)) < 1e-7:
+            break
+    return parameters
+
+
+def train_head(pairs, mode, candidate, auxiliary=(), *, hard_negative_weight=0.0):
     pair_rows, pair_weights = _training_vectors(pairs, auxiliary, mode, candidate)
     x = pair_rows.reshape(-1, pair_rows.shape[-1])
     y = np.tile([0, 1], len(pair_rows))
@@ -197,17 +211,16 @@ def train_head(pairs, mode, candidate, auxiliary=()):
         y = np.concatenate((y, y))
         weights = np.concatenate((weights, 0.7 * weights))
         weights /= weights.sum()
-    parameters = np.zeros(z.shape[1])
-    regularizer = np.eye(len(parameters)) * candidate.penalty
-    regularizer[0, 0] = 0
-    for _ in range(25):
-        p = 1 / (1 + np.exp(-np.clip(z @ parameters, -25, 25)))
-        gradient = z.T @ ((p - y) * weights) + regularizer @ parameters
-        hessian = (z.T * (p * (1 - p) * weights)) @ z + regularizer
-        step = np.linalg.solve(hessian, gradient)
-        parameters -= step
-        if np.max(np.abs(step)) < 1e-7:
-            break
+    parameters = _solve_logit(z, y, weights, candidate.penalty, np.zeros(z.shape[1]))
+    if hard_negative_weight:
+        # Give the highest-scoring real uploads more influence without changing class or pair weights.
+        negative_scores = standardized[::2] @ parameters[1:]
+        rank = np.searchsorted(np.sort(negative_scores), negative_scores, side="right") / len(negative_scores)
+        negative_weights = weights[:len(x):2]
+        total = negative_weights.sum()
+        negative_weights *= 1 + hard_negative_weight * rank**3
+        negative_weights *= total / negative_weights.sum()
+        parameters = _solve_logit(z, y, weights, candidate.penalty, parameters)
     return {**head, "mean": mean.tolist(), "scale": scale.tolist(),
             "weights": parameters[1:].tolist(), "intercept": float(parameters[0])}
 

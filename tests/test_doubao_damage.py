@@ -163,3 +163,21 @@ def test_balanced_calibration_accounts_for_intact_photos_at_each_upload_quality(
     cut, score = pick_cut(rows)
     assert 0.49 < cut <= 0.57
     assert score == pytest.approx(1.0)
+
+
+def test_hard_negative_training_reduces_score_for_high_scoring_real_photo():
+    import numpy as np
+    from train_doubao_damage import Candidate, Pair, train_head
+
+    coordinates = [([-2, 0], [1, 0]), ([-1, 0], [2, 0]), ([-2, 0], [1, -0.5]),
+                   ([-1, 0], [1, 0]), ([2, 1], [2, -0.5]), ([1, 1], [1, -1])]
+    pairs = []
+    for index, (real, generated) in enumerate(coordinates):
+        views = {"matched": {"whole": [{"rgb": np.array(real)}, {"rgb": np.array(generated)}]}}
+        pairs.append(Pair(f"ai-{index}", f"real-{index}", str(index), "batch", "high", views, (0, 0), "damage"))
+    recipe = Candidate("example", ("rgb",), method="paired")
+    base = train_head(pairs, "whole", recipe)
+    weighted = train_head(pairs, "whole", recipe, hard_negative_weight=2.5)
+    real, generated = pairs[4].views["matched"]["whole"]
+    assert doubao_damage.predict_vector(weighted, real) < doubao_damage.predict_vector(base, real)
+    assert doubao_damage.predict_vector(weighted, generated) > 0.5
