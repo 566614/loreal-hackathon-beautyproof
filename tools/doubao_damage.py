@@ -14,6 +14,7 @@ MODEL_PATH = Path(__file__).resolve().parents[1] / "models" / "doubao_damage" / 
 SCHEMA = "beautyproof/doubao-damage@1"
 MAX_PIXELS = 20_000_000
 MIN_SHORT_SIDE = 256
+DETAIL_SHORT_SIDE = 288
 TILE = 24
 STRIDE = 12
 
@@ -29,6 +30,7 @@ FAMILY_LABELS = {
     "chroma": "颜色与高频纹理的关系",
     "fine_edges": "细暗线、亮碎屑与裂纹边缘",
     "edges": "边缘连通形态",
+    "texture_conditioned": "同等纹理上的色度和噪声差异",
 }
 FREQ = np.fft.fftfreq(TILE)
 RADIUS = np.hypot(FREQ[:, None], FREQ)
@@ -87,11 +89,11 @@ def decode(data):
         raise ValueError("无法读取所选图片，请换一张 JPG 或 PNG。") from exc
 
 
-def prepare(image, *, quality=85, smaller=False):
+def prepare(image, *, quality=85, smaller=False, short_side=MIN_SHORT_SIDE):
     """Equalize sample size and encoder for both labels and every input at inference."""
     if min(image.size) < MIN_SHORT_SIDE:
         return None
-    scale = min(MIN_SHORT_SIDE / min(image.size), 768 / max(image.size))
+    scale = min(short_side / min(image.size), 768 / max(image.size))
     size = tuple(round(dim * scale) for dim in image.size)
     if min(size) < 96:
         return None
@@ -305,10 +307,28 @@ def extract(image, roi=None, *, preview=False, study_periodicity=False, extra=()
             tiles, gray, gaussian, (horizontal, vertical), laplacian, texture, proportions[:, 2:]
         ))
 
+    conditioned = None
+    if "texture_conditioned" in extra:
+        chroma_rms = np.sqrt(np.mean(tiles(gaussian[..., 1:])**2, axis=(1, 2)))
+        luma_rms = np.sqrt(np.mean(residual**2, axis=(1, 2)))
+        conditioned = np.column_stack((rgb_stats, np.log((chroma_rms+0.2)/(luma_rms[:, None]+0.2)),
+                                       proportions[:, 2], proportions[:, 3],
+                                       np.log1p(luma_rms) - texture))
+
     def summarize(indices, surroundings=None):
-        flat = indices[np.argsort(texture[indices], kind="stable")[:max(2, (len(indices)+2)//3)]]
-        return {key: _summarize(values, flat, indices, surroundings)
-                for key, values in all_stats.items()}
+        ordered = indices[np.argsort(texture[indices], kind="stable")]
+        flat = ordered[:max(2, (len(indices)+2)//3)]
+        summary = {key: _summarize(values, flat, indices, surroundings)
+                   for key, values in all_stats.items()}
+        if conditioned is not None:
+            # Keep the feature size fixed even for a selection with only two usable tiles.
+            group = ordered[np.rint(np.linspace(0, len(ordered)-1, 3*max(1, len(ordered)//3))).astype(int)]
+            components = [np.median(conditioned[part], axis=0) for part in np.split(group, 3)]
+            if surroundings is not None:
+                components.append(np.median(conditioned[indices], axis=0)
+                                  - np.median(conditioned[surroundings], axis=0))
+            summary["texture_conditioned"] = np.concatenate(components)
+        return summary
 
     whole = summarize(np.arange(len(xx)))
     if study_periodicity or "edges" in extra:
@@ -418,11 +438,30 @@ def analyze_image(data, roi=None, *, model_path=MODEL_PATH):
         region_reason = ("框内或周边像素不足，请适当扩大或缩小选区。" if region is None
                          else "框选训练样本不足。")
     heads = model["heads"] if model else {}
+    whole_result = _prediction(heads.get("whole"), whole, reason)
+    region_result = _prediction(heads.get("region"), region, region_reason) if roi else None
+    detail_heads = model.get("detail_heads", {}) if model else {}
+    pending = {mode: detail_heads[mode] for mode, result in
+               (("whole", whole_result), ("region", region_result))
+               if mode in detail_heads and result and result["status"] != "similar"}
+    if prepared is not None and pending:
+        detail = prepare(image, short_side=DETAIL_SHORT_SIDE)
+        if detail is not None:
+            families = {family for head in pending.values() for family in head["families"]}
+            whole_detail, region_detail, _, _ = extract(
+                detail, roi if "region" in pending else None, extra=families
+            )
+            if "whole" in pending:
+                retry = _prediction(pending["whole"], whole_detail, reason)
+                if retry["status"] == "similar":
+                    whole_result = retry
+            if "region" in pending:
+                retry = _prediction(pending["region"], region_detail, region_reason)
+                if retry["status"] == "similar":
+                    region_result = retry
     return {
         "model": model["id"] if model else None, "device": "cpu", "source_marker": marker,
-        "image_size": [width, height], "roi": roi,
-        "whole": _prediction(heads.get("whole"), whole, reason),
-        "region": _prediction(heads.get("region"), region, region_reason) if roi else None,
+        "image_size": [width, height], "roi": roi, "whole": whole_result, "region": region_result,
         "edge_preview_png": preview, "edge_summary": edge_summary,
     }
 

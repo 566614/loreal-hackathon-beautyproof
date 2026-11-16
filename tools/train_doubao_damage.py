@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 import cv2
 import numpy as np
 
-from doubao_damage import (FAMILY_LABELS, MODEL_PATH, SCHEMA, TILE, decode, extract, prepare,
+from doubao_damage import (FAMILY_LABELS, MIN_SHORT_SIDE, MODEL_PATH, SCHEMA, TILE, decode, extract, prepare,
                            predict_matrix, validate_roi)
 
 CONDITIONS = {"matched": (85, False), "recompressed": (60, False), "reduced_detail": (85, True)}
@@ -68,7 +68,7 @@ class Pair:
     annotation: str
 
 
-def read_pairs(path, real_dir, ai_dir):
+def read_pairs(path, real_dir, ai_dir, *, short_side=MIN_SHORT_SIDE):
     with path.open(encoding="utf-8-sig", newline="") as stream:
         rows = list(csv.DictReader(stream))
     pairs, seen_ai, original_groups = [], set(), {}
@@ -99,7 +99,7 @@ def read_pairs(path, real_dir, ai_dir):
             image, _ = decode(data)
             roi = validate_roi(json.loads(row[field]))
             for condition, (quality, smaller) in CONDITIONS.items():
-                prepared = prepare(image, quality=quality, smaller=smaller)
+                prepared = prepare(image, quality=quality, smaller=smaller, short_side=short_side)
                 whole, region, _, _ = (extract(prepared, roi, study_periodicity=row["label"] == "damage",
                                                      extra=FAMILY_LABELS)
                                       if prepared is not None else (None,) * 4)
