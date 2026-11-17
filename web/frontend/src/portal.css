@@ -72,6 +72,7 @@
 .portal-content h1 span + span { color: #f3c5b9; }
 .portal-lead { margin: 29px 0 38px; color: var(--portal-muted); font-size: 17px; line-height: 1.8; }
 .portal-roles { display: grid; grid-template-columns: 1fr 1.13fr; max-width: 596px; gap: 12px; }
+.portal-roles:focus { outline: 2px solid var(--portal-accent); outline-offset: 6px; border-radius: 12px; }
 .portal-entry {
   display: block;
   min-width: 0;
@@ -107,10 +108,12 @@
 @media (hover: hover) and (pointer: fine) { .portal-entry:hover { transform: translateY(-2px); } }
 
 @media (max-width: 1024px) {
+  .portal-width { width: calc(100% - 128px); }
   .portal-content h1 { font-size: clamp(55px, 7.2vw, 76px); }
   .portal-hero::after { background: linear-gradient(90deg, #160c10f0, #160c10a3 46%, transparent 77%), linear-gradient(0deg, #160c1099, transparent 37%); }
 }
 @media (max-width: 660px) {
+  .portal-width { width: calc(100% - 48px); }
   .portal-top { min-height: 63px; }
   .portal-brand { font-size: 20px; }
   .portal-brand .anticon { font-size: 20px; }

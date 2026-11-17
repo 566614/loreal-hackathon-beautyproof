@@ -13,6 +13,7 @@ import zhCN from "antd/locale/zh_CN";
 import "antd/dist/reset.css";
 import "./workbench.css";
 import { DamageRegion, DamageReport } from "./damage-review.jsx";
+import Portal from "./portal.jsx";
 
 const toolLabels = {
   hash: "文件指纹", c2pa: "来源凭证", ela: "压缩痕迹", spectral: "频域取证",
@@ -35,7 +36,8 @@ const referenceTypes = { efficacy_study: "产品功效试验", product_label: "�
 const theme = {
   token: {
     colorPrimary: "#8e343d", colorLink: "#8a3039", colorText: "#261d20", colorTextSecondary: "#65595c",
-    colorBorder: "#e3d9d6", colorBgLayout: "#f5efeb", borderRadius: 10,
+    colorBorder: "#e3d9d6", colorBgLayout: "#f5efeb", colorWarning: "#946023",
+    colorWarningText: "#7b4210", borderRadius: 10,
     fontFamily: 'Geist, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
     controlHeight: 40,
     motionEaseOutBack: "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -247,9 +249,22 @@ function EvidenceResults({ result }) {
   </div>;
 }
 
+function publicityExplanation(result) {
+  const explanation = result.verdict.explain || {};
+  if (!result.image && result.verdict.risk_level === "suspicious" && result.audit?.context_conflicts?.length) {
+    return {
+      ...explanation,
+      headline: "同一宣称出现不同数值",
+      summary: "相同产品和使用条件下，正文给出了不同的数值。",
+      what_to_do: "核对原始功效资料和对应宣传文案。",
+    };
+  }
+  return explanation;
+}
+
 function reportText(result) {
   const { image, verdict, audit, evidence = {}, agent } = result;
-  const explanation = verdict.explain || {};
+  const explanation = publicityExplanation(result);
   const label = (risks[verdict.risk_level] || risks.inconclusive)[0];
   return [
     "# BeautyProof 美妆宣传核验报告", "",
@@ -279,7 +294,7 @@ function FinishedReport({ result }) {
   const [copy, setCopy] = useState("");
   const verdict = result.verdict;
   const [label, color] = risks[verdict.risk_level] || risks.inconclusive;
-  const explanation = verdict.explain || {};
+  const explanation = publicityExplanation(result);
   const hasClaims = !!result.audit?.claims?.length;
   function download() {
     const url = URL.createObjectURL(new Blob([reportText(result)], { type: "text/markdown;charset=utf-8" }));
@@ -746,6 +761,24 @@ function ChatWorkspace({ role = "reviewer" }) {
   return <Workbench key={session} role={role} onReset={() => setSession(value => value + 1)} />;
 }
 
+function locationRole() {
+  const role = window.location.hash.slice(1);
+  return role === "consumer" || role === "reviewer" ? role : null;
+}
+
+function App() {
+  const [role, setRole] = useState(locationRole);
+  useEffect(() => {
+    const updateRole = () => setRole(locationRole());
+    window.addEventListener("hashchange", updateRole);
+    return () => window.removeEventListener("hashchange", updateRole);
+  }, []);
+  useEffect(() => {
+    document.title = role ? workspaceCopy[role].title + " · BeautyProof" : "BeautyProof · 美妆证据审核";
+  }, [role]);
+  return role ? <ChatWorkspace key={role} role={role} /> : <Portal />;
+}
+
 createRoot(document.getElementById("workbench")).render(
-  <ConfigProvider locale={zhCN} theme={theme}><ChatWorkspace /></ConfigProvider>,
+  <ConfigProvider locale={zhCN} theme={theme}><App /></ConfigProvider>,
 );

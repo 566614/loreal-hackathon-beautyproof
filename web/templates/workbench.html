@@ -1,10 +1,22 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-type="software">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f6f6">
-  <title>美妆审核工作台 · BeautyProof</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
+  <meta name="description" content="发来美妆宣传文案或售后图片，查看对应原句与可复核的依据。">
+  <meta name="theme-color" content="#241419">
+  <title>BeautyProof · 美妆证据审核</title>
+  <style>
+    @font-face {
+      font-family: Geist;
+      src: url("{{ url_for('static', filename='beautyproof/geist-latin.woff2') }}") format("woff2");
+      font-weight: 400 800;
+      font-display: swap;
+      unicode-range: U+0000-00FF, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
+    }
+  </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='workbench/main.css') }}">
   <script defer src="{{ url_for('static', filename='workbench/main.js') }}"></script>
 </head>
