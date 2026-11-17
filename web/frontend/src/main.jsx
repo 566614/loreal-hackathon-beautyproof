@@ -38,6 +38,7 @@ const theme = {
     fontFamily: 'Inter, "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
     controlHeight: 40,
     motionEaseOutBack: "cubic-bezier(0.22, 1, 0.36, 1)",
+    motionEaseInBack: "cubic-bezier(0.64, 0, 0.78, 0)",
   },
 };
 
