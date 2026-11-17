@@ -74,6 +74,29 @@ def test_image_only_clarifies_and_upload_completes_damage(client):
     assert turn(client, "破损分数是什么？", previous=job)[1]["evidence"][0]["label"].startswith("整图")
 
 
+@pytest.mark.parametrize("request_text", ["检查售后破损照片", "同时检查宣传和退款破损"])
+def test_consumer_turn_does_not_dispatch_damage(client, request_text):
+    _, result = turn(client, request_text, role="consumer", file=photo())
+    assert result["type"] == "clarify"
+    assert "消费者入口支持美妆宣传核验" in result["message"]
+
+
+def test_consumer_photo_defaults_to_publicity(client, monkeypatch):
+    monkeypatch.setattr(pipeline, "run_tool", lambda *args, **kwargs: SimpleNamespace(returncode=1, stderr=""))
+    _, result = turn(client, role="consumer", file=photo())
+    assert result["route"] == "publicity"
+    assert set(result["reports"]) == {"publicity"}
+
+
+def test_consumer_cannot_resume_reviewer_turn(client):
+    job, result = turn(client, "审核退款破损", role="reviewer")
+    assert result["type"] == "clarify"
+    response = client.post("/api/agent/turn", data={
+        "message": "为什么？", "previous_job_id": job, "role": "consumer",
+    })
+    assert response.status_code == 409
+
+
 def test_dual_route_reuses_the_image_and_cleans_scratch(client, monkeypatch):
     seen = []
 

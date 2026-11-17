@@ -245,6 +245,10 @@ def _agent_image(upload, directory, name):
 def agent_turn():
     from claim_review import normalize_references, verified_catalog
 
+    role = request.form.get("role")
+    if role not in (None, "consumer", "reviewer"):
+        return jsonify({"error": "请选择消费者或企业审核人员入口。"}), 400
+    publicity_only = role == "consumer"
     message = request.form.get("message", "").strip()
     copy = request.form.get("copy", "").strip() or None
     upload = request.files.get("file")
@@ -270,7 +274,7 @@ def agent_turn():
     previous_id = request.form.get("previous_job_id")
     with JOBS_LOCK:
         previous = JOBS.get(previous_id, {}).get("context")
-    if previous_id and previous is None:
+    if previous_id and (previous is None or previous.get("publicity_only", False) != publicity_only):
         return jsonify({"error": "上一回合已过期，请重新送审。"}), 409
 
     workspace = TemporaryDirectory(prefix="beautyproof-turn-")
@@ -282,6 +286,7 @@ def agent_turn():
         if (reference_image or roi) and not path:
             return jsonify({"error": "请同时附上要审核的图片。"}), 400
         options = {
+            "publicity_only": publicity_only,
             "llm": request.form.get("llm") != "0", "fast": request.form.get("fast") == "1",
             "product": request.form.get("product"), "market": request.form.get("market"),
             "references": references, "verified_references": [catalog[i] for i in dict.fromkeys(ids)],

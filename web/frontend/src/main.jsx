@@ -339,13 +339,13 @@ const reviewLabels = { publicity: "宣传核验", damage: "退款破损审核" }
 const workspaceCopy = {
   consumer: {
     roleName: "消费者", title: "美妆助手", greeting: "今天想核对什么？",
-    lead: "把看到的美妆宣传或售后照片发给我，一起看看有哪些依据。",
-    placeholder: "问问功效宣传，或附一张售后图片…",
+    lead: "发来你看到的美妆文案或宣传图片，一起核对产品说法和依据。",
+    placeholder: "问问功效宣传，或附一张宣传图片…",
     prompts: [
       { title: "看看功效宣传", detail: "核对说法和出处", icon: FileSearchOutlined,
         text: "请核验宣传文案：这款精华连续使用 7 天，水分提升 20%。" },
-      { title: "检查售后图片", detail: "找出可复核的图片线索", icon: PictureOutlined,
-        text: "请检查售后破损图片，看看有哪些需要我复核的地方。" },
+      { title: "核对宣传图片", detail: "看看图片和文案是否一致", icon: PictureOutlined,
+        text: "请核验这张宣传图片，看看图片上的功效宣称有哪些依据。" },
     ],
   },
   reviewer: {
@@ -478,6 +478,7 @@ function Workbench({ role, onReset }) {
       return;
     }
     const data = new FormData();
+    data.set("role", role);
     if (message) data.set("message", message);
     if (copy) data.set("copy", copy);
     if (file) data.set("file", file);
@@ -664,7 +665,7 @@ function Workbench({ role, onReset }) {
               extra={<Button onClick={() => setMaterialsOpen(false)}>完成填写</Button>}>
               <div className="options-content">
 
-                {file && <DamageRegion key={preview} preview={preview} roi={roi} onChange={setRoi} busy={busy} />}
+                {role === "reviewer" && file && <DamageRegion key={preview} preview={preview} roi={roi} onChange={setRoi} busy={busy} />}
                 <Form.Item name="copy" label="宣传正文"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
                 <div className="option-fields">
                   <Form.Item name="product" label="宣传产品"><Input list="known-products" placeholder="完整产品名" /></Form.Item>

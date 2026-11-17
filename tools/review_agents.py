@@ -87,6 +87,8 @@ def identify_intent(message, copy, image, options, previous, model):
         return DAMAGE, None
     if not message and options.get("reference_image"):
         return PUBLICITY, None
+    if not message and image and options.get("publicity_only"):
+        return PUBLICITY, None
     if not message:
         return "clarify", None
 
@@ -234,7 +236,10 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
     progress("router", 0, 0, "running")
     route, copy = identify_intent(message, copy, bool(path), options, previous, model)
     progress("router", 0, 0, "done")
-    context = {**previous, "asset": asset_hash or previous.get("asset")}
+    publicity_only = options.get("publicity_only", False)
+    context = {**previous, "asset": asset_hash or previous.get("asset"), "publicity_only": publicity_only}
+    if publicity_only and route in (DAMAGE, BOTH):
+        return {"type": "clarify", "message": "消费者入口支持美妆宣传核验。请发送产品宣传文案或图片。"}, context
     if route == "answer":
         evidence = report_evidence(previous["reports"], message)
         return {"type": "answer", "message": "这份报告记录了以下依据。" if evidence else
@@ -243,7 +248,8 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
 
     question = None
     if route == "clarify":
-        question = "你想核验宣传内容、审核退款破损，还是两项都查？"
+        question = ("请说明你想核对哪条美妆宣传，或附上一张宣传图片。" if publicity_only else
+                    "你想核验宣传内容、审核退款破损，还是两项都查？")
     elif route in (DAMAGE, BOTH) and not path:
         question = "请附上商品破损图片。收到后我会" + ("分别完成两项审核。" if route == BOTH else "检查整图及你框选的区域。")
     elif not path and not copy:
