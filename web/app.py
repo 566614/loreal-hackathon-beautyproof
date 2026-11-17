@@ -201,14 +201,14 @@ def damage_review():
 
 
 def _run_agent_job(job, workspace, path, message, copy, options, previous):
-    import review_agents
-
     def progress(tool, idx, total, state):
         with JOBS_LOCK:
             job["steps"].append({"tool": tool, "state": state, "index": idx, "total": total})
 
     try:
         try:
+            import review_agents
+
             result, context = review_agents.run_turn(
                 message, copy, path, Path(workspace.name), options, previous, MODEL_LOCK, progress,
             )
@@ -258,9 +258,6 @@ def agent_turn():
         if not isinstance(ids, list) or any(not isinstance(item, str) for item in ids):
             raise ValueError("reference_ids 须为 ID 数组")
         roi = json.loads(request.form["roi"]) if "roi" in request.form else None
-        if roi is not None:
-            from doubao_damage import validate_roi
-            roi = validate_roi(roi)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     try:

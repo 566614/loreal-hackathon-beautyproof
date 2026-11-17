@@ -37,6 +37,7 @@ const theme = {
     colorBorder: "#dcd4d7", colorBgLayout: "#f8f6f6", borderRadius: 8,
     fontFamily: 'Inter, "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
     controlHeight: 40,
+    motionEaseOutBack: "cubic-bezier(0.22, 1, 0.36, 1)",
   },
 };
 
@@ -587,7 +588,7 @@ function Workbench() {
             <div className="model-preference">
               {deepseekReady ? <>
                 <Checkbox checked={useModel} onChange={event => setUseModel(event.target.checked)}>DeepSeek 辅助</Checkbox>
-                <p>{useModel ? "审核消息、识别出的图片文字和必要资料可发送至 DeepSeek。图片始终在本地处理。" : "当前使用本地规则和检测工具。"}</p>
+                <p>{useModel ? "必要的消息、图片文字、资料摘录和检查摘要可发送至 DeepSeek。图片始终在本地处理。" : "当前使用本地规则和检测工具。"}</p>
               </> : <p>当前使用本地规则和检测工具。</p>}
             </div>
           </Form>
