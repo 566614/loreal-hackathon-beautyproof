@@ -303,7 +303,7 @@ def run_text_tools(stem, text, verbose=True, on_progress=None, base_idx=0, total
 def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
             on_progress=None, text=None, llm=False, roundtable=False, *,
             product=None, references=None, publish=True, verified_references=(), market=None,
-            reference_image=None):
+            reference_image=None, run_root=None, review_model=None):
     """对一张图跑完整流水线，返回结构化结果
 
     on_progress: 可选回调 fn(tool, 第几个, 共几个, 状态) —— Web 界面靠它显示实时进度
@@ -326,7 +326,7 @@ def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
         raise FileNotFoundError(f"找不到图片: {original.name}")
 
     run_id = uuid.uuid4().hex
-    output_dir = REPO / "outputs" / "runs" / run_id
+    output_dir = (run_root if run_root is not None else REPO / "outputs" / "runs") / run_id
     output_dir.mkdir(parents=True)
     if original:
         # Take a stable snapshot. Detectors and the file hash use identical bytes.
@@ -356,14 +356,17 @@ def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
                     visual_match = {"status": "无法判断", "regions": [],
                                     "reason": "参考图无法读取或本地定位组件不可用。"}
             return _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
-                                on_progress, text, llm, roundtable, product, references, publish, verified_references, market, visual_match)
+                                on_progress, text, llm, roundtable, product, references, publish,
+                                verified_references, market, visual_match, review_model=review_model)
 
     return _analyze_run(None, None, output_dir, fast, skip, verbose, timeout,
-                        on_progress, text, llm, roundtable, product, references, publish, verified_references, market)
+                        on_progress, text, llm, roundtable, product, references, publish,
+                        verified_references, market, review_model=review_model)
 
 
 def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
-                 on_progress, text, llm, roundtable, product, references, publish, verified_references, market, visual_match=None):
+                 on_progress, text, llm, roundtable, product, references, publish,
+                 verified_references, market, visual_match=None, *, review_model=None):
     import claim_review
     import crossmodal_tool
 
@@ -463,9 +466,10 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
     body_claims = claim_review.extract(text, product)
     image_claims = claim_review.extract(image_text, product, "image")
     claim_model_status = "insufficient_evidence"
-    if llm and (text or image_text):
+    model_options = {"request_json": review_model} if review_model is not None else {}
+    if (llm or review_model is not None) and (text or image_text):
         import llm_explainer
-        model_rows = [llm_explainer.extract_claim_fields(source, product)
+        model_rows = [llm_explainer.extract_claim_fields(source, product, **model_options)
                       for source in (text, image_text) if source]
         claim_model_status = "completed" if all(rows is not None for rows in model_rows) else "model_unavailable"
         by_source = iter(model_rows)
@@ -506,7 +510,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
     semantic_findings, semantic_status = [], "insufficient_evidence"
     semantic_reference_count = None
     semantic_reference_total = None
-    if llm and text and os.environ.get("BP_TEXT_API_ONLY") == "1":
+    if text and (review_model is not None or (llm and os.environ.get("BP_TEXT_API_ONLY") == "1")):
         import llm_explainer
         products = {c["product"] for c in body_claims if c.get("product")}
         if product:
@@ -522,7 +526,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         relevant = [{k: ref[k] for k in ("id", "source", "excerpt", "product", "market", "source_type", "version", "product_version", "locator", "method", "sample", "population", "period", "conditions") if k in ref}
                     for ref in eligible[:8]]
         semantic_reference_count = len(relevant)
-        result = llm_explainer.semantic_review(text, relevant)
+        result = llm_explainer.semantic_review(text, relevant, **model_options)
         semantic_status = "completed" if result is not None else "model_unavailable"
         semantic_findings = result or []
     asset_hash = image_info_fields.get("sha256")
@@ -571,7 +575,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
             checks["semantic_review"]["reason"] = "未找到产品及市场一致的资料；仅检查正文上下文。"
         elif semantic_reference_total > semantic_reference_count:
             checks["semantic_review"]["reason"] = f"符合条件的 {semantic_reference_total} 条资料中仅审核了前 {semantic_reference_count} 条；手选资料优先。"
-    if llm and os.environ.get("BP_TEXT_API_ONLY") == "1":
+    if review_model is not None or (llm and os.environ.get("BP_TEXT_API_ONLY") == "1"):
         checks["claim_model"]["model"] = os.environ.get("BP_DEEPSEEK_MODEL", "deepseek-flash")
         if claim_model_status == "model_unavailable":
             checks["claim_model"]["reason"] = ("DeepSeek 请求失败或返回内容无法解析" if os.environ.get("DEEPSEEK_API_KEY")

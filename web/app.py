@@ -16,6 +16,7 @@
     GET  /api/samples      已有预生成结果的示例样本列表
     GET  /api/sample/<stem> 读某个示例的完整分析结果
     POST /api/analyze      上传图片开跑（multipart: file / fast=0|1）
+    POST /api/agent/turn   对话审核回合（multipart: message / file / previous_job_id）
     GET  /api/job/<id>     轮询任务进度与结果
 """
 import json
@@ -26,6 +27,7 @@ import threading
 import traceback
 import uuid
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from flask import Flask, jsonify, render_template, request
 
@@ -196,6 +198,122 @@ def damage_review():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     return jsonify(result)
+
+
+def _run_agent_job(job, workspace, path, message, copy, options, previous):
+    import review_agents
+
+    def progress(tool, idx, total, state):
+        with JOBS_LOCK:
+            job["steps"].append({"tool": tool, "state": state, "index": idx, "total": total})
+
+    try:
+        try:
+            result, context = review_agents.run_turn(
+                message, copy, path, Path(workspace.name), options, previous, MODEL_LOCK, progress,
+            )
+        finally:
+            workspace.cleanup()
+        with JOBS_LOCK:
+            job.update(status="done", result=result, context=context)
+    except Exception:
+        app.logger.exception("Agent turn failed")
+        with JOBS_LOCK:
+            job.update(status="error", error="本次审核未完成，请重新发送。")
+
+
+def _agent_image(upload, directory, name):
+    from PIL import Image
+
+    if not upload or not upload.filename:
+        return None
+    try:
+        with Image.open(upload.stream) as image:
+            suffix = {"JPEG": ".jpg", "PNG": ".png"}.get(image.format)
+            if not suffix or getattr(image, "n_frames", 1) != 1:
+                raise ValueError("请选择单张 JPG 或 PNG 图片。")
+            image.verify()
+        upload.stream.seek(0)
+    except (OSError, Image.DecompressionBombError) as exc:
+        raise ValueError("无法读取图片，请换一张 JPG 或 PNG。") from exc
+    path = directory / (name + suffix)
+    upload.save(path)
+    return path
+
+
+@app.post("/api/agent/turn")
+def agent_turn():
+    from claim_review import normalize_references, verified_catalog
+
+    message = request.form.get("message", "").strip()
+    copy = request.form.get("copy", "").strip() or None
+    upload = request.files.get("file")
+    if not message and not copy and not (upload and upload.filename):
+        return jsonify({"error": "请填写审核需求或附上图片。"}), 400
+    if len(message) > 12000 or (copy and len(copy) > 12000):
+        return jsonify({"error": "消息和宣传正文各最多 12000 字。"}), 400
+    try:
+        references = normalize_references(json.loads(request.form.get("references", "null")))
+        ids = json.loads(request.form.get("reference_ids", "[]"))
+        if not isinstance(ids, list) or any(not isinstance(item, str) for item in ids):
+            raise ValueError("reference_ids 须为 ID 数组")
+        roi = json.loads(request.form["roi"]) if "roi" in request.form else None
+        if roi is not None:
+            from doubao_damage import validate_roi
+            roi = validate_roi(roi)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    try:
+        catalog = verified_catalog() if ids else {}
+    except (OSError, ValueError):
+        return jsonify({"error": "无法读取已核验依据清单。"}), 503
+    if any(item not in catalog for item in ids):
+        return jsonify({"error": "已核验依据不存在，请刷新后重选。"}), 400
+
+    previous_id = request.form.get("previous_job_id")
+    with JOBS_LOCK:
+        previous = JOBS.get(previous_id, {}).get("context")
+    if previous_id and previous is None:
+        return jsonify({"error": "上一回合已过期，请重新送审。"}), 409
+
+    workspace = TemporaryDirectory(prefix="beautyproof-turn-")
+    worker_started = False
+    try:
+        directory = Path(workspace.name)
+        path = _agent_image(upload, directory, "submission")
+        reference_image = _agent_image(request.files.get("reference_image"), directory, "reference")
+        if (reference_image or roi) and not path:
+            return jsonify({"error": "请同时附上要审核的图片。"}), 400
+        options = {
+            "llm": request.form.get("llm") != "0", "fast": request.form.get("fast") == "1",
+            "product": request.form.get("product"), "market": request.form.get("market"),
+            "references": references, "verified_references": [catalog[i] for i in dict.fromkeys(ids)],
+            "reference_image": reference_image, "roi": roi,
+            "image_name": Path(upload.filename).name if path else None,
+        }
+        job_id = uuid.uuid4().hex
+        job = {"status": "running", "steps": [], "result": None, "error": None}
+        with JOBS_LOCK:
+            if len(JOBS) >= MAX_JOBS and all(item["status"] == "running" for item in JOBS.values()):
+                return jsonify({"error": "审核服务正忙，请稍后重试。"}), 503
+            JOBS[job_id] = job
+        _prune_jobs()
+        try:
+            threading.Thread(
+                target=_run_agent_job, args=(job, workspace, path, message, copy, options, previous or {}),
+                daemon=True,
+            ).start()
+        except RuntimeError:
+            with JOBS_LOCK:
+                JOBS.pop(job_id, None)
+            return jsonify({"error": "审核服务正忙，请稍后重试。"}), 503
+        worker_started = True
+        return jsonify({"job_id": job_id})
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    finally:
+        if not worker_started:
+            workspace.cleanup()
 
 
 @app.post("/api/analyze")
