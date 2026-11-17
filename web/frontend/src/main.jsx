@@ -1,25 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Alert, Button, Card, Checkbox, Collapse, ConfigProvider, Form, Image, Input, Modal,
-  Progress, Radio, Select, Space, Tabs, Tag, Upload,
+  Alert, Button, Card, Checkbox, Collapse, ConfigProvider, Dropdown, Form, Image, Input, Modal,
+  Select, Space, Tabs, Tag, Upload,
 } from "antd";
 import {
-  ApartmentOutlined, ArrowRightOutlined, CopyOutlined, DownloadOutlined,
-  FileTextOutlined, PictureOutlined, SafetyCertificateOutlined, ScanOutlined,
-  UploadOutlined,
+  ArrowRightOutlined, CloseOutlined, CopyOutlined, DownloadOutlined, FileSearchOutlined,
+  LockOutlined, PaperClipOutlined, PictureOutlined, UploadOutlined,
 } from "@ant-design/icons";
 import zhCN from "antd/locale/zh_CN";
 import "antd/dist/reset.css";
 import "./workbench.css";
-import { observations, assessSkin } from "./skin-profile.mjs";
-import { recommend } from "./product-recommendations.mjs";
-import DamageReview from "./damage-review.jsx";
+import { DamageRegion, DamageReport } from "./damage-review.jsx";
 
 const toolLabels = {
   hash: "文件指纹", c2pa: "来源凭证", ela: "压缩痕迹", spectral: "频域取证",
   ocr: "图中文字", ai_label: "AI 来源标识", aigc: "生成倾向", trufor: "局部异常",
   text: "文案检查", crossmodal: "图文对照", claim_model: "DeepSeek 文案模型", semantic_review: "语义复核",
+  router: "识别审核需求", publicity: "宣传核验", damage: "退款破损审核", image_agent: "图像证据复核",
 };
 const risks = {
   high_risk: ["高风险", "error"], suspicious: ["待复核", "warning"],
@@ -35,9 +33,9 @@ const claimColors = { "有证据支持": "success", "存在冲突": "error", "�
 const referenceTypes = { efficacy_study: "产品功效试验", product_label: "产品标签", brand_claim: "品牌宣称", method: "技术方法" };
 const theme = {
   token: {
-    colorPrimary: "#14736a", colorLink: "#14736a", colorText: "#172f2b", colorTextSecondary: "#4e6661",
-    colorBorder: "#d3e0da", colorBgLayout: "#f3f7f4", borderRadius: 10,
-    fontFamily: '"Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
+    colorPrimary: "#b7103a", colorLink: "#a30f34", colorText: "#211e1f", colorTextSecondary: "#61585b",
+    colorBorder: "#dcd4d7", colorBgLayout: "#f8f6f6", borderRadius: 8,
+    fontFamily: 'Inter, "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
     controlHeight: 40,
   },
 };
@@ -46,7 +44,9 @@ async function readJson(path, options) {
   const response = await fetch(path, options);
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload || payload.error) {
-    throw new Error(payload?.error || (response.status === 413 ? "文件太大，请选择不超过 32 MB 的图片。" : "无法读取审核服务的响应，请稍后重试。"));
+    const error = new Error(payload?.error || (response.status === 413 ? "文件太大，两张图片合计须小于 32 MB。" : "无法读取审核服务的响应，请稍后重试。"));
+    error.status = response.status;
+    throw error;
   }
   return payload;
 }
@@ -58,34 +58,27 @@ function AuditStatus({ value }) {
 
 function EmptyReport() {
   return <div className="empty-report">
-    <div className="empty-index"><span className="status-dot" /> 等待送审</div>
-    <div className="inspection" aria-hidden="true">
-      <div className="inspection-inner"><ScanOutlined /></div>
-      <span className="inspection-label">EVIDENCE VIEW</span>
-    </div>
-    <h2>核验报告</h2>
-    <p>提交图片或正文后，查看引用依据、图像线索和待复核事项。</p>
-    <div className="evidence-lanes">
-      <div><PictureOutlined /> <span>图片来源</span><small>生成倾向与局部异常</small></div>
-      <div><FileTextOutlined /> <span>宣传宣称</span><small>承诺原句与功效依据</small></div>
-      <div><ApartmentOutlined /> <span>图文对照</span><small>可比指标与冲突点</small></div>
-    </div>
+    <p className="empty-status">等待送审</p>
+    <p>送审后，可以在这里查看结论和对应证据。</p>
+    <ul className="review-types">
+      <li><FileSearchOutlined /><div><strong>宣传核验</strong><span>宣称原句、图片线索和功效资料</span></div></li>
+      <li><PictureOutlined /><div><strong>退款破损审核</strong><span>整图线索和选区的候选边缘</span></div></li>
+    </ul>
   </div>;
 }
 
 function RunningReport({ steps }) {
   const latest = [...new Map(steps.map(step => [step.tool, step])).values()];
-  const total = Math.max(0, ...latest.map(step => step.total || 0));
-  const finished = latest.filter(step => ["done", "failed", "skipped"].includes(step.state)).length;
-  return <Card className="surface report-surface" title={<span>正在核验</span>}>
-    <div role="status" aria-live="polite">
-      <Progress percent={total ? Math.min(100, Math.round(finished / total * 100)) : 0} status="active" />
-      <p className="muted">{latest.length ? "正在汇总本次检查记录。" : "正在准备送审内容…"}</p>
-    </div>
-    <ul className="check-list">
-      {latest.map(step => <li key={step.tool}><span>{toolLabels[step.tool] || step.tool}</span><AuditStatus value={step.state} /></li>)}
-    </ul>
-  </Card>;
+  const current = latest.filter(step => step.state === "running").at(-1);
+  return <div className="running-report">
+    <p role="status">{current ? toolLabels[current.tool] || current.tool : "正在处理本轮消息"}…</p>
+    {!!latest.length && <details className="evidence-detail">
+      <summary>检查进度</summary>
+      <ul className="check-list">
+        {latest.map(step => <li key={step.tool}><span>{toolLabels[step.tool] || step.tool}</span><AuditStatus value={step.state} /></li>)}
+      </ul>
+    </details>}
+  </div>;
 }
 
 function ImageRegions({ image, regions }) {
@@ -212,6 +205,9 @@ function ImageResults({ result }) {
         <div><span>生成倾向分</span><b>{origin.score ?? "—"}</b><small>{[origin.model, origin.status || "待复核线索"].filter(Boolean).join(" · ")}</small></div>
         <div><span>局部异常分</span><b>{editing.score ?? "—"}</b><small>{[editing.model, editing.region || "区域线索需对照原图"].filter(Boolean).join(" · ")}</small></div>
       </div>
+      {!!result.audit?.image_review_checks?.length && <p className="next-action">
+        <b>优先复核</b>　{result.audit.image_review_checks.map(key => toolLabels[key] || key).join("、")}
+      </p>}
       {result.audit?.ai_illustration_disclosed && <Alert type="info" showIcon title="素材已声明为 AI 示意" />}
       {origin.verified_ai ? <p>已验证来源凭证声明素材由 AI 生成。</p>
         : origin.visible_ai_label && <p>图中有可见 AI 标识，需核对原始来源。</p>}
@@ -280,7 +276,7 @@ function reportText(result) {
   ].filter(line => line != null && line !== false).join("\n");
 }
 
-function FinishedReport({ result, isSample }) {
+function FinishedReport({ result }) {
   const [copy, setCopy] = useState("");
   const verdict = result.verdict;
   const [label, color] = risks[verdict.risk_level] || risks.inconclusive;
@@ -302,17 +298,16 @@ function FinishedReport({ result, isSample }) {
       setCopy("复制失败，可下载报告");
     }
   }
-  return <Card className="surface report-surface" title="核验报告">
+  return <Card className="surface report-surface" title="宣传核验" extra={<Dropdown menu={{ items: [
+    { key: "download", label: "下载 Markdown", icon: <DownloadOutlined />, onClick: download },
+    { key: "copy", label: "复制结论", icon: <CopyOutlined />, onClick: copySummary },
+  ] }} trigger={["click"]}><Button size="small" type="text">报告操作</Button></Dropdown>}>
     <div className="report-heading">
-      <Space size={6} wrap><Tag color={color}>{label}</Tag>{isSample && <Tag>预置样本报告</Tag>}</Space>
+      <Tag color={color}>{label}</Tag>
       <h2>{explanation.headline || label}</h2>
       {explanation.summary && <p>{explanation.summary}</p>}
       {explanation.what_to_do && <p className="next-action"><b>下一步</b>　{explanation.what_to_do}</p>}
-      <Space size={8} wrap>
-        <Button size="small" icon={<DownloadOutlined />} onClick={download}>下载 Markdown</Button>
-        <Button size="small" icon={<CopyOutlined />} onClick={copySummary}>复制结论</Button>
-        {copy && <span role="status" className="muted">{copy}</span>}
-      </Space>
+      {copy && <span role="status" className="muted">{copy}</span>}
     </div>
     <Tabs defaultActiveKey={hasClaims || !result.image ? "claims" : "image"} items={[
       { key: "image", label: "图片审核", children: <ImageResults result={result} /> },
@@ -324,134 +319,72 @@ function FinishedReport({ result, isSample }) {
   </Card>;
 }
 
-function SkinProfile() {
-  const [form] = Form.useForm();
-  const [profile, setProfile] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("beautyproof-skin-profile-v1") || "null");
-      return saved?.version === 1 && Array.isArray(saved.answers) && saved.result?.type ? saved : null;
-    }
-    catch { return null; }
-  });
-  const [error, setError] = useState("");
-  const [category, setCategory] = useState("全部");
-  function save(values) {
-    const answers = observations.map((_, index) => values[`q${index}`] ?? null);
-    const result = assessSkin(answers);
-    const next = { version: 1, savedAt: new Date().toISOString(), answers, result,
-      sensitivity: values.sensitivity ?? null, recentChange: values.recentChange ?? null,
-      goals: values.goals || [], preference: values.preference || [], avoid: values.avoid?.trim() || "" };
-    try {
-      localStorage.setItem("beautyproof-skin-profile-v1", JSON.stringify(next));
-      setProfile(next);
-      setError("");
-    } catch { setError("浏览器无法保存档案，请检查本地存储设置。"); }
-  }
-  function clear() {
-    try {
-      localStorage.removeItem("beautyproof-skin-profile-v1");
-      setProfile(null);
-      form.resetFields();
-      form.setFieldsValue({ ...Object.fromEntries(observations.map((_, index) => [`q${index}`, null])),
-        sensitivity: null, recentChange: null, goals: [], preference: [], avoid: "" });
-      setError("");
-    }
-    catch { setError("浏览器无法清除档案，请检查本地存储设置。"); }
-  }
-  const initial = profile ? Object.fromEntries(profile.answers.map((answer, index) => [`q${index}`, answer])) : {};
-  const recommendations = profile ? recommend(profile, category) : [];
-  return <Card className="surface" title="肤质自测与本地档案">
-    <p>根据近期日常感受填写。档案保存在当前浏览器，结果供护肤选择参考。</p>
-    {profile && <Alert type="info" showIcon title={`自测结果：${profile.result.type}`} description={profile.result.reason} />}
-    <Form form={form} layout="vertical" initialValues={{ ...initial, sensitivity: profile?.sensitivity,
-      recentChange: profile?.recentChange, goals: profile?.goals, preference: profile?.preference, avoid: profile?.avoid }} onFinish={save}>
-      {observations.map((question, index) => <Form.Item key={index} name={`q${index}`} label={`${index + 1}. ${question}`}>
-        <Radio.Group options={[{ label: "从不", value: 0 }, { label: "偶尔", value: 1 },
-          { label: "经常", value: 2 }, { label: "总是", value: 3 }]} />
-      </Form.Item>)}
-      <Form.Item name="sensitivity" label="17. 使用护肤品后是否容易刺痛、灼热或泛红？">
-        <Radio.Group options={[{ label: "从不", value: 0 }, { label: "偶尔", value: 1 },
-          { label: "经常", value: 2 }, { label: "总是", value: 3 }]} />
-      </Form.Item>
-      <Form.Item name="recentChange" label="18. 近期肤质状态是否明显变化？">
-        <Radio.Group options={[{ label: "稳定", value: "stable" }, { label: "变化明显", value: "changed" }, { label: "不确定", value: "unknown" }]} />
-      </Form.Item>
-      <Form.Item name="goals" label="19. 你希望关注哪些方面？">
-        <Checkbox.Group options={["保湿", "清洁", "控油", "妆效", "肤色均匀"]} />
-      </Form.Item>
-      <Form.Item label="20. 你有哪些质地偏好或希望避开的成分？">
-        <Form.Item name="preference" noStyle><Checkbox.Group options={["清爽", "滋润", "乳液", "霜", "啫喱"]} /></Form.Item>
-        <Form.Item name="avoid" noStyle><Input placeholder="希望避开的成分，多个成分用逗号分隔" /></Form.Item>
-      </Form.Item>
-      {error && <Alert type="error" title={error} showIcon />}
-      <Space><Button type="primary" htmlType="submit">保存自测档案</Button><Button onClick={clear}>清除档案</Button></Space>
-    </Form>
-    {profile && <>
-      <p>刺激感：{profile.sensitivity == null ? "未填写" : profile.sensitivity >= 2 ? "较常出现，建议留意耐受情况" : "较少出现"}。</p>
-      <h3>产品资料对照</h3>
-      <p>以下为品牌发布资料中的匹配线索，请购买前核对现售版本和成分。</p>
-      <Select value={category} onChange={setCategory} options={["全部", "洁面", "面霜", "精华"].map(value => ({ value, label: value }))} />
-      {recommendations.length ? recommendations.map(product => <article className="claim" key={product.name}>
-        <strong>{product.name}</strong><p>{product.basis}</p>
-        <p>匹配线索：{profile.result.type}肤质；{(profile.goals || []).filter(goal => product.goals.includes(goal)).length
-          ? `关注目标：${profile.goals.filter(goal => product.goals.includes(goal)).join("、")}` : "关注目标暂无对应资料"}；
-          {(profile.preference || []).filter(value => product.texture.includes(value)).length
-            ? `质地偏好：${profile.preference.filter(value => product.texture.includes(value)).join("、")}` : "质地偏好暂无对应资料"}。</p>
-        <p>品牌资料 {product.sourceDate} · <a href={product.source} target="_blank" rel="noreferrer">查看来源</a></p>
-      </article>) : <p>暂未找到满足条件且资料足够的产品，请核对肤质、品类或避用成分。</p>}
-    </>}
-  </Card>;
-}
+const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
+const reviewLabels = { publicity: "宣传核验", damage: "退款破损审核" };
 
 function Workbench() {
-  const [section, setSection] = useState("audit");
   const [form] = Form.useForm();
   const [referenceForm] = Form.useForm();
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [roi, setRoi] = useState(null);
   const [packageReference, setPackageReference] = useState(null);
-  const [samples, setSamples] = useState([]);
   const [references, setReferences] = useState([]);
   const [referenceOpen, setReferenceOpen] = useState(false);
   const [referenceError, setReferenceError] = useState("");
   const [referenceSaving, setReferenceSaving] = useState(false);
   const [deepseekReady, setDeepseekReady] = useState(false);
-  const [report, setReport] = useState(null);
+  const [useModel, setUseModel] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [review, setReview] = useState(null);
   const [steps, setSteps] = useState([]);
-  const [busy, setBusy] = useState("");
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const previousJob = useRef(null);
   const request = useRef(null);
+  const logRef = useRef(null);
   const reportRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    readJson("/api/samples", { signal: controller.signal }).then(data => setSamples(data.samples || [])).catch(() => {});
-    readJson("/api/reference-catalog", { signal: controller.signal }).then(data => setReferences(data.references || [])).catch(() => {});
-    readJson("/api/config", { signal: controller.signal }).then(data => setDeepseekReady(data.deepseek_configured)).catch(() => {});
+    readJson("/api/reference-catalog", { signal: controller.signal })
+      .then(data => setReferences(data.references || [])).catch(() => {});
+    readJson("/api/config", { signal: controller.signal })
+      .then(data => setDeepseekReady(data.deepseek_configured)).catch(() => {});
     return () => {
       controller.abort();
       request.current?.abort();
     };
   }, []);
 
-  async function run(task, operation) {
-    if (request.current) return;
-    const controller = new AbortController();
-    request.current = controller;
-    setError("");
-    setReport(null);
-    setSteps([]);
-    setBusy(task);
-    try {
-      setReport({ data: await operation(controller.signal), isSample: task === "sample" });
-      if (window.matchMedia("(max-width: 800px)").matches) {
-        reportRef.current?.scrollIntoView({ block: "start" });
-      }
-    } catch (err) {
-      if (!controller.signal.aborted) setError(err.message);
-    } finally {
-      request.current = null;
-      if (!controller.signal.aborted) setBusy("");
+  useEffect(() => {
+    if (!file) {
+      setPreview("");
+      return;
     }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  useEffect(() => {
+    const log = logRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
+  }, [messages, busy]);
+
+  function attach(picked) {
+    if (picked && (!/\.(png|jpe?g)$/i.test(picked.name) || picked.size >= MAX_IMAGE_BYTES)) {
+      setError("请选择小于 32 MB 的 JPG 或 PNG 图片。");
+      return;
+    }
+    setFile(picked);
+    setRoi(null);
+    if (picked !== file) setReview(null);
+    if (file && picked !== file) {
+      setPackageReference(null);
+      form.resetFields(["copy", "product", "market", "referenceIds", "referenceSource", "referenceProduct", "referenceExcerpt"]);
+    }
+    setError("");
   }
 
   async function addReference(values) {
@@ -473,14 +406,21 @@ function Workbench() {
   }
 
   function submit(values) {
-    const text = values.text?.trim();
-    const source = values.referenceSource?.trim(), excerpt = values.referenceExcerpt?.trim();
-    if (!text && !file) {
-      setError("请上传图片或填写正文。");
+    if (request.current) return;
+    const message = values.message?.trim();
+    const copy = values.copy?.trim();
+    const source = values.referenceSource?.trim();
+    const excerpt = values.referenceExcerpt?.trim();
+    if (!message && !file && !copy) {
+      setError("请填写审核需求或附上图片。");
       return;
     }
     if (packageReference && !file) {
-      setError("使用包装参考图时，请同时上传宣传图片。");
+      setError("请同时附上要核验的宣传图片。");
+      return;
+    }
+    if ((file?.size || 0) + (packageReference?.size || 0) >= MAX_IMAGE_BYTES) {
+      setError("两张图片合计须小于 32 MB。");
       return;
     }
     if (Boolean(source) !== Boolean(excerpt)) {
@@ -488,123 +428,183 @@ function Workbench() {
       return;
     }
     const data = new FormData();
+    if (message) data.set("message", message);
+    if (copy) data.set("copy", copy);
     if (file) data.set("file", file);
     if (packageReference) data.set("reference_image", packageReference);
-    if (text) data.set("text", text);
+    if (roi) data.set("roi", JSON.stringify(roi));
     if (values.product?.trim()) data.set("product", values.product.trim());
     if (values.market?.trim()) data.set("market", values.market.trim());
     if (source) data.set("references", JSON.stringify([{ source, excerpt, product: values.referenceProduct?.trim() || null }]));
     if (values.referenceIds?.length) data.set("reference_ids", JSON.stringify(values.referenceIds));
     if (values.fast) data.set("fast", "1");
-    if (values.llm) data.set("llm", "1");
-    run("analysis", async signal => {
-      const { job_id } = await readJson("/api/analyze", { method: "POST", body: data, signal });
-      const deadline = Date.now() + 10 * 60 * 1000;
-      while (!signal.aborted && Date.now() < deadline) {
-        const job = await readJson("/api/job/" + encodeURIComponent(job_id), { signal });
-        setSteps(job.steps || []);
-        if (job.status === "done") return job.result;
-        if (job.status === "error" || job.status === "not_found") throw new Error(job.error || "本次核验未完成。");
-        await new Promise(resolve => setTimeout(resolve, 850));
+    data.set("llm", deepseekReady && useModel ? "1" : "0");
+    if (previousJob.current) data.set("previous_job_id", previousJob.current);
+    runTurn(data, { kind: "user", text: message || copy, attachment: file?.name });
+  }
+
+  async function runTurn(data, entry) {
+    const controller = new AbortController();
+    request.current = controller;
+    const { signal } = controller;
+    setBusy(true);
+    setError("");
+    setSteps([]);
+    try {
+      const { job_id: jobId } = await readJson("/api/agent/turn", { method: "POST", body: data, signal });
+      setMessages(previous => [...previous, entry]);
+      form.setFieldValue("message", "");
+      while (!signal.aborted) {
+        const turn = await readJson("/api/job/" + encodeURIComponent(jobId), { signal });
+        setSteps(turn.steps || []);
+        if (turn.status === "done") {
+          const result = turn.result;
+          previousJob.current = jobId;
+          setMessages(previous => [...previous, { kind: "agent", text: result.message, evidence: result.evidence }]);
+          if (result.type === "review") {
+            setReview({ ...result, id: jobId });
+            if (window.matchMedia("(max-width: 800px)").matches) {
+              requestAnimationFrame(() => reportRef.current?.scrollIntoView({ block: "start" }));
+            }
+          }
+          return;
+        }
+        if (turn.status === "error") throw new Error(turn.error || "本次审核未完成，请重新发送。");
+        await new Promise(resolve => setTimeout(resolve, 750));
       }
-      throw new Error("等待超时，请重新提交。");
-    });
+    } catch (err) {
+      if (!signal.aborted) {
+        if (err.status === 409) previousJob.current = null;
+        setError(err.message);
+      }
+    } finally {
+      request.current = null;
+      if (!signal.aborted) setBusy(false);
+    }
   }
 
   return <>
     <header className="topbar"><div className="page-width topbar-inner">
-      <div className="brand"><div className="brand-mark"><SafetyCertificateOutlined /></div>
-        <span>BeautyProof</span>
-      </div>
-      <Space wrap><Button type={section === "audit" ? "primary" : "text"} onClick={() => setSection("audit")}>内容审核</Button>
-        <Button type={section === "skin" ? "primary" : "text"} onClick={() => setSection("skin")}>肤质自测</Button>
-        <Button type={section === "damage" ? "primary" : "text"} onClick={() => setSection("damage")}>退款破损审核</Button></Space>
+      <div className="brand"><span className="brand-mark" aria-hidden="true" />BeautyProof</div>
+      <span className="workspace-label"><LockOutlined /> 本地工作台</span>
     </div></header>
     <main className="page-width">
-      {section === "skin" ? <SkinProfile /> : section === "damage" ? <DamageReview readJson={readJson} /> : <>
       <div className="intro">
-        <span className="eyebrow"><span /> 审核工作台</span>
-        <h1>美妆宣传核验台</h1>
-        <p>核对宣传图片、文案和功效依据，把需要人工复核的地方标出来。</p>
+        <h1>美妆审核工作台</h1>
+        <p>描述要核验的内容，按需附图。助手会选择对应的检查，并标出需要人工复核的依据。</p>
       </div>
       <div className="workbench-grid">
-        <Card className="surface intake-surface" title="送审内容" extra={<Button type="link" size="small" disabled={!!busy} onClick={() => {
-          form.setFieldValue("text", "【青蓝精华】连续使用 7 天，水分提升 20%。");
-          setError("");
-        }}>试填示例正文</Button>}>
-          <Form form={form} name="workbench" layout="vertical" disabled={!!busy} onFinish={submit} initialValues={{ llm: true }}
-            requiredMark={false}>
-            {!!samples.length && <Form.Item label="已有样本">
-              <Select placeholder="选择样本查看预置报告" options={samples.map(sample => ({
-                value: sample.stem, label: sample.name + (sample.risk_zh ? " · " + sample.risk_zh : ""),
-              }))} onChange={stem => run("sample", signal => readJson("/api/sample/" + encodeURIComponent(stem), { signal }))} />
-            </Form.Item>}
-            <Form.Item label="宣传图片">
-              <Upload.Dragger name="file" accept=".png,.jpg,.jpeg" multiple={false} maxCount={1}
-                fileList={file ? [file] : []} onRemove={() => { setFile(null); return true; }}
-                beforeUpload={picked => {
-                  if (!/\.(png|jpe?g)$/i.test(picked.name) || picked.size > 32 * 1024 * 1024) {
-                    setError("请选择不超过 32 MB 的 PNG 或 JPG 图片。");
-                    return Upload.LIST_IGNORE;
-                  }
-                  setFile(picked);
-                  setError("");
-                  return false;
+        <section className="conversation" aria-labelledby="conversation-heading">
+          <div className="panel-header"><h2 id="conversation-heading">审核对话</h2></div>
+          <div ref={logRef} className="conversation-log" role="log" aria-label="审核消息">
+            {!messages.length && <div className="welcome">
+              <h3>你想核验什么？</h3>
+              <p>可以贴一段宣传文案，或附上一张售后图片。</p>
+              <div className="conversation-examples">
+                <button disabled={busy} type="button" onClick={() => form.setFieldValue("message", "核验宣传文案：这款精华连续使用 7 天，水分提升 20%。")}>核验这段宣传文案</button>
+                <button disabled={busy} type="button" onClick={() => form.setFieldValue("message", "请审核退款申请中的商品破损图片。")}>检查退款申请里的破损图</button>
+              </div>
+            </div>}
+            {messages.map((entry, index) => <article key={index} className={"message message-" + entry.kind}>
+              <h3>{entry.kind === "user" ? "你" : "审核助手"}</h3>
+              {entry.text && <p>{entry.text}</p>}
+              {entry.attachment && <div className="message-file"><PaperClipOutlined /> {entry.attachment}</div>}
+              {!!entry.evidence?.length && <ul className="reply-evidence">
+                {entry.evidence.map((item, i) => <li key={i}>
+                  <strong>{item.label}</strong>
+                  {item.quote && <blockquote>{item.quote}</blockquote>}
+                  {item.detail && <p>{item.detail}</p>}
+                </li>)}
+              </ul>}
+            </article>)}
+          </div>
+          <Form form={form} name="review-turn" layout="vertical" disabled={busy} onFinish={submit} requiredMark={false}>
+            <div className="composer" onDragOver={event => {
+              if (!busy && event.dataTransfer.types.includes("Files")) event.preventDefault();
+            }} onDrop={event => {
+              if (!event.dataTransfer.files.length) return;
+              event.preventDefault();
+              if (!busy) attach(event.dataTransfer.files[0]);
+            }}>
+              <Form.Item name="message" noStyle>
+                <Input.TextArea rows={3} maxLength={12000} aria-label="审核需求" variant="borderless"
+                  placeholder={messages.length ? "追问报告中的依据，或补充材料…" : "例如，帮我核验这段宣传里的功效宣称…"} />
+              </Form.Item>
+              {file && <div className="attachment">
+                {preview && <img src={preview} alt="" />}
+                <span title={file.name}>{file.name}</span>
+                <Button type="text" size="small" aria-label="移除附图" icon={<CloseOutlined />} onClick={() => attach(null)} />
+              </div>}
+              <div className="composer-actions">
+                <Upload accept=".png,.jpg,.jpeg" showUploadList={false} beforeUpload={picked => {
+                  attach(picked);
+                  return Upload.LIST_IGNORE;
                 }}>
-                <span className="upload-icon"><UploadOutlined /></span>
-                <strong>点击或拖入图片</strong>
-                <small>PNG / JPG · 最大 32 MB</small>
-              </Upload.Dragger>
-            </Form.Item>
-            <Form.Item name="text" label="宣传正文">
-              <Input.TextArea rows={4} placeholder="粘贴种草正文、产品功效宣称或图片配文…" />
-            </Form.Item>
-            <Collapse className="options" items={[{
-              key: "context", label: "补充产品与功效依据", extra: <span className="muted">选填</span>,
-              children: <>
-                <Form.Item name="product" label="宣传产品"><Input list="known-products" placeholder="输入完整产品名，也可从资料库选择" /></Form.Item>
+                  <Button type="text" icon={<PaperClipOutlined />}>附图</Button>
+                </Upload>
+                <Button type="primary" htmlType="submit" loading={busy} icon={<ArrowRightOutlined />} iconPlacement="end">发送</Button>
+              </div>
+            </div>
+            {error && <Alert className="form-error" type="error" showIcon title={error} />}
+            <details className="turn-options">
+              <summary>补充审核材料</summary>
+              <div className="options-content">
+                {file && <DamageRegion key={preview} preview={preview} roi={roi} onChange={setRoi} busy={busy} />}
+                <Form.Item name="copy" label="宣传正文"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
+                <div className="option-fields">
+                  <Form.Item name="product" label="宣传产品"><Input list="known-products" placeholder="完整产品名" /></Form.Item>
+                  <Form.Item name="market" label="产品市场"><Input placeholder="如中国大陆" /></Form.Item>
+                </div>
                 <datalist id="known-products">{[...new Set(references.map(ref => ref.product))].map(name => <option key={name} value={name} />)}</datalist>
-                <Form.Item name="market" label="产品市场"><Input placeholder="与资料中的市场名称一致，例如中国大陆" /></Form.Item>
-                <Form.Item label="包装参考图（选填）" extra="上传平面包装或标签参考图，仅用于本地定位相似图案，不能确认产品或功效。两张图片总大小不超过 32 MB。">
-                  <Upload accept=".png,.jpg,.jpeg" multiple={false} maxCount={1}
-                    fileList={packageReference ? [packageReference] : []} onRemove={() => { setPackageReference(null); return true; }}
-                    beforeUpload={picked => {
-                      if (!/\.(png|jpe?g)$/i.test(picked.name) || picked.size > 32 * 1024 * 1024) {
-                        setError("请选择不超过 32 MB 的 PNG 或 JPG 包装参考图。");
+                <Form.Item label="包装参考图" extra="仅用于定位宣传图片中的相似包装，两张图片合计须小于 32 MB。">
+                  <Upload accept=".png,.jpg,.jpeg" maxCount={1} fileList={packageReference ? [packageReference] : []}
+                    onRemove={() => { setPackageReference(null); return true; }} beforeUpload={picked => {
+                      if (!/\.(png|jpe?g)$/i.test(picked.name) || picked.size >= MAX_IMAGE_BYTES) {
+                        setError("请选择小于 32 MB 的 JPG 或 PNG 包装参考图。");
                         return Upload.LIST_IGNORE;
                       }
-                      setPackageReference(picked); setError(""); return false;
+                      setPackageReference(picked);
+                      setError("");
+                      return false;
                     }}><Button icon={<UploadOutlined />}>选择参考图</Button></Upload>
                 </Form.Item>
-                <p className="muted">填写与知识库一致的完整产品名及市场；语义审核只引用同一产品、市场的资料。</p>
-                <Button onClick={() => { setReferenceError(""); setReferenceOpen(true); }}>添加已核验资料</Button>
-                {!!references.length && <Form.Item name="referenceIds" label="选择已核验资料">
-                  <Select mode="multiple" options={references.map(ref => ({ value: ref.id, label: `${ref.source} · ${ref.product} · ${ref.locator}` }))} />
+                {!!references.length && <Form.Item name="referenceIds" label="已核验资料">
+                  <Select mode="multiple" options={references.map(ref => ({
+                    value: ref.id, label: [ref.source, ref.product, ref.locator].join(" · "),
+                  }))} />
                 </Form.Item>}
-                <Form.Item name="referenceSource" label="依据名称"><Input placeholder="例如试验记录或原始报告名称" /></Form.Item>
-                <Form.Item name="referenceProduct" label="依据对应产品"><Input placeholder="按依据原文填写" /></Form.Item>
+                <Button type="link" className="add-reference" onClick={() => { setReferenceError(""); setReferenceOpen(true); }}>添加已核验资料</Button>
+                <div className="option-fields">
+                  <Form.Item name="referenceSource" label="待核验依据名称"><Input /></Form.Item>
+                  <Form.Item name="referenceProduct" label="依据对应产品"><Input /></Form.Item>
+                </div>
                 <Form.Item name="referenceExcerpt" label="待核验摘录"><Input.TextArea rows={3} /></Form.Item>
-              </>,
-            }]} />
-            <div className="form-options">
-              <Form.Item name="fast" valuePropName="checked" noStyle><Checkbox title="跳过耗时的图像检测模型">快速预览</Checkbox></Form.Item>
-              <Form.Item name="llm" valuePropName="checked" noStyle><Checkbox title="将正文、OCR 文字及匹配资料摘录发送给 DeepSeek 审核">DeepSeek 文字审核</Checkbox></Form.Item>
+                <Form.Item name="fast" valuePropName="checked" noStyle>
+                  <Checkbox>快速预览（跳过生成倾向和局部异常模型）</Checkbox>
+                </Form.Item>
+              </div>
+            </details>
+            <div className="model-preference">
+              {deepseekReady ? <>
+                <Checkbox checked={useModel} onChange={event => setUseModel(event.target.checked)}>DeepSeek 辅助</Checkbox>
+                <p>{useModel ? "审核消息、识别出的图片文字和必要资料可发送至 DeepSeek。图片始终在本地处理。" : "当前使用本地规则和检测工具。"}</p>
+              </> : <p>当前使用本地规则和检测工具。</p>}
             </div>
-            {!deepseekReady && <p className="muted">尚未配置 DeepSeek 密钥，当前使用规则审核文字。</p>}
-            {deepseekReady && <p className="muted">启用后会向 DeepSeek 发送正文、图片中识别的文字，以及匹配资料的摘录和条件；图片留在本地。</p>}
-            {error && <Alert className="form-error" title={error} type="error" showIcon />}
-            <Button type="primary" size="large" block htmlType="submit" loading={busy === "analysis"}
-              icon={<ArrowRightOutlined />} iconPlacement="end">开始核验</Button>
-            <p className="input-note">图片和正文至少提供一项。</p>
           </Form>
-        </Card>
-        <section className="report-region" ref={reportRef} aria-label="核验结果">
-          {busy ? <RunningReport steps={steps} /> : report ? <FinishedReport key={report.data.run_id || report.data.image?.stem}
-            result={report.data} isSample={report.isSample} /> : <EmptyReport />}
+        </section>
+        <section className="report-region" ref={reportRef} aria-labelledby="report-heading">
+          <div className="panel-header report-panel-header"><h2 id="report-heading">审核报告</h2></div>
+          {busy && <RunningReport steps={steps} />}
+          {review ? <div className="review-results" key={review.id}>
+            {review.reports.publicity && <FinishedReport result={review.reports.publicity} />}
+            {review.reports.damage && <DamageReport result={review.reports.damage} />}
+            {Object.entries(review.errors).map(([key, value]) => <Alert key={key} type="error" showIcon
+              title={reviewLabels[key]} description={value} />)}
+          </div> : !busy && <EmptyReport />}
         </section>
       </div>
-      </>}
     </main>
+
     <Modal open={referenceOpen} title="添加已核验资料" footer={null} onCancel={() => setReferenceOpen(false)}>
       <p>请先核对原始文件、产品规格和适用条件，记录来源以便回查。</p>
       <p>自动支持功效宣称需要明确一致的市场和产品版本；资料版本指报告本身的版本。</p>
