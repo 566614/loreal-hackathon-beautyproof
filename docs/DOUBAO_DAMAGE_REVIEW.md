@@ -18,6 +18,24 @@
 
 下文 v4 复跑命令加 `--low-false-positives`，把 `--output` 改为 `outputs/runs/doubao-damage-accuracy/low-fp/release`，即可生成 v5 权重和逐图结果。
 
+## 准确率与误报率验收
+
+准确率按全部送审图计算。误报率以实拍为分母，豆包检出率以豆包破损图为分母。对每种上传形态分别用固定阈值检查准确率 `> 95%`、误报率 `< 5%`。没有给出判定的图进入准确率分母，验收要求每张图都有判定。55 张豆包图加 55 个完好实拍对照时，误报至多 2 个，误报和漏报合计至多 5 个。
+
+```powershell
+python tools/evaluate_doubao_target.py outputs/runs/doubao-damage-accuracy/low-fp/release/predictions.csv --method v5 --output outputs/runs/doubao-damage-target/v5-target.json
+```
+
+本批数据里所有实拍都来自同款手机的原文件，豆包图经过不同导出流程。来源取证实验同时检查原文件、Q60、Q45，以及两类图统一裁到 288×354 并统一 JPEG Q55 的条件。验收还需要独立采集、单独标注的真实破损实拍和豆包破损图。图像导出、商品、采集会话应按组留出。
+
+### 教师模型与蒸馏实验
+
+本地跑了 Community Forensics、它的低画质微调版、SAFE 和 NPR。原始分类头迁移到破损局部编辑的效果有限。Community Forensics 冻结骨干、每折重训分类头并约束同图多种上传形态的分数差异后，原文件、Q60、Q45、统一编码的豆包检出分别为 39、40、29、36 张，完好实拍误报分别为 1、0、0、2 个。每种形态各有 55 个正例和 55 个反例，阈值从其他商品组校准。 [Community Forensics](https://github.com/JeongsooP/Community-Forensics) · [SAFE](https://github.com/Ouxiang-Li/SAFE) · [NPR](https://github.com/chuangchuangtan/NPR-DeepfakeDetection)
+
+让教师只用 Q60 形态训练和校准时，商品留出结果为检出 52/55、误报 2/55、准确率 95.5%。按两个采集批次分别留出时，Q60 准确率分别为 96.6% 和 65.4%，误报率分别为 6.9% 和 26.9%。统一编码的商品留出准确率为 73.6%，说明教师的表现仍受批次与导出条件影响。
+
+训练了 16,297 参数的卷积学生，学习教师分数和中间特征。统一编码留出集上，它的 AUROC 从纯监督时的 0.797 升到 0.816，固定阈值下检出 9 张，误报 1 个，准确率为 57.3%。用 Q60 训练的第二个学生，蒸馏后豆包检出从 16/55 增到 23/55，误报从 5/55 降到 2/55，准确率为 69.1%。还测试了使用少量教师卷积投影的学生和使用像素统计的学生。实验脚本与逐图结果在 `outputs/runs/doubao-damage-target/`。
+
 ## v4 准确率对照
 
 v4 优先提高平衡准确率，也就是对豆包破损检出率与完好实拍正确放过率取平均。55 对图按 31 个商品组划分，完整保留过去的五个留出折。阈值只在各训练折的内层开发组校准。原文件、外部 JPEG 质量 60 和缩略图 JPEG 质量 45 均经过与线上一致的推理预处理。

@@ -181,3 +181,26 @@ def test_hard_negative_training_reduces_score_for_high_scoring_real_photo():
     real, generated = pairs[4].views["matched"]["whole"]
     assert doubao_damage.predict_vector(weighted, real) < doubao_damage.predict_vector(base, real)
     assert doubao_damage.predict_vector(weighted, generated) > 0.5
+
+
+def test_accuracy_target_uses_strict_limits_and_counts_undecided_uploads():
+    from evaluate_doubao_target import target_metrics
+
+    def prediction(label, score):
+        return {"label": label, "score": score, "threshold": 0.5}
+
+    # The first run has precisely one false alert per twenty real photos.
+    cohort = [prediction(0, 0.2)] * 19 + [prediction(0, 0.8)] + [prediction(1, 0.8)] * 40
+    result = target_metrics(cohort)
+    assert result["accuracy"] > 0.95 and result["false_positive_rate"] == 0.05 and not result["passes"]
+
+    cohort[19] = prediction(0, 0.2)
+    cohort[20:23] = [prediction(1, 0.2)] * 3
+    result = target_metrics(cohort)
+    assert result["accuracy"] == 0.95 and result["false_positive_rate"] == 0 and not result["passes"]
+
+    cohort[20] = prediction(1, 0.8)
+    assert target_metrics(cohort)["passes"]
+    cohort[0] = prediction(0, None)
+    result = target_metrics(cohort)
+    assert result["undecided"] == 1 and not result["passes"]
