@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Alert, Button, Card, Checkbox, Collapse, ConfigProvider, Dropdown, Form, Image, Input, Modal,
-  Select, Space, Tabs, Tag, Upload,
+  Alert, Avatar, Button, Card, Checkbox, Collapse, ConfigProvider, Drawer, Dropdown, Form, Image, Input, Modal,
+  Select, Spin, Tabs, Tag, Tooltip, Upload,
 } from "antd";
 import {
-  ArrowRightOutlined, CloseOutlined, CopyOutlined, DownloadOutlined, FileSearchOutlined,
-  LockOutlined, PaperClipOutlined, PictureOutlined, UploadOutlined,
+  AppstoreOutlined, ArrowLeftOutlined, ArrowRightOutlined, ArrowUpOutlined, AuditOutlined,
+  CloseOutlined, CopyOutlined, DownloadOutlined, FileSearchOutlined, MessageOutlined, PaperClipOutlined,
+  PictureOutlined, PlusOutlined, ScanOutlined, SwapOutlined, UploadOutlined, UserOutlined,
 } from "@ant-design/icons";
 import zhCN from "antd/locale/zh_CN";
 import "antd/dist/reset.css";
@@ -33,9 +34,9 @@ const claimColors = { "有证据支持": "success", "存在冲突": "error", "�
 const referenceTypes = { efficacy_study: "产品功效试验", product_label: "产品标签", brand_claim: "品牌宣称", method: "技术方法" };
 const theme = {
   token: {
-    colorPrimary: "#b7103a", colorLink: "#a30f34", colorText: "#211e1f", colorTextSecondary: "#61585b",
-    colorBorder: "#dcd4d7", colorBgLayout: "#f8f6f6", borderRadius: 8,
-    fontFamily: 'Inter, "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
+    colorPrimary: "#8e343d", colorLink: "#8a3039", colorText: "#261d20", colorTextSecondary: "#65595c",
+    colorBorder: "#e3d9d6", colorBgLayout: "#f5efeb", borderRadius: 10,
+    fontFamily: 'Geist, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif',
     controlHeight: 40,
     motionEaseOutBack: "cubic-bezier(0.22, 1, 0.36, 1)",
     motionEaseInBack: "cubic-bezier(0.64, 0, 0.78, 0)",
@@ -60,12 +61,8 @@ function AuditStatus({ value }) {
 
 function EmptyReport() {
   return <div className="empty-report">
-    <p className="empty-status">等待送审</p>
-    <p>送审后，可以在这里查看结论和对应证据。</p>
-    <ul className="review-types">
-      <li><FileSearchOutlined /><div><strong>宣传核验</strong><span>宣称原句、图片线索和功效资料</span></div></li>
-      <li><PictureOutlined /><div><strong>退款破损审核</strong><span>整图线索和选区的候选边缘</span></div></li>
-    </ul>
+    <FileSearchOutlined aria-hidden="true" />
+    <p>送审后，可在这里查看结论和对应证据。</p>
   </div>;
 }
 
@@ -324,7 +321,33 @@ function FinishedReport({ result }) {
 const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
 const reviewLabels = { publicity: "宣传核验", damage: "退款破损审核" };
 
-function Workbench() {
+const workspaceCopy = {
+  consumer: {
+    roleName: "消费者", title: "美妆助手", greeting: "今天想核对什么？",
+    lead: "把看到的美妆宣传或售后照片发给我，一起看看有哪些依据。",
+    placeholder: "问问功效宣传，或附一张售后图片…",
+    prompts: [
+      { title: "看看功效宣传", detail: "核对说法和出处", icon: FileSearchOutlined,
+        text: "请核验宣传文案：这款精华连续使用 7 天，水分提升 20%。" },
+      { title: "检查售后图片", detail: "找出可复核的图片线索", icon: PictureOutlined,
+        text: "请检查售后破损图片，看看有哪些需要我复核的地方。" },
+    ],
+  },
+  reviewer: {
+    roleName: "企业审核人员", title: "企业审核助手", greeting: "今天要复核哪份材料？",
+    lead: "发来宣传文案、商品图片或售后凭证，让助手整理审核依据。",
+    placeholder: "输入审核需求，或拖入一张送审图片…",
+    prompts: [
+      { title: "核验宣传宣称", detail: "找出文案冲突和缺失依据", icon: FileSearchOutlined,
+        text: "核验宣传文案：【示例精华】2025版14天水分提升20%。【示例精华】2025版14天水分提升40%。" },
+      { title: "审核退款破损", detail: "核对整图和可疑区域", icon: PictureOutlined,
+        text: "请审核退款申请中的商品破损图片，并指出值得复核的证据。" },
+    ],
+  },
+};
+
+function Workbench({ role, onReset }) {
+  const workspace = workspaceCopy[role];
   const [form] = Form.useForm();
   const [referenceForm] = Form.useForm();
   const [file, setFile] = useState(null);
@@ -342,10 +365,20 @@ function Workbench() {
   const [steps, setSteps] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [materialsOpen, setMaterialsOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 1100px)").matches);
   const previousJob = useRef(null);
   const request = useRef(null);
   const logRef = useRef(null);
-  const reportRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 1100px)");
+    const resize = () => setCompact(query.matches);
+    query.addEventListener("change", resize);
+    return () => query.removeEventListener("change", resize);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -462,12 +495,11 @@ function Workbench() {
         if (turn.status === "done") {
           const result = turn.result;
           previousJob.current = jobId;
-          setMessages(previous => [...previous, { kind: "agent", text: result.message, evidence: result.evidence }]);
+          setMessages(previous => [...previous, { kind: "agent", text: result.message, evidence: result.evidence,
+            reviewId: result.type === "review" ? jobId : null }]);
           if (result.type === "review") {
             setReview({ ...result, id: jobId });
-            if (window.matchMedia("(max-width: 800px)").matches) {
-              requestAnimationFrame(() => reportRef.current?.scrollIntoView({ block: "start" }));
-            }
+            if (!compact) setReportOpen(true);
           }
           return;
         }
@@ -485,42 +517,94 @@ function Workbench() {
     }
   }
 
-  return <>
-    <header className="topbar"><div className="page-width topbar-inner">
-      <div className="brand"><span className="brand-mark" aria-hidden="true" />BeautyProof</div>
-      <span className="workspace-label"><LockOutlined /> 本地工作台</span>
-    </div></header>
-    <main className="page-width">
-      <div className="intro">
-        <h1>美妆审核工作台</h1>
-        <p>描述要核验的内容，按需附图。助手会选择对应的检查，并标出需要人工复核的依据。</p>
+  const RoleIcon = role === "consumer" ? UserOutlined : AuditOutlined;
+  const threadTitle = messages.find(entry => entry.kind === "user")?.text || "新的审核对话";
+  const reportContent = <>
+    {busy && <RunningReport steps={steps} />}
+    {review ? <div className="review-results" key={review.id}>
+      {review.reports.publicity && <FinishedReport result={review.reports.publicity} />}
+      {review.reports.damage && <DamageReport result={review.reports.damage} />}
+      {Object.entries(review.errors).map(([key, value]) => <Alert key={key} type="error" showIcon
+        title={reviewLabels[key]} description={value} />)}
+    </div> : !busy && <EmptyReport />}
+  </>;
+
+  return <div className="desk">
+    <aside className="desk-sidebar" aria-label="会话导航">
+      <a className="desk-brand" href="#"><ScanOutlined aria-hidden="true" /> BeautyProof</a>
+      <Button className="desk-new" block icon={<PlusOutlined aria-hidden="true" />} onClick={onReset} disabled={busy}>新建对话</Button>
+      <div className="desk-session">
+        <small>当前会话</small>
+        <div className="desk-thread"><MessageOutlined aria-hidden="true" /><span title={threadTitle}>{threadTitle}</span></div>
       </div>
-      <div className="workbench-grid">
-        <section className="conversation" aria-labelledby="conversation-heading">
-          <div className="panel-header"><h2 id="conversation-heading">审核对话</h2></div>
+      <div className="desk-role">
+        <Avatar shape="square" size={36} icon={<RoleIcon />} />
+        <strong>{workspace.roleName}</strong>
+        <Tooltip title="切换身份"><Button type="text" href="#" className="desk-switch" aria-label="切换身份"
+          icon={<SwapOutlined aria-hidden="true" />} /></Tooltip>
+      </div>
+    </aside>
+
+    <main className="desk-main">
+      <header className="desk-topbar">
+        <div className="desk-top-title">
+          <Button className="desk-mobile-home" type="text" size="small" href="#" aria-label="返回首页"
+            icon={<ArrowLeftOutlined aria-hidden="true" />} />
+          <span>{workspace.title}</span>
+        </div>
+        <div className="desk-top-actions">
+          <Button className="desk-mobile-new" type="text" size="small" onClick={onReset} disabled={busy}
+            aria-label="新建对话" icon={<PlusOutlined aria-hidden="true" />} />
+          {(review || busy) && <Button size="small" type={reportOpen ? "default" : "text"} icon={<FileSearchOutlined aria-hidden="true" />}
+            aria-expanded={reportOpen} onClick={() => setReportOpen(value => !value)}>审核报告</Button>}
+        </div>
+      </header>
+
+      <div className={"desk-body" + (reportOpen && !compact ? " desk-with-report" : "")}>
+        <section className={"conversation" + (messages.length ? " conversation-active" : "")} aria-label="审核对话">
           <div ref={logRef} className="conversation-log" role="log" aria-label="审核消息">
             {!messages.length && <div className="welcome">
-              <h3>你想核验什么？</h3>
-              <p>可以贴一段宣传文案，或附上一张售后图片。</p>
+              <div className="welcome-insignia"><ScanOutlined aria-hidden="true" /></div>
+              <h1>{workspace.greeting}</h1>
+              <p>{workspace.lead}</p>
               <div className="conversation-examples">
-                <button disabled={busy} type="button" onClick={() => form.setFieldValue("message", "核验宣传文案：这款精华连续使用 7 天，水分提升 20%。")}>核验这段宣传文案</button>
-                <button disabled={busy} type="button" onClick={() => form.setFieldValue("message", "请审核退款申请中的商品破损图片。")}>检查退款申请里的破损图</button>
+                {workspace.prompts.map(({ title, detail, text, icon: Icon }) => <Button disabled={busy}
+                  key={title} className="example-action" onClick={() => {
+                    form.setFieldValue("message", text);
+                    inputRef.current?.focus();
+                  }}>
+                  <span className="example-icon"><Icon aria-hidden="true" /></span>
+                  <span className="example-copy"><strong>{title}</strong><small>{detail}</small></span>
+                  <ArrowRightOutlined className="example-arrow" aria-hidden="true" />
+                </Button>)}
               </div>
             </div>}
-            {messages.map((entry, index) => <article key={index} className={"message message-" + entry.kind}>
-              <h3>{entry.kind === "user" ? "你" : "审核助手"}</h3>
-              {entry.text && <p>{entry.text}</p>}
-              {entry.attachment && <div className="message-file"><PaperClipOutlined /> {entry.attachment}</div>}
-              {!!entry.evidence?.length && <ul className="reply-evidence">
-                {entry.evidence.map((item, i) => <li key={i}>
-                  <strong>{item.label}</strong>
-                  {item.quote && <blockquote>{item.quote}</blockquote>}
-                  {item.detail && <p>{item.detail}</p>}
-                </li>)}
-              </ul>}
-            </article>)}
+            {!!messages.length && <div className="message-stream">
+              {messages.map((entry, index) => <article key={index} className={"message message-" + entry.kind}>
+                {entry.kind === "agent" && <Avatar className="message-avatar" shape="square" size={29} icon={<ScanOutlined />} />}
+                <div className="message-content">
+                  <h2>{entry.kind === "user" ? "你" : workspace.title}</h2>
+                  {entry.text && <p>{entry.text}</p>}
+                  {entry.attachment && <div className="message-file"><PaperClipOutlined aria-hidden="true" /> {entry.attachment}</div>}
+                  {!!entry.evidence?.length && <ul className="reply-evidence">
+                    {entry.evidence.map((item, i) => <li key={i}>
+                      <strong>{item.label}</strong>
+                      {item.quote && <blockquote>{item.quote}</blockquote>}
+                      {item.detail && <p>{item.detail}</p>}
+                    </li>)}
+                  </ul>}
+                  {entry.reviewId && entry.reviewId === review?.id && <Button className="message-report" size="small"
+                    icon={<FileSearchOutlined aria-hidden="true" />} onClick={() => setReportOpen(true)}>查看报告</Button>}
+                </div>
+              </article>)}
+              {busy && <div className="message-pending" role="status">
+                <Spin size="small" /> 审核助手正在处理…
+              </div>}
+            </div>}
           </div>
-          <Form form={form} name="review-turn" layout="vertical" disabled={busy} onFinish={submit} requiredMark={false}>
+
+          <Form className="desk-form" form={form} name="review-turn" layout="vertical" disabled={busy}
+            onFinish={submit} requiredMark={false}>
             <div className="composer" onDragOver={event => {
               if (!busy && event.dataTransfer.types.includes("Files")) event.preventDefault();
             }} onDrop={event => {
@@ -529,28 +613,42 @@ function Workbench() {
               if (!busy) attach(event.dataTransfer.files[0]);
             }}>
               <Form.Item name="message" noStyle>
-                <Input.TextArea rows={3} maxLength={12000} aria-label="审核需求" variant="borderless"
-                  placeholder={messages.length ? "追问报告中的依据，或补充材料…" : "例如，帮我核验这段宣传里的功效宣称…"} />
+                <Input.TextArea ref={inputRef} autoSize={{ minRows: 2, maxRows: 6 }} maxLength={12000}
+                  aria-label="审核需求" variant="borderless"
+                  placeholder={messages.length ? "追问报告中的依据，或补充材料…" : workspace.placeholder}
+                  onKeyDown={event => {
+                    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing &&
+                      event.nativeEvent.keyCode !== 229) {
+                      event.preventDefault();
+                      form.submit();
+                    }
+                  }} />
               </Form.Item>
               {file && <div className="attachment">
                 {preview && <img src={preview} alt="" />}
                 <span title={file.name}>{file.name}</span>
-                <Button type="text" size="small" aria-label="移除附图" icon={<CloseOutlined />} onClick={() => attach(null)} />
+                <Button type="text" size="small" aria-label="移除附图" icon={<CloseOutlined aria-hidden="true" />} onClick={() => attach(null)} />
               </div>}
               <div className="composer-actions">
-                <Upload accept=".png,.jpg,.jpeg" showUploadList={false} beforeUpload={picked => {
-                  attach(picked);
-                  return Upload.LIST_IGNORE;
-                }}>
-                  <Button type="text" icon={<PaperClipOutlined />}>附图</Button>
-                </Upload>
-                <Button type="primary" htmlType="submit" loading={busy} icon={<ArrowRightOutlined />} iconPlacement="end">发送</Button>
+                <div className="composer-tools">
+                  <Upload accept=".png,.jpg,.jpeg" showUploadList={false} beforeUpload={picked => {
+                    attach(picked);
+                    return Upload.LIST_IGNORE;
+                  }}>
+                    <Button type="text" icon={<PaperClipOutlined aria-hidden="true" />}>附图</Button>
+                  </Upload>
+                  <Button type="text" icon={<AppstoreOutlined aria-hidden="true" />}
+                    onClick={() => setMaterialsOpen(true)}>补充材料</Button>
+                </div>
+                <Button type="primary" htmlType="submit" loading={busy} icon={<ArrowUpOutlined aria-hidden="true" />} iconPlacement="end">发送</Button>
               </div>
             </div>
             {error && <Alert className="form-error" type="error" showIcon title={error} />}
-            <details className="turn-options">
-              <summary>补充审核材料</summary>
+            <Drawer title="补充审核材料" open={materialsOpen} onClose={() => setMaterialsOpen(false)}
+              size="min(100vw, 520px)" forceRender
+              extra={<Button onClick={() => setMaterialsOpen(false)}>完成填写</Button>}>
               <div className="options-content">
+
                 {file && <DamageRegion key={preview} preview={preview} roi={roi} onChange={setRoi} busy={busy} />}
                 <Form.Item name="copy" label="宣传正文"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
                 <div className="option-fields">
@@ -575,7 +673,8 @@ function Workbench() {
                     value: ref.id, label: [ref.source, ref.product, ref.locator].join(" · "),
                   }))} />
                 </Form.Item>}
-                <Button type="link" className="add-reference" onClick={() => { setReferenceError(""); setReferenceOpen(true); }}>添加已核验资料</Button>
+                {role === "reviewer" && <Button type="link" className="add-reference"
+                  onClick={() => { setReferenceError(""); setReferenceOpen(true); }}>添加已核验资料</Button>}
                 <div className="option-fields">
                   <Form.Item name="referenceSource" label="待核验依据名称"><Input /></Form.Item>
                   <Form.Item name="referenceProduct" label="依据对应产品"><Input /></Form.Item>
@@ -585,27 +684,30 @@ function Workbench() {
                   <Checkbox>快速预览（跳过生成倾向和局部异常模型）</Checkbox>
                 </Form.Item>
               </div>
-            </details>
+            </Drawer>
             <div className="model-preference">
               {deepseekReady ? <>
                 <Checkbox checked={useModel} onChange={event => setUseModel(event.target.checked)}>DeepSeek 辅助</Checkbox>
                 <p>{useModel ? "必要的消息、图片文字、资料摘录和检查摘要可发送至 DeepSeek。图片始终在本地处理。" : "当前使用本地规则和检测工具。"}</p>
-              </> : <p>当前使用本地规则和检测工具。</p>}
+              </> : <p>当前使用本地规则和检测工具 · 结果供人工复核</p>}
             </div>
           </Form>
         </section>
-        <section className="report-region" ref={reportRef} aria-labelledby="report-heading">
-          <div className="panel-header report-panel-header"><h2 id="report-heading">审核报告</h2></div>
-          {busy && <RunningReport steps={steps} />}
-          {review ? <div className="review-results" key={review.id}>
-            {review.reports.publicity && <FinishedReport result={review.reports.publicity} />}
-            {review.reports.damage && <DamageReport result={review.reports.damage} />}
-            {Object.entries(review.errors).map(([key, value]) => <Alert key={key} type="error" showIcon
-              title={reviewLabels[key]} description={value} />)}
-          </div> : !busy && <EmptyReport />}
-        </section>
+        {reportOpen && !compact && <aside className="report-region" aria-labelledby="report-heading">
+          <div className="report-panel-header">
+            <FileSearchOutlined aria-hidden="true" />
+            <h2 id="report-heading">审核报告</h2>
+            <Button type="text" size="small" aria-label="关闭报告" onClick={() => setReportOpen(false)}
+              icon={<CloseOutlined aria-hidden="true" />} />
+          </div>
+          {reportContent}
+        </aside>}
       </div>
     </main>
+
+    {compact && <Drawer title="审核报告" open={reportOpen} onClose={() => setReportOpen(false)}
+      size="min(100vw, 560px)" rootClassName="report-drawer">{reportContent}</Drawer>}
+
 
     <Modal open={referenceOpen} title="添加已核验资料" footer={null} onCancel={() => setReferenceOpen(false)}>
       <p>请先核对原始文件、产品规格和适用条件，记录来源以便回查。</p>
@@ -636,10 +738,14 @@ function Workbench() {
         <Button type="primary" htmlType="submit" loading={referenceSaving}>保存到本地知识库</Button>
       </Form>
     </Modal>
-    <footer className="page-width footer"><span>BeautyProof</span><span>美妆内容审核 · 证据辅助人工复核</span></footer>
-  </>;
+  </div>;
+}
+
+function ChatWorkspace({ role = "reviewer" }) {
+  const [session, setSession] = useState(0);
+  return <Workbench key={session} role={role} onReset={() => setSession(value => value + 1)} />;
 }
 
 createRoot(document.getElementById("workbench")).render(
-  <ConfigProvider locale={zhCN} theme={theme}><Workbench /></ConfigProvider>,
+  <ConfigProvider locale={zhCN} theme={theme}><ChatWorkspace /></ConfigProvider>,
 );
