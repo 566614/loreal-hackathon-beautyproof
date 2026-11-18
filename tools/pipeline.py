@@ -37,6 +37,7 @@
     outputs/<tool>_frame_*.json             每帧的逐工具证据（与图片侧同一套格式）
 """
 import datetime as dt
+import copy
 import hashlib
 import os
 import shutil
@@ -364,6 +365,55 @@ def analyze(image_path=None, fast=False, skip=(), verbose=True, timeout=900,
                         verified_references, market, review_model=review_model)
 
 
+def review_verdict(evidence, claims, context_conflicts):
+    """Apply the same evidence and claim rules to initial and follow-up reviews."""
+    risk_level, reasons = judge(evidence)
+    if any(claim["status"] == "存在冲突" for claim in claims):
+        if risk_level != "high_risk":
+            risk_level = "suspicious"
+        reasons.append("宣称核验：图文或对应参考资料存在冲突")
+    if any(claim["status"] == "证据不足" for claim in claims):
+        reasons.append("宣称核验：部分宣称缺少对应产品、指标和条件的证据")
+    if context_conflicts:
+        if risk_level != "high_risk":
+            risk_level = "suspicious"
+        reasons.append("正文核验：同一产品及条件下存在不同数值，请核对原文")
+    if risk_level == "credible":
+        risk_level = "inconclusive"
+    plain = explain_verdict(risk_level, evidence)
+    if any(c["status"] == "存在冲突" and c["references"] for c in claims) and risk_level == "suspicious":
+        plain.update(headline="宣传宣称与提供的依据不一致",
+                     summary="发现对应产品、指标和条件下的数值差异，详见宣称核验。",
+                     what_to_do="核对原始资料和文案后再决定是否发布。")
+    return risk_level, reasons, plain
+
+
+def reassess_references(original, references, verified_references, market):
+    """Reuse frozen image/text observations after an explicitly requested evidence update."""
+    import claim_review
+
+    started = time.monotonic()
+    report = copy.deepcopy(original)
+    audit = report["audit"]
+    body = [c for c in audit["claims"] if c["source"] == "body"]
+    image = [c for c in audit["claims"] if c["source"] == "image"]
+    audit["claims"] = claim_review.assess(
+        body, image, references, audit["crossmodal"].get("contradictions", []),
+        verified_references=verified_references, market=market,
+    )
+    # Semantic findings were generated against the old reference set.
+    audit["semantic_findings"] = []
+    audit["checks"]["semantic_review"] = {
+        "status": "insufficient_evidence", "reason": "本次补证复用原始观测，使用本地规则重新核验资料。",
+    }
+    risk, reasons, plain = review_verdict(report["evidence"], audit["claims"], audit["context_conflicts"])
+    report["verdict"].update(risk_level=risk, reasons=reasons, explain=plain)
+    report.pop("llm_explanation", None)
+    report["generated_at"] = dt.datetime.now().isoformat(timespec="seconds")
+    report["elapsed_seconds"] = round(time.monotonic() - started, 3)
+    return report
+
+
 def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
                  on_progress, text, llm, roundtable, product, references, publish,
                  verified_references, market, visual_match=None, *, review_model=None):
@@ -535,19 +585,7 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
         (output_dir / f"{tool}_{stem}.json").write_text(
             json.dumps(item, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    risk_level, reasons = judge(evidence)
-    if any(claim["status"] == "存在冲突" for claim in claims):
-        if risk_level != "high_risk":
-            risk_level = "suspicious"
-        reasons.append("宣称核验：图文或对应参考资料存在冲突")
-    if any(claim["status"] == "证据不足" for claim in claims):
-        reasons.append("宣称核验：部分宣称缺少对应产品、指标和条件的证据")
-    if context_conflicts:
-        if risk_level != "high_risk":
-            risk_level = "suspicious"
-        reasons.append("正文核验：同一产品及条件下存在不同数值，请核对原文")
-    if risk_level == "credible":
-        risk_level = "inconclusive"
+    risk_level, reasons, plain = review_verdict(evidence, claims, context_conflicts)
 
     signals = _import_rule_engine().image_signals(evidence)
     checks = {}
@@ -583,11 +621,6 @@ def _analyze_run(image_path, info, output_dir, fast, skip, verbose, timeout,
     checks["text"] = {"status": "completed" if "text" in evidence else "insufficient_evidence"}
     checks["crossmodal"] = {"status": "completed" if text and cross.get("conflict_level") in
                             ("none", "medium", "hard") else "insufficient_evidence"}
-    plain = explain_verdict(risk_level, evidence)
-    if any(c["status"] == "存在冲突" and c["references"] for c in claims) and risk_level == "suspicious":
-        plain.update(headline="宣传宣称与提供的依据不一致",
-                     summary="发现对应产品、指标和条件下的数值差异，详见宣称核验。",
-                     what_to_do="核对原始资料和文案后再决定是否发布。")
 
     # 把规则引擎的定级结论落盘为 verdict_<stem>.json —— 之前漏了这一步，
     # 导致 report_generator 读不到定级、样例报告一律显示「NO_VERDICT」，

@@ -220,6 +220,8 @@ def _run_agent_job(job, workspace, path, message, copy, options, previous):
         app.logger.exception("Agent turn failed")
         with JOBS_LOCK:
             job.update(status="error", error="本次审核未完成，请重新发送。")
+            if options.get("evidence_followup"):
+                previous["evidence_session"]["followup_job_id"] = None
 
 
 def _agent_image(upload, directory, name):
@@ -249,10 +251,11 @@ def agent_turn():
     if role not in (None, "consumer", "reviewer"):
         return jsonify({"error": "请选择消费者或企业审核人员入口。"}), 400
     publicity_only = role == "consumer"
+    evidence_followup = request.form.get("evidence_followup") == "1"
     message = request.form.get("message", "").strip()
     copy = request.form.get("copy", "").strip() or None
     upload = request.files.get("file")
-    if not message and not copy and not (upload and upload.filename):
+    if not message and not copy and not (upload and upload.filename) and not evidence_followup:
         return jsonify({"error": "请填写审核需求或附上图片。"}), 400
     if len(message) > 12000 or (copy and len(copy) > 12000):
         return jsonify({"error": "消息和宣传正文各最多 12000 字。"}), 400
@@ -276,6 +279,18 @@ def agent_turn():
         previous = JOBS.get(previous_id, {}).get("context")
     if previous_id and (previous is None or previous.get("publicity_only", False) != publicity_only):
         return jsonify({"error": "上一回合已过期，请重新送审。"}), 409
+    session = previous.get("evidence_session") if previous else None
+    if evidence_followup:
+        if publicity_only or not session:
+            return jsonify({"error": "上一回合未等待功效试验补证，请重新送审。"}), 409
+        if not ids or references:
+            return jsonify({"error": "补证请选择已核验资料，用户摘录请先核对并录入资料库。"}), 400
+        if (upload and upload.filename) or request.files.get("reference_image") or roi is not None:
+            return jsonify({"error": "补证沿用上一回合图片，修改图片或选区请重新送审。"}), 400
+        for field, supplied in (("copy", copy), ("product", request.form.get("product")),
+                                ("market", request.form.get("market"))):
+            if supplied is not None and supplied != session[field]:
+                return jsonify({"error": "补证须沿用上一回合正文、产品和市场。"}), 400
 
     workspace = TemporaryDirectory(prefix="beautyproof-turn-")
     worker_started = False
@@ -286,6 +301,7 @@ def agent_turn():
         if (reference_image or roi) and not path:
             return jsonify({"error": "请同时附上要审核的图片。"}), 400
         options = {
+            "evidence_followup": evidence_followup,
             "publicity_only": publicity_only,
             "llm": request.form.get("llm") != "0", "fast": request.form.get("fast") == "1",
             "product": request.form.get("product"), "market": request.form.get("market"),
@@ -298,6 +314,10 @@ def agent_turn():
         with JOBS_LOCK:
             if len(JOBS) >= MAX_JOBS and all(item["status"] == "running" for item in JOBS.values()):
                 return jsonify({"error": "审核服务正忙，请稍后重试。"}), 503
+            if evidence_followup:
+                if session["followup_job_id"]:
+                    return jsonify({"error": "该次送审已提交补证，最多续审一次。"}), 409
+                session["followup_job_id"] = job_id
             JOBS[job_id] = job
         _prune_jobs()
         try:
@@ -308,6 +328,8 @@ def agent_turn():
         except RuntimeError:
             with JOBS_LOCK:
                 JOBS.pop(job_id, None)
+                if evidence_followup:
+                    session["followup_job_id"] = None
             return jsonify({"error": "审核服务正忙，请稍后重试。"}), 503
         worker_started = True
         return jsonify({"job_id": job_id})
