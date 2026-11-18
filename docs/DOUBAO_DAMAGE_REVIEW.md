@@ -71,6 +71,30 @@ python tools/evaluate_doubao_target.py outputs/runs/doubao-damage-accuracy/low-f
 python tools/doubao_compact.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/model.bin"
 ```
 
+### 新增数据上的教师与局部噪声实验
+
+在同一固定划分上，重新提取两套本地 Community Forensics 教师特征。骨干保持冻结，分类头、候选与阈值在训练侧按来源组校准。最终教师使用低画质版特征的核分类头。它在 Q60 上检出 14/25、误报 0/25，仍需要完整教师骨干参与推理。
+
+局部实验把每图保留为 256 个区域，每区提取 78 个通道、高通噪声与重采样描述，并按同图的亮度和纹理组计算相对量。小网络给各区评分，用最高的 12 个区域与区域均值共同汇总。区域汇总与排列无关。训练采用整图标签，候选包括纯监督和教师软标签版本，训练侧分组结果选中了纯监督版本。
+
+各模型均在相同的 25 张新 AI 图和 25 张完好实拍上验证。
+
+| 实验模型 | 原文件准确率 | Q60 | Q45 缩略图 | 统一编码 |
+| --- | ---: | ---: | ---: | ---: |
+| 冻结教师与适配分类头 | 88% | 78% | 76% | 78% |
+| 局部噪声小网络 | 90% | 80% | 68% | 64% |
+| 局部与整图分数融合 | 90% | 78% | 66% | 70% |
+
+局部模型在原文件、Q60、Q45、统一编码的实拍误报分别为 0/25、0/25、0/25、2/25，AI 检出分别为 20/25、15/25、9/25、9/25。它的权重为 14,519 字节，推理入口 `tools/doubao_local_noise.py` 使用 NumPy。50 个实际验证文件上本机 CPU P95 为 0.128 秒。实际文件特征与缓存一致，50 个文件判定和 200 个缓存判定均复现，CPU 与训练实现的最大浮点分差为 `1.91e-6`。
+
+验证商品的程序修图对照各有 11 个条目，7 种效果均为 0 个误报，包含训练时留出的浅色曲线画法。真实破损实拍仍为 0 张。压缩后的准确率和统一编码误报率尚未通过验收。固定验证集已用于多轮开发对照，相关结果用于实验比较。
+
+本机实验权重为 `D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/local-mil-model.npz`。同目录的 `teacher-validation.json`、`local-mil-validation.json`、`local-global-fusion-validation.json` 和 `local-mil-cpu-verification.json` 记录逐条件结果与运行核对。
+
+```powershell
+python tools/doubao_local_noise.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/local-mil-model.npz"
+```
+
 ### 可信原图对照实验
 
 整图配准后，从稳定结构估计 RGB 色调曲线。校正后的颜色残差结合局部相关性和梯度方向差异评分，结构对应不足时使用 v5 单图分数。整图阶段与输入框选位置无关。在已登记配对的商品留出实验中，完好实拍对照使用同一拍摄的转码副本。原文件、Q60、Q45 和统一编码分别检出 53、55、51、55 张豆包图，四种上传各 0 个误报。每种上传形态有 55 个正例和 55 个完好实拍对照。
