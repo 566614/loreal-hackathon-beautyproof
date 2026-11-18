@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image, ImageOps
 
 MODEL_PATH = Path(__file__).resolve().parents[1] / "models" / "doubao_damage" / "model.json"
+REVIEW_MODEL_PATH = MODEL_PATH.with_name("quality-local-model.npz")
 SCHEMA = "beautyproof/doubao-damage@1"
 BALANCED_SCHEMA = "beautyproof/doubao-damage@2"
 MAX_PIXELS = 20_000_000
@@ -493,9 +494,53 @@ def load_model(model_path):
 
 
 
-def analyze_image(data, roi=None, *, model_path=MODEL_PATH):
+def _local_prediction(score, threshold, area):
+    above = score >= threshold
+    reason = (f"{area}通道与噪声分数达到本批原文件复核阈值，建议核对来源。" if above else
+              f"{area}通道与噪声分数低于本批原文件复核阈值。")
+    return {"status": "similar" if above else "weak", "score": score,
+            "threshold": threshold, "reason": reason, "cues": []}
+
+
+def _local_review(image, marker, roi, model_path):
+    from doubao_local_noise import image_features, load_model as load_local, region_indices, score_features
+
+    try:
+        model = load_local(model_path)
+    except (OSError, ValueError, KeyError):
+        model = None
+    reason = ("有效像素不足，建议用清晰原图复核。" if min(image.size) < MIN_SHORT_SIDE else
+              "找不到可用的本地破损审核模型。")
+    whole = {"status": "insufficient", "score": None, "threshold": None, "reason": reason, "cues": []}
+    region = None
+    if roi is not None:
+        region = dict(whole)
+    if model is not None and min(image.size) >= MIN_SHORT_SIDE:
+        features = image_features(image)
+        threshold = float(model["threshold"])
+        whole = _local_prediction(float(score_features(model, features)), threshold, "整图")
+        if roi is not None:
+            region = {**region, "reason": "选区未覆盖局部噪声采样点，请扩大选区。"}
+            indices = region_indices(roi)
+            if len(indices):
+                score = float(score_features(model, features, selected_regions=indices))
+                region = _local_prediction(score, threshold, "选区")
+                region["reason"] += "选区评分保留整图噪声上下文。"
+    preview, edge_summary = None, None
+    if roi is not None and min(image.size) >= MIN_SHORT_SIDE:
+        prepared = prepare(image, short_side=DETAIL_SHORT_SIDE)
+        _, preview, edge_summary = _edge_features(cv2.cvtColor(prepared, cv2.COLOR_RGB2GRAY), roi, True)
+    return {"model": str(model["schema"]) if model is not None else None,
+            "experimental": True, "evaluation_scope": "original_files", "device": "cpu",
+            "source_marker": marker, "image_size": list(image.size), "roi": roi,
+            "whole": whole, "region": region, "edge_preview_png": preview, "edge_summary": edge_summary}
+
+
+def analyze_image(data, roi=None, *, model_path=REVIEW_MODEL_PATH):
     roi = validate_roi(roi)
     image, marker = decode(data)
+    if Path(model_path).suffix.lower() == ".npz":
+        return _local_review(image, marker, roi, model_path)
     width, height = image.size
     try:
         model = load_model(model_path)
@@ -549,7 +594,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="图片文件或目录")
     parser.add_argument("--roi", type=json.loads, help="EXIF 纠正后的归一化 [左,上,右,下]")
-    parser.add_argument("--model", type=Path, default=MODEL_PATH)
+    parser.add_argument("--model", type=Path, default=REVIEW_MODEL_PATH)
     args = parser.parse_args()
     batch = args.input.is_dir()
     paths = ([p for p in sorted(args.input.iterdir()) if p.suffix.lower() in (".jpg", ".jpeg", ".png")]

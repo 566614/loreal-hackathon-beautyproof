@@ -2,7 +2,11 @@
 
 在 BeautyProof 顶栏选择「退款破损审核」，上传 JPG 或 PNG，点击「开始检查」。可以框选裂痕、碎粉或包装破口。结果包含整图和选区的检测分、复核阈值、像素线索与来源标识。橙色覆盖图显示候选边缘，可能包含印刷线、接缝与反光。
 
-本地默认从 `models/doubao_damage/model.json` 读取 v5 CPU 权重。整图用色度和再压缩响应，框选同时使用局部噪声与裂纹叠片，在统一的 288 像素短边提取特征。v5 的权重是 17,201 字节。v4 权重保存在 `outputs/runs/doubao-damage-accuracy/reproduced/model.json`。
+本地默认从 `models/doubao_damage/quality-local-model.npz` 读取 19,392 字节的 CPU 权重，通过 NumPy 汇总局部通道、噪声与重采样响应，并按图内画质响应校准。检测分与同一模型的复核阈值比较。选区共用整图噪声上下文，分数最多达到整图分数，选区过小时提示扩大范围。候选边缘通过预览显示。
+
+当前主要验收原文件。固定开发验证包含 25 张新 AI 图和 25 张完好实拍，接口复测准确率为 98%、实拍误报率为 4%。验证集已用于多轮开发，真实破损实拍对照为 0。
+
+`POST /api/damage-review` 和 `python tools/doubao_damage.py` 使用同一默认权重。50 张图分别进行整图和带选区请求，共 100 次 Flask 请求客户端核对，整图判定均复现，框选请求也保持同一整图判定。接口处理耗时的本机 CPU P95 为 0.153 秒，带选区为 0.229 秒。所选区域的独立分类准确率尚未评测。记录在本机 `outputs/runs/doubao-damage-new-20261118/http-review-verification.json`。
 
 ## v5 降低误报
 
@@ -39,6 +43,87 @@ python tools/evaluate_doubao_target.py outputs/runs/doubao-damage-accuracy/low-f
 ### 单图重采样与低位编码实验
 
 单图先用三种重采样比例比较亮度、色度和噪声残差，再结合 v5 的全局特征评分。从完整样本核模型压到每值 4 位后，商品留出的 Q60 检出 28/55，误报 0/55，准确率为 75.5%。Q45 缩略图误报 3/55，统一编码误报 5/55。两个整批留出上的 Q60 准确率分别为 53.4% 和 51.9%。实验权重为 101,141 字节，56 个实际文件上从解码到评分的本机 CPU P95 为 0.534 秒。各留出模型加载后，复现了全部 880 个留出分数。 [本轮逐条件结果](../outputs/runs/doubao-damage-target/lowbit-complete-kernel.json) · [CPU 记录](../outputs/runs/doubao-damage-target/lowbit-kernel-cpu.json)
+
+### 实拍覆盖与破损外观对照
+
+按商品组用提供的 127 张实拍扩充相应训练折，并加入实拍经局部调亮、平滑和程序绘制裂线后的对照，完整核模型在商品留出的 Q60 上检出 37/55、误报 0/55。用训练样本上的分数拟合压缩模型后，256 个四位原型在相同留出上检出 38/55、误报 0/55，准确率为 84.5%。校准后的权重为 65,687 字节。单图入口为 `tools/doubao_compact.py`，使用 RGB 通道关系、纹理条件下的色度与噪声、重采样和 JPEG 响应。
+
+另外用实拍程序绘制分叉暗线、局部像素错位和浅色曲线。在一批整批留出对照中，未加这些效果时误报 6/29，加局部错位后为 12/29，新增误报来自 5 张不同实拍。用这些反例训练后，同一阈值选择规则下新增误报条目从 6 个降到 2 个。约束同一实拍添加效果前后分数接近，可以进一步减少误报，同时也降低部分 AI 检出。这些图的损伤由程序编辑得到，部分粗选区包含商品周边背景，真实破损实拍的误报率仍需验证。
+
+### 2026-11-18 新增 AI 图划分与训练
+
+三个新增目录共有 125 张 AI 图，分别为 42、41、42 张。按用户说明，它们均基于旧原图生成。结合几何配准与逐图商品核对分组，对包含多个来源商品的画面合并相关组，默认按 80% 训练、20% 验证分配。最终复制出 100 张训练图和 25 张验证图。验证侧覆盖 11 个同源商品组，配套的 25 张实拍也进入验证侧。相应旧 AI 版本从本轮训练中留出，训练共使用 144 张 AI 图，其中 100 张为新增图，另有 102 张实拍及训练侧程序编辑对照。
+
+划分工具为 `tools/prepare_doubao_split.py`。本机数据保存在 `D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/`，其中 `splits/train/ai/` 和 `splits/validation/ai/` 包含实际图片副本。`manifest.csv` 登记源路径、同源组和 SHA-256，`split-lock.json` 固定划分。125 个副本均核对了哈希，训练与验证组交叉为 0。
+
+候选模型和阈值通过训练侧四折同源分组校准确定，然后固定权重并加载评分验证集。每个条件均有 25 张新 AI 图和 25 张实拍。
+
+| 上传条件 | 准确率 | 实拍误报 | AI 检出 |
+| --- | ---: | ---: | ---: |
+| 原文件 | 88% | 0/25 | 19/25 |
+| JPEG Q60 | 72% | 0/25 | 11/25 |
+| JPEG Q45 缩略图 | 72% | 1/25 | 12/25 |
+| 统一尺寸与 JPEG 编码 | 72% | 2/25 | 13/25 |
+
+实验权重 `model.bin` 为 66,010 字节，50 个实际验证文件上本机 CPU P95 为 0.444 秒。实际文件入口复现了全部 50 个原文件判定，分数最大浮点差为 `2.8e-14`。验证商品中的 9 张不同实拍另生成了程序编辑对照，每种效果有 11 个条目，均为 0 个误报，包含训练时留出的浅色曲线画法。
+
+本轮结果仍未达到准确率 `> 95%` 与误报率 `< 5%` 的整体验收要求。验证图是新生成版本，相关商品和原图此前已用于模型开发，本轮拟合和阈值选择排除了这些验证组。真实破损实拍对照数量为 0。逐图结果、验收、运行核对和程序编辑诊断分别保存在该目录的 `validation.json`、`target.json`、`cpu-verification.json`、`damage-appearance-audit.json`。
+
+本机可从当前工作树运行实验模型。
+
+```powershell
+python tools/doubao_compact.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/model.bin"
+```
+
+### 新增数据上的教师与局部噪声实验
+
+在同一固定划分上，重新提取两套本地 Community Forensics 教师特征。骨干保持冻结，分类头、候选与阈值在训练侧按来源组校准。最终教师使用低画质版特征的核分类头。它在 Q60 上检出 14/25、误报 0/25，仍需要完整教师骨干参与推理。
+
+局部实验把每图保留为 256 个区域，每区提取 78 个通道、高通噪声与重采样描述，并按同图的亮度和纹理组计算相对量。小网络给各区评分，用最高的 12 个区域与区域均值共同汇总。区域汇总与排列无关。训练采用整图标签，候选包括纯监督和教师软标签版本，训练侧分组结果选中了纯监督版本。
+
+各模型均在相同的 25 张新 AI 图和 25 张完好实拍上验证。
+
+| 实验模型 | 原文件准确率 | Q60 | Q45 缩略图 | 统一编码 |
+| --- | ---: | ---: | ---: | ---: |
+| 冻结教师与适配分类头 | 88% | 78% | 76% | 78% |
+| 局部噪声小网络 | 90% | 80% | 68% | 64% |
+| 局部与整图分数融合 | 90% | 78% | 66% | 70% |
+
+局部模型在原文件、Q60、Q45、统一编码的实拍误报分别为 0/25、0/25、0/25、2/25，AI 检出分别为 20/25、15/25、9/25、9/25。它的权重为 14,519 字节，推理入口 `tools/doubao_local_noise.py` 使用 NumPy。50 个实际验证文件上本机 CPU P95 为 0.128 秒。实际文件特征与缓存一致，50 个文件判定和 200 个缓存判定均复现，CPU 与训练实现的最大浮点分差为 `1.91e-6`。
+
+验证商品的程序修图对照各有 11 个条目，7 种效果均为 0 个误报，包含训练时留出的浅色曲线画法。真实破损实拍仍为 0 张。压缩后的准确率和统一编码误报率尚未通过验收。固定验证集已用于多轮开发对照，相关结果用于实验比较。
+
+本机实验权重为 `D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/local-mil-model.npz`。同目录的 `teacher-validation.json`、`local-mil-validation.json`、`local-global-fusion-validation.json` 和 `local-mil-cpu-verification.json` 记录逐条件结果与运行核对。
+
+```powershell
+python tools/doubao_local_noise.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/local-mil-model.npz"
+```
+
+### 原文件阶段的画质校准与多教师蒸馏
+
+按用户当前要求，原文件作为这一阶段的主要验收条件。用区域通道与噪声统计估计画质响应，再校准局部网络分数，校准器与阈值均在训练侧按来源组选择。`quality-local-model.npz` 在固定开发验证的 25 张新 AI 图和 25 张完好实拍上检出 25/25，误报 1/25，准确率 98%、实拍误报率 4%。原文件验收记录在 `quality-original-target.json`。本批原文件对照通过数值门槛。
+
+校准后的权重为 19,392 字节，仍由 `tools/doubao_local_noise.py` 通过 NumPy 在 CPU 上运行。50 个实际验证文件的本机 CPU P95 为 0.135 秒。200 个缓存判定与 50 个实际文件判定均复现。对应的 Q60 准确率为 86%，Q45 与统一编码均为 68%。验证来源组在本次拟合和阈值校准中留出，固定验证集已用于多轮开发比较。
+
+新增了 NPR、SAFE 两套本地教师，与已有两套 Community Forensics 一起比较。四个单教师和三个组合按训练侧来源组生成交叉拟合信号。原文件教师对照结果如下，每项有 25 张新 AI 图和 25 张完好实拍。
+
+| 教师或组合 | 准确率 | 实拍误报 | AI 检出 |
+| --- | ---: | ---: | ---: |
+| Community Forensics 官方版 | 100% | 0/25 | 25/25 |
+| Community Forensics 低画质版 | 100% | 0/25 | 25/25 |
+| NPR | 88% | 0/25 | 19/25 |
+| SAFE | 100% | 0/25 | 25/25 |
+| 两套 Community Forensics | 100% | 0/25 | 25/25 |
+| NPR 与 SAFE | 100% | 0/25 | 25/25 |
+| 四教师组合 | 100% | 0/25 | 25/25 |
+
+进一步比较了七种教师信号各自 25% 与 50% 的软标签训练，以及一个纯监督对照，共 15 个小模型。学生的教师信号由训练来源组内交叉拟合产生，程序编辑负例使用硬标签。候选与阈值在训练侧确定后，统一导出并评分固定验证集。14 个蒸馏模型都检出 25/25 张 AI 图，实拍误报为 2–7/25。SAFE 的 25% 蒸馏候选在该开发验证上准确率为 96%、误报率为 8%。训练侧结果选出的纯监督对照为 94%、12%，相关蒸馏候选尚未同时满足两项原文件门槛。
+
+这 15 份小模型权重均可通过当前 NumPy 入口加载，核对了全部 750 个缓存判定，并核对了 50 个实际文件的特征与所选模型判定。完整比较在本机数据目录的 `raw-teacher-family-validation.json` 和 `raw-distillation/validation.json`，模型副本位于 `raw-distillation/models/`。原文件阶段当前通过本批数值门槛的实验权重为同目录下的 `quality-local-model.npz`。真实破损实拍对照仍为 0，真实破损业务误报率尚待验证。
+
+```powershell
+python tools/doubao_local_noise.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/quality-local-model.npz"
+```
 
 ### 可信原图对照实验
 
@@ -95,7 +180,7 @@ python tools/doubao_damage.py "样图.jpg" --roi "[0.25,0.4,0.7,0.85]"
 python tools/doubao_damage.py $aiDir
 ```
 
-训练命令写模型副本到指定输出目录，可用 `--model` 指向该文件单独评分。工作台默认权重路径维持不变。接口 `POST /api/damage-review` 的 multipart 表单接收 `file` 和可选的归一化 EXIF 坐标 `roi`，响应包含 `whole`、`region` 和候选边缘叠图。
+训练命令写模型副本到指定输出目录，可用 `--model` 指向该文件单独评分。旧版 JSON 模型通过该参数复跑。工作台默认加载 `models/doubao_damage/quality-local-model.npz`。接口 `POST /api/damage-review` 的 multipart 表单接收 `file` 和可选的归一化 EXIF 坐标 `roi`，响应包含 `whole`、`region` 和候选边缘叠图。
 
 
 ## 裂纹算子叠片和数学建模
