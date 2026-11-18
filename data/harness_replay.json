@@ -1,0 +1,330 @@
+{
+  "schema": "beautyproof/harness-dataset@1",
+  "description": "12 条合成原型样本，开发与留出各 6 条。用于流程验收，尚需替换为团队授权、独立标注的真实样本。",
+  "cases": [
+    {
+      "sample_id": "dev-01",
+      "group": "dev-01-source",
+      "split": "development",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": true,
+        "uncertain_ocr_count": 1,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_study",
+        "reason": "正文产品、版本及市场齐全，先补功效试验。"
+      }
+    },
+    {
+      "sample_id": "dev-02",
+      "group": "dev-02-source",
+      "split": "development",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": false,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_metadata",
+        "reason": "先明确市场。"
+      }
+    },
+    {
+      "sample_id": "dev-03",
+      "group": "dev-03-source",
+      "split": "development",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": true,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "human_review",
+        "reason": "已有正文冲突，交人工核对。"
+      }
+    },
+    {
+      "sample_id": "dev-04",
+      "group": "dev-04-source",
+      "split": "development",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "有证据支持"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "finish",
+        "reason": "宣称已核验且无图片待查。"
+      }
+    },
+    {
+      "sample_id": "dev-05",
+      "group": "dev-05-source",
+      "split": "development",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": true,
+        "uncertain_ocr_count": 2,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:image:0",
+            "source": "image",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_original",
+        "reason": "只有图片宣称，先看清图片。"
+      }
+    },
+    {
+      "sample_id": "dev-06",
+      "group": "dev-06-source",
+      "split": "development",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": false,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_metadata",
+        "reason": "产品版本缺失。"
+      }
+    },
+    {
+      "sample_id": "hold-01",
+      "group": "hold-01-source",
+      "split": "holdout",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": true,
+        "uncertain_ocr_count": 2,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_study",
+        "reason": "正文已可归属，优先补试验。"
+      }
+    },
+    {
+      "sample_id": "hold-02",
+      "group": "hold-02-source",
+      "split": "holdout",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": true,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "model_unavailable",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_study",
+        "reason": "另一独立案例先查正文对应试验。"
+      }
+    },
+    {
+      "sample_id": "hold-03",
+      "group": "hold-03-source",
+      "split": "holdout",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": true,
+        "uncertain_ocr_count": 1,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:image:0",
+            "source": "image",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_original",
+        "reason": "图片宣称仍需清晰原图。"
+      }
+    },
+    {
+      "sample_id": "hold-04",
+      "group": "hold-04-source",
+      "split": "holdout",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": false,
+            "product_known": true,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "human_review",
+        "reason": "未量化的语义宣称交人工。"
+      }
+    },
+    {
+      "sample_id": "hold-05",
+      "group": "hold-05-source",
+      "split": "holdout",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": true,
+            "version_known": true,
+            "status": "存在冲突"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "human_review",
+        "reason": "已发现冲突。"
+      }
+    },
+    {
+      "sample_id": "hold-06",
+      "group": "hold-06-source",
+      "split": "holdout",
+      "kind": "synthetic",
+      "observation": {
+        "market_known": true,
+        "has_image": false,
+        "uncertain_ocr_count": 0,
+        "ocr_status": "completed",
+        "context_conflict": false,
+        "claims": [
+          {
+            "id": "claim:body:0",
+            "source": "body",
+            "quantified": true,
+            "product_known": false,
+            "version_known": true,
+            "status": "证据不足"
+          }
+        ]
+      },
+      "feedback": {
+        "correct_action": "request_metadata",
+        "reason": "产品归属不明，先补元数据。"
+      }
+    }
+  ]
+}
