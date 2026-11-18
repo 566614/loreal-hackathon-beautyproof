@@ -95,6 +95,32 @@ python tools/doubao_compact.py "样图.jpg" --model "D:/heckson/loreal-hackathon
 python tools/doubao_local_noise.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/local-mil-model.npz"
 ```
 
+### 原文件阶段的画质校准与多教师蒸馏
+
+按用户当前要求，原文件作为这一阶段的主要验收条件。用区域通道与噪声统计估计画质响应，再校准局部网络分数，校准器与阈值均在训练侧按来源组选择。`quality-local-model.npz` 在固定开发验证的 25 张新 AI 图和 25 张完好实拍上检出 25/25，误报 1/25，准确率 98%、实拍误报率 4%。原文件验收记录在 `quality-original-target.json`。本批原文件对照通过数值门槛。
+
+校准后的权重为 19,392 字节，仍由 `tools/doubao_local_noise.py` 通过 NumPy 在 CPU 上运行。50 个实际验证文件的本机 CPU P95 为 0.135 秒。200 个缓存判定与 50 个实际文件判定均复现。对应的 Q60 准确率为 86%，Q45 与统一编码均为 68%。验证来源组在本次拟合和阈值校准中留出，固定验证集已用于多轮开发比较。
+
+新增了 NPR、SAFE 两套本地教师，与已有两套 Community Forensics 一起比较。四个单教师和三个组合按训练侧来源组生成交叉拟合信号。原文件教师对照结果如下，每项有 25 张新 AI 图和 25 张完好实拍。
+
+| 教师或组合 | 准确率 | 实拍误报 | AI 检出 |
+| --- | ---: | ---: | ---: |
+| Community Forensics 官方版 | 100% | 0/25 | 25/25 |
+| Community Forensics 低画质版 | 100% | 0/25 | 25/25 |
+| NPR | 88% | 0/25 | 19/25 |
+| SAFE | 100% | 0/25 | 25/25 |
+| 两套 Community Forensics | 100% | 0/25 | 25/25 |
+| NPR 与 SAFE | 100% | 0/25 | 25/25 |
+| 四教师组合 | 100% | 0/25 | 25/25 |
+
+进一步比较了七种教师信号各自 25% 与 50% 的软标签训练，以及一个纯监督对照，共 15 个小模型。学生的教师信号由训练来源组内交叉拟合产生，程序编辑负例使用硬标签。候选与阈值在训练侧确定后，统一导出并评分固定验证集。14 个蒸馏模型都检出 25/25 张 AI 图，实拍误报为 2–7/25。SAFE 的 25% 蒸馏候选在该开发验证上准确率为 96%、误报率为 8%。训练侧结果选出的纯监督对照为 94%、12%，相关蒸馏候选尚未同时满足两项原文件门槛。
+
+这 15 份小模型权重均可通过当前 NumPy 入口加载，核对了全部 750 个缓存判定，并核对了 50 个实际文件的特征与所选模型判定。完整比较在本机数据目录的 `raw-teacher-family-validation.json` 和 `raw-distillation/validation.json`，模型副本位于 `raw-distillation/models/`。原文件阶段当前通过本批数值门槛的实验权重为同目录下的 `quality-local-model.npz`。真实破损实拍对照仍为 0，真实破损业务误报率尚待验证。
+
+```powershell
+python tools/doubao_local_noise.py "样图.jpg" --model "D:/heckson/loreal-hackathon-beautyproof/outputs/runs/doubao-damage-new-20261118/quality-local-model.npz"
+```
+
 ### 可信原图对照实验
 
 整图配准后，从稳定结构估计 RGB 色调曲线。校正后的颜色残差结合局部相关性和梯度方向差异评分，结构对应不足时使用 v5 单图分数。整图阶段与输入框选位置无关。在已登记配对的商品留出实验中，完好实拍对照使用同一拍摄的转码副本。原文件、Q60、Q45 和统一编码分别检出 53、55、51、55 张豆包图，四种上传各 0 个误报。每种上传形态有 55 个正例和 55 个完好实拍对照。

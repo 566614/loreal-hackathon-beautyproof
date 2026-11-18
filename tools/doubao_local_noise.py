@@ -9,6 +9,7 @@ import numpy as np
 from doubao_damage import MIN_SHORT_SIDE, decode
 
 SCHEMA = "beautyproof/doubao-local-noise@1"
+QUALITY_SCHEMA = "beautyproof/doubao-local-noise@2"
 SIDE = 288
 GRID = 16
 DIMENSIONS = 78
@@ -70,12 +71,17 @@ def image_features(image):
 def load_model(path):
     with np.load(path, allow_pickle=False) as archive:
         model = {key: archive[key].copy() for key in archive.files}
-    if str(model.get("schema")) != SCHEMA:
+    schema = str(model.get("schema"))
+    if schema not in (SCHEMA, QUALITY_SCHEMA):
         raise ValueError("局部模型特征版本不匹配。")
     shapes = {"mean": (DIMENSIONS,), "spread": (DIMENSIONS,),
               "layers.0.weight": (32, DIMENSIONS), "layers.0.bias": (32,),
               "layers.3.weight": (16, 32), "layers.3.bias": (16,),
               "layers.5.weight": (1, 16), "layers.5.bias": (1,)}
+    if schema == QUALITY_SCHEMA:
+        shapes.update({"quality_mean": (156,), "quality_spread": (156,),
+                       "quality_weights": (156, 4), "quality_temperature": (),
+                       "quality_center": (4,), "quality_width": (4,)})
     for key, shape in shapes.items():
         if model[key].shape != shape or not np.isfinite(model[key]).all():
             raise ValueError("局部模型参数无效。")
@@ -84,7 +90,18 @@ def load_model(path):
         raise ValueError("局部模型缺少校准阈值。")
     if np.any(model["spread"] <= 0):
         raise ValueError("局部模型归一化参数无效。")
+    if schema == QUALITY_SCHEMA and (np.any(model["quality_spread"] <= 0) or
+                                     np.any(model["quality_width"] <= 0) or
+                                     float(model["quality_temperature"]) <= 0):
+        raise ValueError("画质校准参数无效。")
     return model
+
+
+def quality_features(features):
+    absolute = features[..., :39]
+    quartiles = np.quantile(absolute, [.25, .75], axis=-2)
+    return np.concatenate((absolute.mean(-2), absolute.std(-2), quartiles[0], quartiles[1]),
+                          axis=-1).astype(np.float32)
 
 
 def score_features(model, features):
@@ -94,14 +111,24 @@ def score_features(model, features):
         hidden = hidden/(1+np.exp(np.clip(-hidden, -80, 80)))
     scores = (hidden@model["layers.5.weight"].T+model["layers.5.bias"])[..., 0]
     largest = np.partition(scores, -12, axis=-1)[..., -12:]
-    return .8*largest.mean(-1)+.2*scores.mean(-1)
+    score = .8*largest.mean(-1)+.2*scores.mean(-1)
+    if str(model["schema"]) == QUALITY_SCHEMA:
+        quality = ((quality_features(features)-model["quality_mean"])/model["quality_spread"]).clip(-5, 5)
+        logits = (quality@model["quality_weights"]+.25)/float(model["quality_temperature"])
+        logits -= logits.max(-1, keepdims=True)
+        probability = np.exp(logits)
+        probability /= probability.sum(-1, keepdims=True)
+        normalized = ((score.astype(np.float64)[..., None]-model["quality_center"])/
+                      model["quality_width"])
+        score = (probability*normalized).sum(-1)
+    return score
 
 
 def analyze_image(data, model):
     image, marker = decode(data)
     score = float(score_features(model, image_features(image)))
     threshold = float(model["threshold"])
-    return {"model": SCHEMA, "experimental": True, "device": "cpu",
+    return {"model": str(model["schema"]), "experimental": True, "device": "cpu",
             "score": score, "threshold": threshold,
             "status": "ai_suspected" if score >= threshold else "below_threshold",
             "source_marker": marker}
