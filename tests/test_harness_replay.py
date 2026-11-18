@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from replay_harness import load_cases, replay, validate_cases
-from review_harness import decide
+from review_harness import decide, observe
 
 
 def dataset():
@@ -77,4 +77,18 @@ def test_consumed_followup_cannot_request_more_evidence():
     observation = dataset()[0]["observation"]
     assert decide(observation, "v0")["action"] == "request_original"
     assert decide(observation, "v1")["action"] == "request_study"
-    assert decide(observation, "v1", followup_used=True)["action"] == "human_review"
+    observation["followup_used"] = True
+    assert decide(observation, "v1")["action"] == "human_review"
+
+
+def test_scope_and_followup_state_survive_privacy_export():
+    report = {"audit": {
+        "claims": [{"source": "body", "metric": "规格", "value": 30, "quote": "private product 30ml",
+                    "product": "private product", "product_version": "2025版", "status": "证据不足"}],
+        "uncertain_ocr": [], "context_conflicts": [], "checks": {},
+    }}
+    observation = observe(report, "中国", followup_used=True)
+    assert observation["claims"][0]["quantified"] is False
+    assert observation["followup_used"] is True
+    assert "private product" not in json.dumps(observation)
+    assert decide(observation)["action"] == "human_review"

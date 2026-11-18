@@ -254,6 +254,8 @@ def agent_turn():
     evidence_followup = request.form.get("evidence_followup") == "1"
     message = request.form.get("message", "").strip()
     copy = request.form.get("copy", "").strip() or None
+    product = request.form.get("product", "").strip() or None
+    market = request.form.get("market", "").strip() or None
     upload = request.files.get("file")
     if not message and not copy and not (upload and upload.filename) and not evidence_followup:
         return jsonify({"error": "请填写审核需求或附上图片。"}), 400
@@ -287,10 +289,13 @@ def agent_turn():
             return jsonify({"error": "补证请选择已核验资料，用户摘录请先核对并录入资料库。"}), 400
         if (upload and upload.filename) or request.files.get("reference_image") or roi is not None:
             return jsonify({"error": "补证沿用上一回合图片，修改图片或选区请重新送审。"}), 400
-        for field, supplied in (("copy", copy), ("product", request.form.get("product")),
-                                ("market", request.form.get("market"))):
-            if supplied is not None and supplied != session[field]:
+        for field, supplied in (("copy", copy), ("product", product), ("market", market)):
+            if field in request.form and supplied != session[field]:
                 return jsonify({"error": "补证须沿用上一回合正文、产品和市场。"}), 400
+        # Keep previously cited catalog entries while adding the selected evidence.
+        prior_ids = [ref["id"] for claim in session["report"]["audit"]["claims"]
+                     for ref in claim["references"] if ref.get("id") in catalog]
+        ids = list(dict.fromkeys(prior_ids + ids))
 
     workspace = TemporaryDirectory(prefix="beautyproof-turn-")
     worker_started = False
@@ -304,7 +309,7 @@ def agent_turn():
             "evidence_followup": evidence_followup,
             "publicity_only": publicity_only,
             "llm": request.form.get("llm") != "0", "fast": request.form.get("fast") == "1",
-            "product": request.form.get("product"), "market": request.form.get("market"),
+            "product": product, "market": market,
             "references": references, "verified_references": [catalog[i] for i in dict.fromkeys(ids)],
             "reference_image": reference_image, "roi": roi,
             "image_name": Path(upload.filename).name if path else None,

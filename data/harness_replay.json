@@ -22,7 +22,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_study",
@@ -49,7 +50,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_metadata",
@@ -76,7 +78,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "human_review",
@@ -103,7 +106,8 @@
             "version_known": true,
             "status": "有证据支持"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "finish",
@@ -130,7 +134,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_original",
@@ -157,7 +162,8 @@
             "version_known": false,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_metadata",
@@ -184,7 +190,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_study",
@@ -211,7 +218,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_study",
@@ -238,7 +246,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_original",
@@ -265,7 +274,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "human_review",
@@ -292,7 +302,8 @@
             "version_known": true,
             "status": "存在冲突"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "human_review",
@@ -319,7 +330,8 @@
             "version_known": true,
             "status": "证据不足"
           }
-        ]
+        ],
+        "followup_used": false
       },
       "feedback": {
         "correct_action": "request_metadata",

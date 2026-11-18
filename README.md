@@ -134,6 +134,12 @@ powershell -ExecutionPolicy Bypass -File tools/start_local.ps1
 
 文字规则可离线运行；要启用 DeepSeek，请在启动工作台的 PowerShell 进程中临时设置 `DEEPSEEK_API_KEY`。不要把密钥写进源码、README 或 Git。安全输入示例和数据传输范围见 [运行说明](docs/BEAUTY_REVIEW_RUNTIME.md#配置-deepseek)。服务不可用时，系统保留规则结果并提示语义模型缺失。
 
+## 审核 Harness 与策略回放
+
+企业宣传核验的「检查记录」会给出下一步取证动作。等待功效试验时，可通过现有资料入口核对并录入证据，再点「补证后核验」，查看同一宣称的前后状态与新增引用。一次送审最多成功续审一次，图片与文字观测在续审中复用。
+
+检查记录支持下载决策轨迹和审核员标注的回放样本。运行 `python tools/replay_harness.py --output .local/harness/replay.json`，可用仓库的 12 条合成样本对照 v0、v1 取证顺序，查看逐案改进、回归和人工采用建议。真实演示需要团队授权的功效试验，操作与评测边界见 [Harness 演示说明](docs/HARNESS_DEMO.md)。
+
 ## 资料、训练和验证
 
 | 文件 | 内容 |

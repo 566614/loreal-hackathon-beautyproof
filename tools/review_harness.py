@@ -13,7 +13,7 @@ ACTIONS = {
 }
 
 
-def observe(report, market):
+def observe(report, market, *, followup_used=False):
     """Export decision inputs without excerpts, filenames, or product identities."""
     audit = report["audit"]
     claims = []
@@ -21,7 +21,8 @@ def observe(report, market):
         claims.append({
             "id": f"claim:{claim['source']}:{index}",
             "source": claim["source"],
-            "quantified": isinstance(claim.get("value"), (int, float)),
+            "quantified": isinstance(claim.get("value"), (int, float))
+            and claim["metric"] in ("水分提升", "斑点减少", "保湿时长"),
             "product_known": bool(claim.get("product")),
             "version_known": bool(claim.get("product_version"))
             and claim["product_version"] not in ("新版", "旧版", "ambiguous"),
@@ -33,11 +34,12 @@ def observe(report, market):
         "uncertain_ocr_count": len(audit["uncertain_ocr"]),
         "ocr_status": audit["checks"].get("ocr", {}).get("status", "insufficient_evidence"),
         "context_conflict": bool(audit["context_conflicts"]),
+        "followup_used": followup_used,
         "claims": claims,
     }
 
 
-def decide(observation, policy_version="v0", *, followup_used=False):
+def decide(observation, policy_version="v0"):
     """Change only study/original priority between v0 and v1."""
     if policy_version not in POLICIES:
         raise ValueError("未知取证策略版本")
@@ -51,7 +53,7 @@ def decide(observation, policy_version="v0", *, followup_used=False):
     )
     if observation["context_conflict"] or any(c["status"] == "存在冲突" for c in claims):
         action, reason = "human_review", "conflicting_evidence"
-    elif followup_used:
+    elif observation["followup_used"]:
         action, reason = ("human_review", "followup_still_incomplete") if unresolved or unclear else (
             "finish", "evidence_checked")
     elif quantified and (not observation["market_known"] or any(
@@ -78,12 +80,19 @@ def decide(observation, policy_version="v0", *, followup_used=False):
 
 def trace(report, market, *, followup_used=False):
     started = time.monotonic()
-    observation = observe(report, market)
-    decision = decide(observation, followup_used=followup_used)
+    observation = observe(report, market, followup_used=followup_used)
+    decision = decide(observation)
+    state = "completed"
+    if decision["action"] == "request_study":
+        state = "waiting_evidence"
+    elif decision["action"].startswith("request_"):
+        state = "waiting_materials"
+    elif decision["action"] == "human_review":
+        state = "human_review"
     return {
         "schema": "beautyproof/harness@1", "policy_version": "v0",
         "observation": observation, "decision": decision,
-        "state": "waiting_evidence" if decision["action"] == "request_study" else "completed",
+        "state": state,
         "followup_used": followup_used,
         "elapsed_ms": round((time.monotonic() - started) * 1000, 3),
     }

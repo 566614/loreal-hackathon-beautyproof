@@ -29,7 +29,7 @@ def validate_cases(cases):
         if not isinstance(case, dict) or set(case) != {"sample_id", "group", "split", "kind", "observation", "feedback"}:
             raise ValueError("样本须含 sample_id、group、split、kind、observation、feedback，导出时请移除额外字段")
         for key in ("sample_id", "group", "kind"):
-            if not isinstance(case[key], str) or not case[key].strip():
+            if not isinstance(case[key], str) or not case[key].strip() or case[key] != case[key].strip():
                 raise ValueError(f"{key} 须为非空文本")
         if case["sample_id"] in ids:
             raise ValueError("样本编号重复")
@@ -42,13 +42,14 @@ def validate_cases(cases):
         feedback = case["feedback"]
         if not isinstance(feedback, dict) or set(feedback) != {"correct_action", "reason"}:
             raise ValueError("feedback 须含 correct_action 与 reason")
-        if feedback["correct_action"] not in ACTIONS or not isinstance(feedback["reason"], str) or not feedback["reason"].strip():
+        if (not isinstance(feedback["correct_action"], str) or feedback["correct_action"] not in ACTIONS
+                or not isinstance(feedback["reason"], str) or not feedback["reason"].strip()):
             raise ValueError("反馈须含允许的动作与审核员纠正理由")
         observation = case["observation"]
-        keys = {"market_known", "has_image", "uncertain_ocr_count", "ocr_status", "context_conflict", "claims"}
+        keys = {"market_known", "has_image", "uncertain_ocr_count", "ocr_status", "context_conflict", "followup_used", "claims"}
         if not isinstance(observation, dict) or set(observation) != keys:
             raise ValueError("观测字段须与 Harness 导出契约一致，禁止附带原文和图片")
-        if any(type(observation[key]) is not bool for key in ("market_known", "has_image", "context_conflict")):
+        if any(type(observation[key]) is not bool for key in ("market_known", "has_image", "context_conflict", "followup_used")):
             raise ValueError("观测状态须为布尔值")
         count = observation["uncertain_ocr_count"]
         if type(count) is not int or count < 0:

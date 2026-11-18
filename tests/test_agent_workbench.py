@@ -185,6 +185,29 @@ def test_concurrent_followup_and_answer_cannot_bypass_single_use(client, monkeyp
     assert state == "done"
 
 
+def test_followup_preserves_other_previously_cited_studies(client):
+    existing = add_study(client)
+    source = HARNESS_COPY + HARNESS_COPY.replace("14天", "7天")
+    job, _ = turn(client, "核验宣传文案：" + source, role="reviewer", market="中国")
+    added = add_study(client, excerpt=HARNESS_COPY.replace("14天", "7天"))
+    _, result = turn(client, previous=job, role="reviewer", evidence_followup="1", reference_ids=json.dumps([added]))
+    claims = result["reports"]["publicity"]["audit"]["claims"]
+    assert [c["status"] for c in claims] == ["有证据支持", "有证据支持"]
+    assert existing in {r["id"] for r in claims[0]["references"]}
+
+
+def test_model_unavailable_keeps_local_harness_and_followup(client, monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
+    monkeypatch.setattr(llm_explainer, "deepseek_json", lambda *a, **kw: None)
+    job, initial = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国")
+    report = initial["reports"]["publicity"]
+    assert report["audit"]["checks"]["claim_model"]["status"] == "model_unavailable"
+    assert report["harness_trace"]["state"] == "waiting_evidence"
+    ref = add_study(client)
+    _, result = turn(client, previous=job, role="reviewer", evidence_followup="1", reference_ids=json.dumps([ref]))
+    assert result["reports"]["publicity"]["evidence_comparison"][0]["after"] == "有证据支持"
+
+
 def test_image_only_clarifies_and_upload_completes_damage(client):
     _, result = turn(client, file=photo())
     assert result["type"] == "clarify"
