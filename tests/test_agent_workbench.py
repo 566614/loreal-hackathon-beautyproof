@@ -221,6 +221,31 @@ def test_image_only_clarifies_and_upload_completes_damage(client):
     assert turn(client, "破损分数是什么？", previous=job)[1]["evidence"][0]["label"].startswith("整图")
 
 
+def test_reviewer_turn_scores_original_upload_with_packaged_noise_model(client, monkeypatch):
+    from doubao_local_noise import analyze_image, load_model
+
+    stream = io.BytesIO()
+    Image.effect_noise((480, 320), 35).convert("RGB").save(stream, format="JPEG")
+    data = stream.getvalue()
+    expected = analyze_image(data, load_model(doubao_damage.REVIEW_MODEL_PATH))
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("破损回合应只使用本地噪声模型")
+
+    monkeypatch.setattr(pipeline, "analyze", unexpected)
+    monkeypatch.setattr(pipeline, "run_tool", unexpected)
+    _, result = turn(client, "审核退款破损", role="reviewer", llm="0",
+                     file=(io.BytesIO(data), "item.jpg"), roi="[0.2,0.2,0.8,0.8]")
+    assert result["route"] == "damage" and result["errors"] == {}
+    report = result["reports"]["damage"]
+    assert report["model"] == expected["model"]
+    assert report["device"] == "cpu" and report["evaluation_scope"] == "original_files"
+    assert report["whole"]["score"] == expected["score"]
+    assert report["whole"]["threshold"] == expected["threshold"]
+    assert report["region"]["score"] <= report["whole"]["score"]
+    assert report["preview"].startswith("data:image/jpeg;") and report["edge_preview_png"]
+
+
 @pytest.mark.parametrize("request_text", ["检查售后破损照片", "同时检查宣传和退款破损"])
 def test_consumer_turn_does_not_dispatch_damage(client, request_text):
     _, result = turn(client, request_text, role="consumer", file=photo())
