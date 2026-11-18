@@ -242,7 +242,8 @@ def test_reviewer_turn_scores_original_upload_with_packaged_noise_model(client, 
     assert report["device"] == "cpu" and report["evaluation_scope"] == "original_files"
     assert report["whole"]["score"] == expected["score"]
     assert report["whole"]["threshold"] == expected["threshold"]
-    assert report["region"]["score"] <= report["whole"]["score"]
+    assert report["region"]["status"] == "insufficient" and report["region"]["score"] is None
+    assert "整图噪声分布" in report["region"]["reason"]
     assert report["preview"].startswith("data:image/jpeg;") and report["edge_preview_png"]
 
 

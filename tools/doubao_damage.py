@@ -503,7 +503,8 @@ def _local_prediction(score, threshold, area):
 
 
 def _local_review(image, marker, roi, model_path):
-    from doubao_local_noise import image_features, load_model as load_local, region_indices, score_features
+    from doubao_local_noise import (SUMMARY_SCHEMA, image_features, load_model as load_local,
+                                    region_indices, score_features, summary_features)
 
     try:
         model = load_local(model_path)
@@ -516,10 +517,13 @@ def _local_review(image, marker, roi, model_path):
     if roi is not None:
         region = dict(whole)
     if model is not None and min(image.size) >= MIN_SHORT_SIDE:
-        features = image_features(image)
+        summary = str(model["schema"]) == SUMMARY_SCHEMA
+        features = summary_features(image) if summary else image_features(image)
         threshold = float(model["threshold"])
         whole = _local_prediction(float(score_features(model, features)), threshold, "整图")
-        if roi is not None:
+        if roi is not None and summary:
+            region = {**region, "reason": "选区仅用于预览；当前模型依据整图噪声分布评分，未单独校准选区。"}
+        elif roi is not None:
             region = {**region, "reason": "选区未覆盖局部噪声采样点，请扩大选区。"}
             indices = region_indices(roi)
             if len(indices):

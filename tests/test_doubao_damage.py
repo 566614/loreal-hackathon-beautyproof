@@ -63,7 +63,7 @@ def test_small_region_keeps_the_default_whole_image_decision():
     assert selected["whole"] == whole["whole"]
     assert selected["region"]["status"] == "insufficient"
     assert selected["region"]["score"] is None
-    assert "采样点" in selected["region"]["reason"]
+    assert "整图噪声分布" in selected["region"]["reason"]
 
 
 def test_default_missing_model_reports_the_same_cause_for_whole_and_region(tmp_path):

@@ -89,3 +89,17 @@ def test_partial_weight_archive_is_a_model_loading_error(tmp_path):
     path.write_bytes(path.read_bytes()[:-64])
     with pytest.raises(ValueError, match="模型文件损坏"):
         doubao_local_noise.load_model(path)
+
+
+def test_summary_model_rejects_region_scoring_and_mismatched_coefficients(tmp_path):
+    model = doubao_local_noise.load_model(
+        Path(__file__).resolve().parents[1]/"models/doubao_damage/quality-local-model.npz"
+    )
+    assert str(model["schema"]) == doubao_local_noise.SUMMARY_SCHEMA
+    with pytest.raises(ValueError, match="整图统计"):
+        doubao_local_noise.score_features(model, np.zeros(624), selected_regions=np.asarray([0]))
+    model["weights"] = np.zeros(78)
+    path = tmp_path/"wrong-summary.npz"
+    np.savez_compressed(path, **model)
+    with pytest.raises(ValueError, match="参数无效"):
+        doubao_local_noise.load_model(path)

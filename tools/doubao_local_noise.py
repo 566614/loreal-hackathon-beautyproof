@@ -6,11 +6,13 @@ from zipfile import BadZipFile
 
 import cv2
 import numpy as np
+from PIL import Image
 
 from doubao_damage import MIN_SHORT_SIDE, decode
 
 SCHEMA = "beautyproof/doubao-local-noise@1"
 QUALITY_SCHEMA = "beautyproof/doubao-local-noise@2"
+SUMMARY_SCHEMA = "beautyproof/doubao-summary-noise@1"
 SIDE = 288
 GRID = 16
 DIMENSIONS = 78
@@ -69,6 +71,24 @@ def image_features(image):
     return np.concatenate((raw, relative), axis=-1).astype(np.float32)
 
 
+def summary_features(image):
+    global_features = image_features(image)
+    if min(image.size) < SIDE:
+        ratio = SIDE/min(image.size)
+        image = image.resize((round(image.width*ratio), round(image.height*ratio)), Image.Resampling.LANCZOS)
+    selected = np.arange(GRID*GRID).reshape(GRID, GRID)[::2, ::2].ravel()
+    native = []
+    for horizontal, vertical in ((.25, .25), (.75, .25), (.5, .5), (.25, .75), (.75, .75)):
+        x = min(max(round(image.width*horizontal)-SIDE//2, 0), image.width-SIDE)
+        y = min(max(round(image.height*vertical)-SIDE//2, 0), image.height-SIDE)
+        native.append(image_features(image.crop((x, y, x+SIDE, y+SIDE)))[selected])
+    summaries = []
+    for features in (global_features, np.concatenate(native)):
+        quantile = np.quantile(features, [.1, .9], axis=-2)
+        summaries.extend((features.mean(-2), features.std(-2), quantile[0], quantile[1]))
+    return np.concatenate(summaries).astype(np.float32)
+
+
 def load_model(path):
     try:
         with np.load(path, allow_pickle=False) as archive:
@@ -76,12 +96,15 @@ def load_model(path):
     except BadZipFile as exc:
         raise ValueError("局部模型文件损坏。") from exc
     schema = str(model.get("schema"))
-    if schema not in (SCHEMA, QUALITY_SCHEMA):
+    if schema not in (SCHEMA, QUALITY_SCHEMA, SUMMARY_SCHEMA):
         raise ValueError("局部模型特征版本不匹配。")
     shapes = {"mean": (DIMENSIONS,), "spread": (DIMENSIONS,),
               "layers.0.weight": (32, DIMENSIONS), "layers.0.bias": (32,),
               "layers.3.weight": (16, 32), "layers.3.bias": (16,),
               "layers.5.weight": (1, 16), "layers.5.bias": (1,)}
+    if schema == SUMMARY_SCHEMA:
+        shapes = {"mean": (DIMENSIONS*8,), "spread": (DIMENSIONS*8,),
+                  "weights": (DIMENSIONS*8,), "bias": ()}
     if schema == QUALITY_SCHEMA:
         shapes.update({"quality_mean": (156,), "quality_spread": (156,),
                        "quality_weights": (156, 4), "quality_temperature": (),
@@ -116,6 +139,11 @@ def region_indices(roi):
 
 
 def score_features(model, features, *, selected_regions=None):
+    if str(model["schema"]) == SUMMARY_SCHEMA:
+        if selected_regions is not None:
+            raise ValueError("整图统计模型未单独校准选区评分。")
+        normal = ((features-model["mean"])/model["spread"]).clip(-5, 5).astype(np.float64)
+        return normal@model["weights"]+float(model["bias"])
     hidden = ((features-model["mean"])/model["spread"]).clip(-5, 5)
     for index in (0, 3):
         hidden = hidden@model[f"layers.{index}.weight"].T+model[f"layers.{index}.bias"]
@@ -142,7 +170,8 @@ def score_features(model, features, *, selected_regions=None):
 
 def analyze_image(data, model):
     image, marker = decode(data)
-    score = float(score_features(model, image_features(image)))
+    features = summary_features(image) if str(model["schema"]) == SUMMARY_SCHEMA else image_features(image)
+    score = float(score_features(model, features))
     threshold = float(model["threshold"])
     return {"model": str(model["schema"]), "experimental": True, "device": "cpu",
             "score": score, "threshold": threshold,

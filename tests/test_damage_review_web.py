@@ -66,7 +66,9 @@ def test_review_endpoint_uses_packaged_cpu_noise_model_and_preserves_region_cont
     assert result["device"] == "cpu" and result["evaluation_scope"] == "original_files"
     assert result["whole"]["score"] == expected["score"]
     assert result["whole"]["threshold"] == expected["threshold"]
-    assert result["region"]["score"] <= result["whole"]["score"]
+    assert result["region"]["status"] == "insufficient"
+    assert result["region"]["score"] is None
+    assert "整图噪声分布" in result["region"]["reason"]
     assert result["region"]["cues"] == []
     assert result["edge_preview_png"]
     assert result["image_size"] == [480, 320]
