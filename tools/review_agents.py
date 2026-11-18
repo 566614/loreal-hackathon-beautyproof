@@ -10,6 +10,7 @@ from contextlib import nullcontext
 import claim_review
 import llm_explainer
 import pipeline
+import review_harness
 
 
 PUBLICITY = "publicity"
@@ -217,6 +218,28 @@ def report_evidence(reports, question):
 
 
 def run_turn(message, copy, path, directory, options, previous, model_lock, progress):
+    if options.get("evidence_followup"):
+        session = previous["evidence_session"]
+        progress("evidence_followup", 0, 0, "running")
+        report = pipeline.reassess_references(
+            session["report"], session["references"], options["verified_references"], session["market"],
+        )
+        report["harness_trace"] = review_harness.trace(report, session["market"], followup_used=True)
+        before = session["report"]["audit"]["claims"]
+        comparison = []
+        for index, (old, new) in enumerate(zip(before, report["audit"]["claims"])):
+            old_ids = {r.get("id") for r in old["references"]}
+            comparison.append({
+                "claim_id": f"claim:{new['source']}:{index}", "quote": new["quote"],
+                "before": old["status"], "after": new["status"],
+                "added_references": [r for r in new["references"] if r.get("id") not in old_ids],
+            })
+        report["evidence_comparison"] = comparison
+        progress("evidence_followup", 0, 0, "done")
+        context = {**previous, "reports": {PUBLICITY: report}, "last_route": PUBLICITY}
+        return {"type": "review", "route": PUBLICITY, "message": "补证核验完成。请查看前后状态与新增依据。",
+                "reports": {PUBLICITY: report}, "errors": {}}, context
+
     asset_hash = None
     if path:
         digest = hashlib.sha256()
@@ -284,5 +307,15 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         summary = "已完成" + "与".join(LABELS[key] for key in reports) + "。" + (
             "另一项审核未完成，原因已列在报告中。" if errors else "可以继续询问报告中的依据。"
         )
+    context.pop("evidence_session", None)
+    if PUBLICITY in reports and not publicity_only:
+        report = reports[PUBLICITY]
+        report["harness_trace"] = review_harness.trace(report, options.get("market"))
+        if report["harness_trace"]["state"] == "waiting_evidence":
+            context["evidence_session"] = {
+                "report": report, "copy": copy, "product": options.get("product"),
+                "market": options.get("market"), "asset": asset_hash,
+                "references": options.get("references", []), "followup_job_id": None,
+            }
     context.update(pending=None, last_route=route, copy=copy, reports=reports)
     return {"type": "review", "route": route, "message": summary, "reports": reports, "errors": errors}, context

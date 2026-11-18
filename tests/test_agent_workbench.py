@@ -3,6 +3,7 @@
 import io
 import json
 import sys
+import threading
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -17,6 +18,7 @@ from web import app as web
 import doubao_damage
 import llm_explainer
 import pipeline
+import review_agents
 
 
 @pytest.fixture
@@ -59,6 +61,128 @@ def test_text_review_and_grounded_follow_up(client):
     assert answer["evidence"][0]["quote"] in source
     assert answer["evidence"][0]["detail"] in source
     assert turn(client, "为什么？", previous=job)[1]["type"] == "answer"
+
+
+HARNESS_COPY = "【青蓝精华】2025版14天水分提升20%。"
+
+
+def add_study(client, **changes):
+    data = {
+        "source": "合成测试报告", "excerpt": HARNESS_COPY, "product": "青蓝精华",
+        "version": "报告1", "locator": "第2页", "reviewer": "测试审核员",
+        "source_type": "efficacy_study", "market": "中国", "product_version": "2025版",
+        "reviewer_confirmed": True, **changes,
+    }
+    response = client.post("/api/reference-catalog", json=data)
+    assert response.status_code == 201
+    return response.json["reference"]["id"]
+
+
+def test_harness_followup_support_and_single_use(client, monkeypatch):
+    job, initial = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国")
+    original = initial["reports"]["publicity"]
+    assert original["harness_trace"]["state"] == "waiting_evidence"
+    ref = add_study(client)
+    monkeypatch.setattr(pipeline, "analyze", lambda *a, **kw: pytest.fail("补证不应重复检测"))
+    _, result = turn(client, previous=job, role="reviewer", evidence_followup="1", reference_ids=json.dumps([ref]))
+    report = result["reports"]["publicity"]
+    assert report["evidence_comparison"][0]["before"] == "证据不足"
+    assert report["evidence_comparison"][0]["after"] == "有证据支持"
+    assert report["evidence_comparison"][0]["added_references"][0]["id"] == ref
+    assert report["harness_trace"]["decision"]["action"] == "finish"
+    assert original["audit"]["claims"][0]["status"] == "证据不足"
+    duplicate = client.post("/api/agent/turn", data={
+        "previous_job_id": job, "role": "reviewer", "evidence_followup": "1", "reference_ids": json.dumps([ref]),
+    })
+    assert duplicate.status_code == 409
+
+
+@pytest.mark.parametrize("changes, expected", [
+    ({"product_version": "2024版", "excerpt": HARNESS_COPY.replace("2025", "2024")}, "证据不足"),
+    ({"market": "美国"}, "证据不足"),
+    ({"source_type": "brand_claim"}, "证据不足"),
+    ({"excerpt": HARNESS_COPY.replace("20%", "40%")}, "存在冲突"),
+])
+def test_followup_scope_and_conflicts(client, changes, expected):
+    job, _ = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国")
+    ref = add_study(client, **changes)
+    _, result = turn(client, previous=job, role="reviewer", evidence_followup="1", reference_ids=json.dumps([ref]))
+    report = result["reports"]["publicity"]
+    assert report["audit"]["claims"][0]["status"] == expected
+    assert report["harness_trace"]["decision"]["action"] == "human_review"
+
+
+def test_followup_rejects_changed_or_unverified_materials(client):
+    job, _ = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国")
+    ref = add_study(client)
+    base = {"previous_job_id": job, "role": "reviewer", "evidence_followup": "1", "reference_ids": json.dumps([ref])}
+    for changes in ({"copy": "新的宣传"}, {"market": "美国"}, {"product": "其他精华"},
+                    {"file": photo()}, {"roi": "[]"}, {"reference_ids": '["missing"]'},
+                    {"reference_ids": "[]"}, {"references": json.dumps([{"source": "自述", "excerpt": HARNESS_COPY}])}):
+        assert client.post("/api/agent/turn", data={**base, **changes}).status_code == 400
+    assert client.post("/api/agent/turn", data={**base, "previous_job_id": "expired"}).status_code == 409
+    assert client.post("/api/agent/turn", data={**base, "role": "consumer"}).status_code == 409
+
+
+def test_followup_failure_releases_reservation_and_followup_does_not_need_model(client, monkeypatch):
+    job, _ = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国")
+    ref = add_study(client)
+    original = pipeline.reassess_references
+    monkeypatch.setattr(pipeline, "reassess_references", lambda *a: (_ for _ in ()).throw(OSError("read failed")))
+    data = {"previous_job_id": job, "role": "reviewer", "evidence_followup": "1", "reference_ids": json.dumps([ref])}
+    response = client.post("/api/agent/turn", data=data)
+    failed_id = response.json["job_id"]
+    for _ in range(200):
+        if client.get("/api/job/" + failed_id).json["status"] == "error":
+            break
+        time.sleep(.01)
+    assert web.JOBS[job]["context"]["evidence_session"]["followup_job_id"] is None
+    monkeypatch.setattr(pipeline, "reassess_references", original)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
+    monkeypatch.setattr(llm_explainer, "deepseek_json", lambda *a, **kw: pytest.fail("续审应离线执行"))
+    assert turn(client, **data)[1]["reports"]["publicity"]["audit"]["claims"][0]["status"] == "有证据支持"
+
+
+def test_followup_reuses_image_snapshot_after_cleanup(client, monkeypatch):
+    def image_review(path, copy, options, directory, model, progress, model_lock):
+        report = pipeline.analyze(text=copy, publish=False, run_root=directory)
+        report["image"] = {"name": "item.png", "sha256": "snapshot"}
+        report["audit"]["checks"]["ocr"] = {"status": "completed"}
+        return report
+    monkeypatch.setattr(review_agents, "publicity_agent", image_review)
+    job, initial = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国", file=photo())
+    assert initial["reports"]["publicity"]["harness_trace"]["state"] == "waiting_evidence"
+    ref = add_study(client)
+    _, result = turn(client, previous=job, role="reviewer", evidence_followup="1", reference_ids=json.dumps([ref]))
+    assert result["reports"]["publicity"]["image"]["sha256"] == "snapshot"
+
+
+def test_concurrent_followup_and_answer_cannot_bypass_single_use(client, monkeypatch):
+    job, _ = turn(client, "核验宣传文案：" + HARNESS_COPY, role="reviewer", market="中国")
+    answer_job, _ = turn(client, "为什么？", previous=job, role="reviewer")
+    ref = add_study(client)
+    started, release = threading.Event(), threading.Event()
+    original = pipeline.reassess_references
+
+    def blocked(*args):
+        started.set()
+        assert release.wait(5)
+        return original(*args)
+
+    monkeypatch.setattr(pipeline, "reassess_references", blocked)
+    data = {"previous_job_id": job, "role": "reviewer", "evidence_followup": "1", "reference_ids": json.dumps([ref])}
+    response = client.post("/api/agent/turn", data=data)
+    try:
+        assert started.wait(5)
+        assert client.post("/api/agent/turn", data={**data, "previous_job_id": answer_job}).status_code == 409
+    finally:
+        release.set()
+    for _ in range(200):
+        state = client.get("/api/job/" + response.json["job_id"]).json["status"]
+        if state == "done":
+            break
+        time.sleep(.01)
+    assert state == "done"
 
 
 def test_image_only_clarifies_and_upload_completes_damage(client):

@@ -19,6 +19,9 @@
 }
 
 body { background: var(--ground); color: var(--ink); font-family: var(--display); }
+.claim-table-wrap { overflow-x: auto; }
+.claim-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.claim-table th, .claim-table td { padding: 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
 ::selection { background: #eed0ce; color: var(--ink); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 

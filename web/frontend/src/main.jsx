@@ -20,6 +20,7 @@ const toolLabels = {
   ocr: "图中文字", ai_label: "AI 来源标识", aigc: "生成倾向", trufor: "局部异常",
   text: "文案检查", crossmodal: "图文对照", claim_model: "DeepSeek 文案模型", semantic_review: "语义复核",
   router: "识别审核需求", publicity: "宣传核验", damage: "退款破损审核", image_agent: "图像证据复核",
+  evidence_followup: "补证后核验",
 };
 const risks = {
   high_risk: ["高风险", "error"], suspicious: ["待复核", "warning"],
@@ -224,12 +225,83 @@ function ImageResults({ result }) {
   </div>;
 }
 
-function EvidenceResults({ result }) {
+const harnessActions = {
+  request_metadata: "补充产品、版本或市场", request_original: "补充清晰原图",
+  request_study: "补充已核验功效试验", human_review: "转人工复核", finish: "结束取证",
+};
+
+function downloadJson(value, name) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function HarnessResults({ result, references, busy, onFollowup, onAddReference }) {
+  const [selected, setSelected] = useState([]);
+  const trace = result.harness_trace;
+  if (!trace) return null;
+  return <div className="result-stack">
+    <p><b>下一步</b>　{trace.decision.label}</p>
+    <p className="muted">策略 {trace.policy_version} · {trace.decision.reason_code} · {trace.elapsed_ms} ms</p>
+    <p className="muted">依据编号　{trace.decision.evidence_ids.join("、") || "尚无可用观测"}</p>
+    {trace.state === "waiting_evidence" && <>
+      <p>核对功效试验原文、产品版本和市场后，选择资料继续核验。</p>
+      <Button onClick={onAddReference} disabled={busy}>添加已核验资料</Button>
+      <Select mode="multiple" aria-label="补证资料" placeholder="选择已核验资料" value={selected}
+        onChange={setSelected} disabled={busy} options={references.map(ref => ({
+          value: ref.id, label: `${ref.source} · ${ref.product} · ${ref.locator}`,
+        }))} />
+      <Button type="primary" disabled={busy || !selected.length} onClick={() => onFollowup(selected)}>
+        补证后核验
+      </Button>
+    </>}
+    {!!result.evidence_comparison?.length && <>
+      <p>已沿用原始观测完成一次补证核验。</p>
+      <div className="claim-table-wrap"><table className="claim-table">
+        <thead><tr><th scope="col">宣称</th><th scope="col">补证前</th><th scope="col">补证后</th></tr></thead>
+        <tbody>{result.evidence_comparison.map(row => <tr key={row.claim_id}>
+          <td>{row.quote}</td><td>{row.before}</td><td>{row.after}</td>
+        </tr>)}</tbody>
+      </table></div>
+      {result.evidence_comparison.flatMap(row => row.added_references.map(ref => <p key={`${row.claim_id}-${ref.id}`}>
+        <b>新增引用</b>　{ref.source} · {ref.locator}<br />{ref.quote}
+      </p>))}
+    </>}
+    <Button onClick={() => downloadJson({ schema: "beautyproof/harness@1", sample_id: result.run_id, ...trace }, "harness-trace.json")}>
+      下载决策轨迹
+    </Button>
+    <Collapse items={[{ key: "feedback", label: "标注取证顺序并导出回放样本", children:
+      <Form layout="vertical" requiredMark={false} initialValues={{ sample_id: result.run_id, split: "development" }}
+        onFinish={values => downloadJson({
+          sample_id: values.sample_id, group: values.group, split: values.split, kind: "reviewer_labeled",
+          observation: trace.observation,
+          feedback: { correct_action: values.correct_action, reason: values.reason },
+        }, "harness-feedback.json")}>
+        <Form.Item name="sample_id" label="样本编号" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
+        <Form.Item name="group" label="来源组（同一宣传或试验使用同组）" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
+        <Form.Item name="split" label="分区" rules={[{ required: true }]}><Select options={[
+          { value: "development", label: "开发集" }, { value: "holdout", label: "冻结留出集" },
+        ]} /></Form.Item>
+        <Form.Item name="correct_action" label="正确下一步" rules={[{ required: true }]}>
+          <Select options={Object.entries(harnessActions).map(([value, label]) => ({ value, label }))} />
+        </Form.Item>
+        <Form.Item name="reason" label="纠正理由" rules={[{ required: true, whitespace: true }]}><Input.TextArea rows={2} /></Form.Item>
+        <Button htmlType="submit">导出反馈与观测</Button>
+      </Form>,
+    }]} />
+  </div>;
+}
+
+function EvidenceResults({ result, ...harnessProps }) {
   const evidence = result.evidence || {};
   const checks = result.audit?.checks || {};
   const keys = [...new Set([...Object.keys(checks), ...Object.keys(evidence)])];
   const actions = [...(result.agent?.decisions || []), ...(result.agent?.actions || [])];
   return <div className="result-stack">
+    <HarnessResults result={result} {...harnessProps} />
     <Collapse items={keys.map(key => ({
       key,
       label: result.tool_meta?.[key]?.label || toolLabels[key] || key,
@@ -290,7 +362,7 @@ function reportText(result) {
   ].filter(line => line != null && line !== false).join("\n");
 }
 
-function FinishedReport({ result }) {
+function FinishedReport({ result, ...harnessProps }) {
   const [copy, setCopy] = useState("");
   const verdict = result.verdict;
   const [label, color] = risks[verdict.risk_level] || risks.inconclusive;
@@ -327,7 +399,7 @@ function FinishedReport({ result }) {
       { key: "image", label: "图片审核", children: <ImageResults result={result} /> },
       { key: "claims", label: hasClaims ? "文字审核（" + result.audit.claims.length + "）" : "文字审核", children: <ClaimResults result={result} /> },
       { key: "crossmodal", label: "图文匹配", children: <CrossmodalResults result={result} /> },
-      { key: "tools", label: "检查记录", children: <EvidenceResults result={result} /> },
+      { key: "tools", label: "检查记录", children: <EvidenceResults result={result} {...harnessProps} /> },
     ]} />
     {explanation.caveat && <p className="report-caveat">{explanation.caveat}</p>}
   </Card>;
@@ -494,6 +566,17 @@ function Workbench({ role, onReset }) {
     runTurn(data, { kind: "user", text: message || copy, attachment: file?.name });
   }
 
+  function followup(referenceIds) {
+    if (request.current || !review) return;
+    const data = new FormData();
+    data.set("role", role);
+    data.set("evidence_followup", "1");
+    data.set("previous_job_id", review.id);
+    data.set("reference_ids", JSON.stringify(referenceIds));
+    data.set("llm", "0");
+    runTurn(data, { kind: "user", text: "使用已核验资料补证后核验。" });
+  }
+
   async function runTurn(data, entry) {
     const controller = new AbortController();
     request.current = controller;
@@ -538,7 +621,8 @@ function Workbench({ role, onReset }) {
   const reportContent = <>
     {busy && <RunningReport steps={steps} />}
     {review ? <div className="review-results" key={review.id}>
-      {review.reports.publicity && <FinishedReport result={review.reports.publicity} />}
+      {review.reports.publicity && <FinishedReport result={review.reports.publicity}
+        references={references} busy={busy} onFollowup={followup} onAddReference={() => setReferenceOpen(true)} />}
       {review.reports.damage && <DamageReport result={review.reports.damage} />}
       {Object.entries(review.errors).map(([key, value]) => <Alert key={key} type="error" showIcon
         title={reviewLabels[key]} description={value} />)}
