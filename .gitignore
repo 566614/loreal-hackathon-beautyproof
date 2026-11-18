@@ -242,6 +242,10 @@ models/*
 !models/beautyproof_aigen_v2/
 !models/beautyproof_aigen_v3/
 !models/beautyproof_aigen_v4/
+# 退款审核的轻量 CPU 推理权重。
+!models/doubao_damage/
+models/doubao_damage/*
+!models/doubao_damage/quality-local-model.npz
 
 # TruFor 推理中间产物（每次跑都会自动重建，且是原图副本 + 定位图 npz，不必进仓库）
 outputs/_trufor_in/

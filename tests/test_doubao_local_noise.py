@@ -50,6 +50,21 @@ def test_neutral_quality_calibration_preserves_the_network_score():
     np.testing.assert_allclose(original, adjusted, rtol=0, atol=2e-6)
 
 
+@pytest.mark.parametrize("calibrated", [False, True])
+@pytest.mark.parametrize("roi", [[.09, .09, .1, .1], [.2, .2, .8, .8]])
+def test_selected_regions_share_context_and_cannot_raise_the_whole_image_score(calibrated, roi):
+    model = parameters(calibrated)
+    generator = np.random.default_rng(20261119)
+    regions = generator.normal(size=(2, 256, 78)).astype(np.float32)
+    whole = doubao_local_noise.score_features(model, regions)
+    selected = doubao_local_noise.region_indices(roi)
+    local = doubao_local_noise.score_features(model, regions, selected_regions=selected)
+    assert np.all(local <= whole)
+    full_frame = doubao_local_noise.region_indices([0, 0, 1, 1])
+    repeated = doubao_local_noise.score_features(model, regions, selected_regions=full_frame)
+    np.testing.assert_array_equal(whole, repeated)
+
+
 def test_quality_calibration_rejects_zero_spread(tmp_path):
     model = parameters(calibrated=True)
     model["quality_width"][0] = 0
@@ -65,4 +80,12 @@ def test_local_model_requires_a_calibrated_threshold(tmp_path):
     path = tmp_path/"uncalibrated.npz"
     np.savez_compressed(path, **model)
     with pytest.raises(ValueError, match="校准阈值"):
+        doubao_local_noise.load_model(path)
+
+
+def test_partial_weight_archive_is_a_model_loading_error(tmp_path):
+    path = tmp_path/"partial.npz"
+    np.savez_compressed(path, **parameters())
+    path.write_bytes(path.read_bytes()[:-64])
+    with pytest.raises(ValueError, match="模型文件损坏"):
         doubao_local_noise.load_model(path)

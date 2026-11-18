@@ -2,6 +2,7 @@
 import argparse
 import json
 from pathlib import Path
+from zipfile import BadZipFile
 
 import cv2
 import numpy as np
@@ -69,8 +70,11 @@ def image_features(image):
 
 
 def load_model(path):
-    with np.load(path, allow_pickle=False) as archive:
-        model = {key: archive[key].copy() for key in archive.files}
+    try:
+        with np.load(path, allow_pickle=False) as archive:
+            model = {key: archive[key].copy() for key in archive.files}
+    except BadZipFile as exc:
+        raise ValueError("局部模型文件损坏。") from exc
     schema = str(model.get("schema"))
     if schema not in (SCHEMA, QUALITY_SCHEMA):
         raise ValueError("局部模型特征版本不匹配。")
@@ -104,14 +108,26 @@ def quality_features(features):
                           axis=-1).astype(np.float32)
 
 
-def score_features(model, features):
+def region_indices(roi):
+    centers = (np.arange(GRID)+.5)/GRID
+    horizontal, vertical = np.meshgrid(centers, centers)
+    return np.flatnonzero((horizontal >= roi[0]) & (horizontal <= roi[2]) &
+                          (vertical >= roi[1]) & (vertical <= roi[3]))
+
+
+def score_features(model, features, *, selected_regions=None):
     hidden = ((features-model["mean"])/model["spread"]).clip(-5, 5)
     for index in (0, 3):
         hidden = hidden@model[f"layers.{index}.weight"].T+model[f"layers.{index}.bias"]
         hidden = hidden/(1+np.exp(np.clip(-hidden, -80, 80)))
     scores = (hidden@model["layers.5.weight"].T+model["layers.5.bias"])[..., 0]
     largest = np.partition(scores, -12, axis=-1)[..., -12:]
-    score = .8*largest.mean(-1)+.2*scores.mean(-1)
+    peak = largest.mean(-1)
+    if selected_regions is not None:
+        count = min(12, len(selected_regions))
+        local = np.partition(scores[..., selected_regions], -count, axis=-1)[..., -count:]
+        peak = np.minimum(peak, local.mean(-1))
+    score = .8*peak+.2*scores.mean(-1)
     if str(model["schema"]) == QUALITY_SCHEMA:
         quality = ((quality_features(features)-model["quality_mean"])/model["quality_spread"]).clip(-5, 5)
         logits = (quality@model["quality_weights"]+.25)/float(model["quality_temperature"])

@@ -56,6 +56,24 @@ def test_metadata_survives_image_too_small_for_scoring(tmp_path):
     assert "像素" in result["whole"]["reason"]
 
 
+def test_small_region_keeps_the_default_whole_image_decision():
+    data = encode(sample_image())
+    whole = doubao_damage.analyze_image(data)
+    selected = doubao_damage.analyze_image(data, [.1, .1, .11, .11])
+    assert selected["whole"] == whole["whole"]
+    assert selected["region"]["status"] == "insufficient"
+    assert selected["region"]["score"] is None
+    assert "采样点" in selected["region"]["reason"]
+
+
+def test_default_missing_model_reports_the_same_cause_for_whole_and_region(tmp_path):
+    result = doubao_damage.analyze_image(encode(sample_image()), [.2, .2, .8, .8],
+                                        model_path=tmp_path/"missing.npz")
+    assert result["model"] is None
+    assert result["whole"]["status"] == result["region"]["status"] == "insufficient"
+    assert result["whole"]["reason"] == result["region"]["reason"]
+
+
 @pytest.mark.parametrize("roi", [[0.5, 0.2, 0.4, 0.7], [0.1, 0.5, 1.1, 1.0], [False, 0.1, 1, 1]])
 def test_invalid_region_fails_before_image_decode(roi):
     with pytest.raises(ValueError, match="坐标"):

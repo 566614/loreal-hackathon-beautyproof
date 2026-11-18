@@ -2,7 +2,11 @@
 
 在 BeautyProof 顶栏选择「退款破损审核」，上传 JPG 或 PNG，点击「开始检查」。可以框选裂痕、碎粉或包装破口。结果包含整图和选区的检测分、复核阈值、像素线索与来源标识。橙色覆盖图显示候选边缘，可能包含印刷线、接缝与反光。
 
-本地默认从 `models/doubao_damage/model.json` 读取 v5 CPU 权重。整图用色度和再压缩响应，框选同时使用局部噪声与裂纹叠片，在统一的 288 像素短边提取特征。v5 的权重是 17,201 字节。v4 权重保存在 `outputs/runs/doubao-damage-accuracy/reproduced/model.json`。
+本地默认从 `models/doubao_damage/quality-local-model.npz` 读取 19,392 字节的 CPU 权重，通过 NumPy 汇总局部通道、噪声与重采样响应，并按图内画质响应校准。检测分与同一模型的复核阈值比较。选区共用整图噪声上下文，分数最多达到整图分数，选区过小时提示扩大范围。候选边缘通过预览显示。
+
+当前主要验收原文件。固定开发验证包含 25 张新 AI 图和 25 张完好实拍，接口复测准确率为 98%、实拍误报率为 4%。验证集已用于多轮开发，真实破损实拍对照为 0。
+
+`POST /api/damage-review` 和 `python tools/doubao_damage.py` 使用同一默认权重。50 张图分别进行整图和带选区请求，共 100 次 Flask 请求客户端核对，整图判定均复现，框选请求也保持同一整图判定。接口处理耗时的本机 CPU P95 为 0.153 秒，带选区为 0.229 秒。所选区域的独立分类准确率尚未评测。记录在本机 `outputs/runs/doubao-damage-new-20261118/http-review-verification.json`。
 
 ## v5 降低误报
 
@@ -176,7 +180,7 @@ python tools/doubao_damage.py "样图.jpg" --roi "[0.25,0.4,0.7,0.85]"
 python tools/doubao_damage.py $aiDir
 ```
 
-训练命令写模型副本到指定输出目录，可用 `--model` 指向该文件单独评分。工作台默认权重路径维持不变。接口 `POST /api/damage-review` 的 multipart 表单接收 `file` 和可选的归一化 EXIF 坐标 `roi`，响应包含 `whole`、`region` 和候选边缘叠图。
+训练命令写模型副本到指定输出目录，可用 `--model` 指向该文件单独评分。旧版 JSON 模型通过该参数复跑。工作台默认加载 `models/doubao_damage/quality-local-model.npz`。接口 `POST /api/damage-review` 的 multipart 表单接收 `file` 和可选的归一化 EXIF 坐标 `roi`，响应包含 `whole`、`region` 和候选边缘叠图。
 
 
 ## 裂纹算子叠片和数学建模
