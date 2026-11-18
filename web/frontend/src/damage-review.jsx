@@ -1,4 +1,5 @@
-import { Button, Card, Space } from "antd";
+import { Button, Space } from "antd";
+import { ArrowRightOutlined, FileSearchOutlined } from "@ant-design/icons";
 import React, { useRef, useState } from "react";
 
 const SOURCE_LABELS = {
@@ -84,11 +85,13 @@ export function DamageRegion({ preview, roi, onChange, busy }) {
 
 export function DamageReport({ result }) {
   const { preview, roi, edge_preview_png: overlay, whole, region } = result;
-  return <Card className="surface report-surface" title="退款破损审核">
+  return <article className="review-document damage-document report-surface">
+    <header className="report-titlebar"><div><FileSearchOutlined aria-hidden="true" /><h2>退款破损审核</h2></div></header>
     <div className="result-stack">
       {whole && <Assessment title="整图" data={whole} />}
       {region && <Assessment title="选区" data={region} />}
-      <p className="next-action"><b>下一步</b>　结合原始图片和售后凭证人工复核。</p>
+      <div className="report-next"><ArrowRightOutlined aria-hidden="true" />
+        <p><b>下一步</b><span>结合原始图片和售后凭证人工复核。</span></p></div>
       {preview && <figure className="damage-edge">
         <div className="damage-photo">
           <img src={preview} alt="退款破损送审图片" />
@@ -106,5 +109,5 @@ export function DamageReport({ result }) {
         <p className="muted">{result.model ? result.model + " · CPU" : "本地 CPU 检查未加载破损模型。"}</p>
       </details>
     </div>
-  </Card>;
+  </article>;
 }

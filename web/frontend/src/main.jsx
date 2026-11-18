@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Alert, Avatar, Button, Card, Checkbox, Collapse, ConfigProvider, Drawer, Dropdown, Form, Image, Input, Modal,
+  Alert, Avatar, Button, Checkbox, Collapse, ConfigProvider, Drawer, Dropdown, Form, Image, Input, Modal,
   Select, Spin, Tabs, Tag, Tooltip, Upload,
 } from "antd";
 import {
   AppstoreOutlined, ArrowLeftOutlined, ArrowRightOutlined, ArrowUpOutlined, AuditOutlined,
   CloseOutlined, CopyOutlined, DownloadOutlined, FileSearchOutlined, MessageOutlined, PaperClipOutlined,
-  PictureOutlined, PlusOutlined, ScanOutlined, SwapOutlined, UploadOutlined, UserOutlined,
+  PictureOutlined, PlusOutlined, ScanOutlined, SwapOutlined, UploadOutlined, UserOutlined, CheckCircleOutlined,
+  FileTextOutlined, LinkOutlined, SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import zhCN from "antd/locale/zh_CN";
 import "antd/dist/reset.css";
@@ -111,7 +112,7 @@ function ClaimResults({ result }) {
       <Tag color="orange">词语线索 · 待人工复核</Tag><blockquote>{item.context}</blockquote>
       <p>{item.review_reason}</p>
     </article>)}
-    {contextConflicts.map((item, index) => <article className="claim" key={"context-" + index}>
+    {contextConflicts.map((item, index) => <article className="claim claim-conflict" key={"context-" + index}>
       <Tag color="orange">{item.type}</Tag>
       <blockquote><mark>{item.first.quote}</mark></blockquote>
       <blockquote><mark>{item.second.quote}</mark></blockquote>
@@ -243,23 +244,23 @@ function HarnessResults({ result, references, busy, onFollowup, onAddReference }
   const [selected, setSelected] = useState([]);
   const trace = result.harness_trace;
   if (!trace) return null;
-  return <div className="result-stack">
-    <p><b>下一步</b>　{trace.decision.label}</p>
-    <p className="muted">策略 {trace.policy_version} · {trace.decision.reason_code} · {trace.elapsed_ms} ms</p>
-    <p className="muted">依据编号　{trace.decision.evidence_ids.join("、") || "尚无可用观测"}</p>
+  return <section className="result-stack harness-result" aria-label="取证与补证">
+    <div className="harness-action"><span className="report-symbol"><ScanOutlined aria-hidden="true" /></span>
+      <div><span className="muted">下一步</span><h3>{trace.decision.label}</h3></div>
+    </div>
     {trace.state === "waiting_evidence" && <>
       <p>核对功效试验原文、产品版本和市场后，选择资料继续核验。</p>
-      <Button onClick={onAddReference} disabled={busy}>添加已核验资料</Button>
+      <Button className="harness-add-reference" icon={<PlusOutlined />} onClick={onAddReference} disabled={busy}>添加已核验资料</Button>
       <Select mode="multiple" aria-label="补证资料" placeholder="选择已核验资料" value={selected}
         onChange={setSelected} disabled={busy} options={references.map(ref => ({
           value: ref.id, label: `${ref.source} · ${ref.product} · ${ref.locator}`,
         }))} />
-      <Button type="primary" disabled={busy || !selected.length} onClick={() => onFollowup(selected)}>
+      <Button className="harness-submit" type="primary" disabled={busy || !selected.length} onClick={() => onFollowup(selected)}>
         补证后核验
       </Button>
     </>}
     {!!result.evidence_comparison?.length && <>
-      <p>已沿用原始观测完成一次补证核验。</p>
+      <p className="comparison-caption"><CheckCircleOutlined aria-hidden="true" /> 已沿用原始观测完成一次补证核验。</p>
       <div className="claim-table-wrap"><table className="claim-table">
         <thead><tr><th scope="col">宣称</th><th scope="col">补证前</th><th scope="col">补证后</th></tr></thead>
         <tbody>{result.evidence_comparison.map(row => <tr key={row.claim_id}>
@@ -270,9 +271,13 @@ function HarnessResults({ result, references, busy, onFollowup, onAddReference }
         <b>新增引用</b>　{ref.source} · {ref.locator}<br />{ref.quote}
       </p>))}
     </>}
-    <Button onClick={() => downloadJson({ schema: "beautyproof/harness@1", sample_id: result.run_id, ...trace }, "harness-trace.json")}>
-      下载决策轨迹
-    </Button>
+    <details className="evidence-detail harness-trace"><summary>查看决策轨迹</summary>
+      <dl className="trace-facts"><div><dt>策略版本</dt><dd>{trace.policy_version}</dd></div>
+        <div><dt>决策理由</dt><dd>{trace.decision.reason_code}</dd></div>
+        <div><dt>决策耗时</dt><dd>{trace.elapsed_ms} ms</dd></div>
+        <div><dt>依据编号</dt><dd>{trace.decision.evidence_ids.join("、") || "尚无可用观测"}</dd></div></dl>
+      <Button icon={<DownloadOutlined />} onClick={() => downloadJson({ sample_id: result.run_id, ...trace }, "harness-trace.json")}>下载决策轨迹</Button>
+    </details>
     <Collapse items={[{ key: "feedback", label: "标注取证顺序并导出回放样本", children:
       <Form layout="vertical" requiredMark={false} initialValues={{ sample_id: result.run_id, split: "development" }}
         onFinish={values => downloadJson({
@@ -292,7 +297,7 @@ function HarnessResults({ result, references, busy, onFollowup, onAddReference }
         <Button htmlType="submit">导出反馈与观测</Button>
       </Form>,
     }]} />
-  </div>;
+  </section>;
 }
 
 function EvidenceResults({ result, ...harnessProps }) {
@@ -384,25 +389,30 @@ function FinishedReport({ result, ...harnessProps }) {
       setCopy("复制失败，可下载报告");
     }
   }
-  return <Card className="surface report-surface" title="宣传核验" extra={<Dropdown menu={{ items: [
+  return <article className="review-document report-surface">
+    <header className="report-titlebar"><div><FileSearchOutlined aria-hidden="true" /><h2>宣传核验</h2></div>
+      <Dropdown menu={{ items: [
     { key: "download", label: "下载 Markdown", icon: <DownloadOutlined />, onClick: download },
     { key: "copy", label: "复制结论", icon: <CopyOutlined />, onClick: copySummary },
-  ] }} trigger={["click"]}><Button size="small" type="text">报告操作</Button></Dropdown>}>
+  ] }} trigger={["click"]}><Button size="small" type="text" icon={<DownloadOutlined aria-hidden="true" />}>报告操作</Button></Dropdown>
+    </header>
     <div className="report-heading">
-      <Tag color={color}>{label}</Tag>
-      <h2>{explanation.headline || label}</h2>
-      {explanation.summary && <p>{explanation.summary}</p>}
-      {explanation.what_to_do && <p className="next-action"><b>下一步</b>　{explanation.what_to_do}</p>}
+      <div className="report-status"><Tag color={color}>{label}</Tag>
+        <span>{result.image?.name || "正文审核"}</span></div>
+      <h3>{explanation.headline || label}</h3>
+      {explanation.summary && <p className="report-summary">{explanation.summary}</p>}
+      {explanation.what_to_do && <div className="report-next"><ArrowRightOutlined aria-hidden="true" />
+        <p><b>下一步</b><span>{explanation.what_to_do}</span></p></div>}
       {copy && <span role="status" className="muted">{copy}</span>}
     </div>
-    <Tabs defaultActiveKey={hasClaims || !result.image ? "claims" : "image"} items={[
-      { key: "image", label: "图片审核", children: <ImageResults result={result} /> },
-      { key: "claims", label: hasClaims ? "文字审核（" + result.audit.claims.length + "）" : "文字审核", children: <ClaimResults result={result} /> },
-      { key: "crossmodal", label: "图文匹配", children: <CrossmodalResults result={result} /> },
-      { key: "tools", label: "检查记录", children: <EvidenceResults result={result} {...harnessProps} /> },
+    <Tabs className="report-tabs" defaultActiveKey={hasClaims || !result.image ? "claims" : "image"} items={[
+      { key: "image", label: <><PictureOutlined aria-hidden="true" /><span>图片审核</span></>, children: <ImageResults result={result} /> },
+      { key: "claims", label: <><FileTextOutlined aria-hidden="true" /><span>文字审核</span>{hasClaims && <span className="report-tab-count">{result.audit.claims.length}</span>}</>, children: <ClaimResults result={result} /> },
+      { key: "crossmodal", label: <><LinkOutlined aria-hidden="true" /><span>图文匹配</span></>, children: <CrossmodalResults result={result} /> },
+      { key: "tools", label: <><SafetyCertificateOutlined aria-hidden="true" /><span>检查记录</span></>, children: <EvidenceResults result={result} {...harnessProps} /> },
     ]} />
     {explanation.caveat && <p className="report-caveat">{explanation.caveat}</p>}
-  </Card>;
+  </article>;
 }
 
 const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
