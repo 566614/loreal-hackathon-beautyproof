@@ -22,6 +22,26 @@
       "count": 695,
       "size_kb": 269.8,
       "fields": ["comment_id", "note_id", "content", "nickname", "like_count", "sub_comment_count", "create_time"]
+    },
+    {
+      "file": "curated_phrase_patterns.jsonl",
+      "type": "curated_phrase_references",
+      "source": "editorial synthesis from publicly described beauty-content patterns and official guidance; not scraped posts",
+      "count": 200,
+      "categories": {
+        "情景开场": 20,
+        "效果宣称": 20,
+        "数字与周期": 20,
+        "成分与技术": 20,
+        "人群与肤质": 20,
+        "购买引导": 20,
+        "个人体验": 20,
+        "评论互动": 20,
+        "图片与证据": 20,
+        "趋势与内容结构": 20
+      },
+      "fields": ["id", "category", "title", "phrase", "reading", "check", "provenance", "source_refs", "is_real_post", "is_efficacy_evidence"],
+      "size_kb": 101.5
     }
   ],
   "rule_docs": [
@@ -39,6 +59,14 @@
     "国货彩妆", "国货之光", "平价好物", "学生党好物",
     "花知晓", "完美底妆", "新手化妆教程", "送礼好物"
   ],
-  "total_size_kb": 386.4,
-  "capture_tool": "NanmiCoder/MediaCrawler (67k+ stars)"
+  "total_size_kb": 487.9,
+  "capture_tool": "NanmiCoder/MediaCrawler (67k+ stars)",
+  "source_references": {
+    "NMPA_EFFICACY_RULES": "https://yjj.scjgj.fujian.gov.cn/hzp/flfg/202107/t20210708_5642667.htm",
+    "SAMR_INTERNET_AD_RULES": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_d93a579afd45413e8576e4623fab348f.html",
+    "XHS_FALSE_CLAIMS_GUIDANCE": "https://school.xiaohongshu.com/rule/detail/119727",
+    "PUBLIC_BEAUTY_TREND_REPORTING": "https://www.donews.com/article/detail/5099/55964.html",
+    "EDITORIAL_SYNTHESIS": "Independently phrased examples organized from the above public references; entries do not quote specific posts or claim that a pattern is proof."
+  },
+  "notes": "curated_phrase_patterns.jsonl 中的 200 条是归纳示例，不是真实抓取笔记、用户评价、功效证据或广告定性标签。"
 }

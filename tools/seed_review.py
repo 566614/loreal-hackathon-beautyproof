@@ -54,6 +54,14 @@ def knowledge():
                 rows.append({"id": f"{path.stem}:{index}", "source": name,
                              "locator": row.get("title") or "社区用语参考", "excerpt": excerpt,
                              "kind": "community_example"})
+    path = KB / "curated_phrase_patterns.jsonl"
+    if path.exists():
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
+            row = json.loads(line)
+            rows.append({"id": row["id"], "source": "归纳话术参考（非真实笔记）",
+                         "locator": row["title"],
+                         "excerpt": f"示例表达：{row['phrase']} 参考理解：{row['reading']} 复核方向：{row['check']}",
+                         "kind": "synthesized_pattern", "source_refs": row["source_refs"]})
     return rows
 
 
@@ -64,7 +72,8 @@ def retrieve(text):
     selected = []
     for name in ("confirmed_ad_case.md", "ad_detection_rules.md", "beauty_categories.md"):
         selected.extend(next(([r] for r in ranked if r["source"] == name), []))
-    selected.extend([r for r in ranked if r["kind"] == "community_example"][:2])
+    selected.extend([r for r in ranked if r["kind"] == "community_example"][:1])
+    selected.extend([r for r in ranked if r["kind"] == "synthesized_pattern"][:2])
     return selected
 
 
@@ -190,7 +199,7 @@ def analyze(paths, names, copy, comments, profile, request_json, progress):
                          "writing": "写给普通用户：title不超过16字；analysis只写一句话、不超过60字；action只写一句话、不超过24字；不用适配、协同性、产品级、证据缺口、阈值、校准等术语；每条只解释一件事，不把多个问题塞进一句话。",
                          "conclusion_confidence": "0到1的数字，表示你对本次综合判断的主观把握；未经统计校准，不是图片AI概率或产品功效有效率。截图信息有限时不要给绝对的1，也不要只因送审方标签就机械给满分。"},
             "limits": ["精确参数不单独证明广告，问题不是功效证据，评论一致性不证明水军。",
-                       "编辑规则与社区语料不是产品功效证明；不采用其价格、时长、SPF经验值作硬阈值。",
+                       "编辑规则、社区语料和归纳话术都不是产品功效证明；归纳示例不是用户原帖、广告证据或虚假宣传判定依据；不采用其中的价格、时长或SPF经验值作硬阈值。",
                        "你仅收到文字观测，不得虚构像素检测分或确认实拍与AI；不诊断皮肤病。",
                        "没有硬矛盾就说没有；根据evidence_ids引用原材料；reference_ids仅引用提供的资料。",
                        "个人主观感受可以保留，不能替代成品试验。",

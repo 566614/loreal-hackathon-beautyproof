@@ -88,7 +88,8 @@ export default function SeedReport({ result }) {
     <details className="seed-references"><summary>查看参考资料</summary>
       <p>产品效果还需要品牌提供试验依据。</p>
       {result.references.map(ref => <section key={ref.id}><strong>{ref.locator}</strong>
-        <small>{ref.source} · {ref.kind === "community_example" ? "其他笔记的用语参考" : "编辑参考"}</small>
+        <small>{ref.source} · {ref.kind === "community_example" ? "社区用语参考" :
+          ref.kind === "synthesized_pattern" ? "整理示例，不代表真实笔记" : "编辑参考"}</small>
         <p>{ref.excerpt.slice(0, 450)}</p></section>)}
     </details>
   </article>;
