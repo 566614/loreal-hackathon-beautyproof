@@ -94,6 +94,14 @@ def test_reviewer_image_defaults_to_local_damage(case_client):
     assert result["reports"]["damage"]["device"] == "cpu"
 
 
+def test_consumer_plain_text_does_not_need_a_routing_keyword(case_client):
+    client, _ = case_client
+    _, result = send(client, [("role", "consumer"), ("message", "姐妹闭眼入，这个真的超级好用")])
+    report = result["reports"]["publicity"]
+    assert report["source_counts"]["body"] == 1
+    assert any(f["category"] == "promotion" for f in report["findings"])
+
+
 def test_deepseek_refinement_requires_real_evidence_and_reference_ids(tmp_path, monkeypatch):
     path = tmp_path / "test.png"
     path.write_bytes(png("white"))

@@ -274,8 +274,10 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
     seed = previous.get("reports", {}).get(PUBLICITY, {}).get("schema") == "beautyproof/seed-review@1"
     if seed and message and not NEW_REVIEW.search(message):
         route = "answer"
-    elif options.get("publicity_only") and route == "clarify" and (path or copy or options.get("comments")):
+    elif options.get("publicity_only") and route == "clarify" and (message or path or copy or options.get("comments")):
         route = PUBLICITY
+        if not path and not copy and not options.get("comments"):
+            copy = message
     progress("router", 0, 0, "done")
     publicity_only = options.get("publicity_only", False)
     context = {**previous, "asset": asset_hash or previous.get("asset"), "publicity_only": publicity_only}
