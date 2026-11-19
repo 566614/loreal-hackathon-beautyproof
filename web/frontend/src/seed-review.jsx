@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Button, Tag } from "antd";
 import { ArrowRightOutlined, CheckCircleOutlined, FileSearchOutlined, PictureOutlined } from "@ant-design/icons";
 import "./seed-review.css";
-import AnalysisProcess from "./analysis-process.jsx";
 
 const categories = { all: "全部线索", promotion: "推广", efficacy: "功效参数", suitability: "适配",
   comments: "评论导流", logic: "逻辑", image: "图片", credible: "可参考" };
@@ -36,22 +35,31 @@ export default function SeedReport({ result }) {
   const [category, setCategory] = useState("all");
   const [activeId, setActiveId] = useState(result.findings[0]?.id);
   const [evidenceId, setEvidenceId] = useState(null);
+  const detailRef = useRef(null);
   const visible = result.findings.filter(f => category === "all" || f.category === category);
   const active = visible.find(f => f.id === activeId) || visible[0];
   const anchors = active ? active.evidence_ids.map(id => result.evidence.find(e => e.id === id)).filter(Boolean) : [];
   const evidence = anchors.find(e => e.id === evidenceId) || anchors[0];
   const asset = result.assets.find(a => a.id === evidence?.asset_id);
   const counts = result.source_counts;
+  const confidence = result.conclusion?.confidence;
   return <article className="review-document seed-document report-surface">
     <header className="report-titlebar"><div><FileSearchOutlined aria-hidden="true" /><h2>种草核验</h2></div>
       <Tag color="warning">{result.findings.some(f => f.category === "promotion") ? "留意推广与证据缺口" : "按线索核对"}</Tag></header>
-    <section className="seed-summary"><h3>{result.product || result.title}</h3><p>{result.summary}</p>
+    <section className="seed-summary">
+      <div className="seed-conclusion-row"><h3>{result.conclusion?.title || "商业推广与功效依据需核对"}</h3>
+        {typeof confidence === "number" && <div className="seed-confidence">
+          <strong>{Math.round(confidence * 100)}<span>%</span></strong><span>判断置信度</span><small>Agent 估计</small>
+        </div>}
+      </div>
+      <p className="seed-product">{result.product || result.title}</p><p>{result.summary}</p>
+      {typeof confidence === "number" && <p className="seed-confidence-note">置信度表示 Agent 对本次材料的判断把握，未经业务样本校准。</p>}
       <div className="seed-source-strip">
         <span>{result.assets.length} 张图片</span><span>{counts.body || 0} 段正文</span>
         <span>{counts.image_text || 0} 段图片文字</span><span>{counts.comment || 0} 条可见评论线索</span>
       </div>
     </section>
-    <AnalysisProcess process={result.analysis_process} />
+    <h3 className="seed-directory-title">线索目录</h3>
     <nav className="seed-filters" aria-label="分析线索分类">
       {Object.entries(categories).filter(([key]) => key === "all" || result.findings.some(f => f.category === key))
         .map(([key, label]) => <button key={key} type="button" aria-pressed={category === key}
@@ -60,12 +68,15 @@ export default function SeedReport({ result }) {
     <div className="seed-findings" aria-label="分析结果">
       {visible.map(f => <button className={"seed-finding" + (active?.id === f.id ? " is-active" : "")}
         aria-pressed={active?.id === f.id} type="button" key={f.id}
-        onClick={() => { setActiveId(f.id); setEvidenceId(null); }}>
+        onClick={() => {
+          setActiveId(f.id); setEvidenceId(null);
+          requestAnimationFrame(() => detailRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }));
+        }}>
         <span><Tag color={levels[f.level][1]}>{categories[f.category]}</Tag><strong>{f.title}</strong></span>
         <ArrowRightOutlined aria-hidden="true" />
       </button>)}
     </div>
-    {active && <section className="seed-detail" aria-live="polite">
+    {active && <section ref={detailRef} className="seed-detail" aria-live="polite">
       <h3>{active.title}</h3><p>{active.analysis}</p>
       <div className="seed-anchor-tabs" aria-label="原文证据">
         {anchors.map((e, index) => <button type="button" key={e.id} aria-pressed={evidence?.id === e.id}
