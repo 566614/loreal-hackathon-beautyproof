@@ -25,6 +25,7 @@ const toolLabels = {
   evidence_followup: "补证后核验",
   seed_extract: "分离正文、图片文字和评论", seed_ocr: "读取图片文字",
   seed_knowledge: "检索推广与社区参考", seed_reasoning: "综合逻辑、适配与可信线索",
+  damage_explain: "DeepSeek 整理检测依据与复核建议",
 };
 const risks = {
   high_risk: ["高风险", "error"], suspicious: ["待复核", "warning"],

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button, Tag } from "antd";
 import { ArrowRightOutlined, CheckCircleOutlined, FileSearchOutlined, PictureOutlined } from "@ant-design/icons";
 import "./seed-review.css";
+import AnalysisProcess from "./analysis-process.jsx";
 
 const categories = { all: "全部线索", promotion: "推广", efficacy: "功效参数", suitability: "适配",
   comments: "评论导流", logic: "逻辑", image: "图片", credible: "可参考" };
@@ -50,6 +51,7 @@ export default function SeedReport({ result }) {
         <span>{counts.image_text || 0} 段图片文字</span><span>{counts.comment || 0} 条可见评论线索</span>
       </div>
     </section>
+    <AnalysisProcess process={result.analysis_process} />
     <nav className="seed-filters" aria-label="分析线索分类">
       {Object.entries(categories).filter(([key]) => key === "all" || result.findings.some(f => f.category === key))
         .map(([key, label]) => <button key={key} type="button" aria-pressed={category === key}
