@@ -15,6 +15,7 @@ import "antd/dist/reset.css";
 import "./workbench.css";
 import { DamageRegion, DamageReport } from "./damage-review.jsx";
 import Portal from "./portal.jsx";
+import SeedReport from "./seed-review.jsx";
 
 const toolLabels = {
   hash: "文件指纹", c2pa: "来源凭证", ela: "压缩痕迹", spectral: "频域取证",
@@ -22,6 +23,8 @@ const toolLabels = {
   text: "文案检查", crossmodal: "图文对照", claim_model: "DeepSeek 文案模型", semantic_review: "语义复核",
   router: "识别审核需求", publicity: "宣传核验", damage: "退款破损审核", image_agent: "图像证据复核",
   evidence_followup: "补证后核验",
+  seed_extract: "分离正文、图片文字和评论", seed_ocr: "读取图片文字",
+  seed_knowledge: "检索推广与社区参考", seed_reasoning: "综合逻辑、适配与可信线索",
 };
 const risks = {
   high_risk: ["高风险", "error"], suspicious: ["待复核", "warning"],
@@ -420,23 +423,21 @@ const reviewLabels = { publicity: "宣传核验", damage: "退款破损审核" }
 
 const workspaceCopy = {
   consumer: {
-    roleName: "消费者", title: "美妆助手", greeting: "今天想核对什么？",
-    lead: "发来你看到的美妆文案或宣传图片，一起核对产品说法和依据。",
-    placeholder: "问问功效宣传，或附一张宣传图片…",
+    roleName: "消费者", title: "种草核验助手", greeting: "这篇种草，值得信吗？",
+    lead: "把笔记、配图和评论一起发来，看看哪些是体验，哪些还缺依据。",
+    placeholder: "附上笔记、配图和评论，或粘贴正文…",
     prompts: [
-      { title: "看看功效宣传", detail: "核对说法和出处", icon: FileSearchOutlined,
-        text: "请核验宣传文案：这款精华连续使用 7 天，水分提升 20%。" },
-      { title: "核对宣传图片", detail: "看看图片和文案是否一致", icon: PictureOutlined,
-        text: "请核验这张宣传图片，看看图片上的功效宣称有哪些依据。" },
+      { title: "分析这组种草素材", detail: "一起看正文、配图和评论", icon: FileSearchOutlined,
+        text: "请核验这组小红书种草素材：找出推广、功效参数、肤质适配和评论导流线索，并告诉我哪些内容可以参考。" },
+      { title: "看看是否适合我", detail: "按肤质与耐受核对推荐", icon: PictureOutlined,
+        text: "请核验这篇种草是否提供了足够的肤质、肤色和使用条件，而不是有同样问题就推荐同一款。" },
     ],
   },
   reviewer: {
-    roleName: "企业审核人员", title: "企业审核助手", greeting: "今天要复核哪份材料？",
-    lead: "发来宣传文案、商品图片或售后凭证，让助手整理审核依据。",
-    placeholder: "输入审核需求，或拖入一张送审图片…",
+    roleName: "企业审核人员", title: "破损图片审核助手", greeting: "核对这次退货的图片线索。",
+    lead: "上传商品破损原图，由本地 CPU 模型检查生成线索，辅助售后复核。",
+    placeholder: "附上破损图片，说明需要复核的位置…",
     prompts: [
-      { title: "核验宣传宣称", detail: "找出文案冲突和缺失依据", icon: FileSearchOutlined,
-        text: "核验宣传文案：【示例精华】2025版14天水分提升20%。【示例精华】2025版14天水分提升40%。" },
       { title: "审核退款破损", detail: "核对整图和可疑区域", icon: PictureOutlined,
         text: "请审核退款申请中的商品破损图片，并指出值得复核的证据。" },
     ],
@@ -448,6 +449,7 @@ function Workbench({ role, onReset }) {
   const [form] = Form.useForm();
   const [referenceForm] = Form.useForm();
   const [file, setFile] = useState(null);
+  const [additionalFiles, setAdditionalFiles] = useState([]);
   const [preview, setPreview] = useState("");
   const [roi, setRoi] = useState(null);
   const [packageReference, setPackageReference] = useState(null);
@@ -510,6 +512,7 @@ function Workbench({ role, onReset }) {
       return;
     }
     setFile(picked);
+    setAdditionalFiles([]);
     setRoi(null);
     if (picked !== file) setReview(null);
     if (file && picked !== file) {
@@ -517,6 +520,23 @@ function Workbench({ role, onReset }) {
       form.resetFields(["copy", "product", "market", "referenceIds", "referenceSource", "referenceProduct", "referenceExcerpt"]);
     }
     setError("");
+  }
+
+  function attachMany(picked) {
+    if (role !== "consumer") { attach(picked[0] || null); return; }
+    const merged = [...(file ? [file, ...additionalFiles] : []), ...picked];
+    const unique = merged.filter((item, index) => merged.findIndex(other =>
+      other.name === item.name && other.size === item.size && other.lastModified === item.lastModified) === index);
+    if (unique.length > 6 || unique.some(item => !/\.(png|jpe?g)$/i.test(item.name)) ||
+      unique.reduce((sum, item) => sum + item.size, 0) >= MAX_IMAGE_BYTES) {
+      setError("请提交最多 6 张 JPG / PNG，合计小于 32 MB。"); return;
+    }
+    setFile(unique[0] || null); setAdditionalFiles(unique.slice(1)); setReview(null); setError("");
+  }
+
+  function removeAttachment(index) {
+    const remaining = [file, ...additionalFiles].filter((_, i) => i !== index);
+    setFile(remaining[0] || null); setAdditionalFiles(remaining.slice(1)); setRoi(null); setReview(null);
   }
 
   async function addReference(values) {
@@ -543,7 +563,7 @@ function Workbench({ role, onReset }) {
     const copy = values.copy?.trim();
     const source = values.referenceSource?.trim();
     const excerpt = values.referenceExcerpt?.trim();
-    if (!message && !file && !copy) {
+    if (!message && !file && !copy && !values.comments?.trim()) {
       setError("请填写审核需求或附上图片。");
       return;
     }
@@ -551,7 +571,7 @@ function Workbench({ role, onReset }) {
       setError("请同时附上要核验的宣传图片。");
       return;
     }
-    if ((file?.size || 0) + (packageReference?.size || 0) >= MAX_IMAGE_BYTES) {
+    if ((file?.size || 0) + additionalFiles.reduce((sum, item) => sum + item.size, 0) + (packageReference?.size || 0) >= MAX_IMAGE_BYTES) {
       setError("两张图片合计须小于 32 MB。");
       return;
     }
@@ -563,7 +583,9 @@ function Workbench({ role, onReset }) {
     data.set("role", role);
     if (message) data.set("message", message);
     if (copy) data.set("copy", copy);
-    if (file) data.set("file", file);
+    if (file) [file, ...additionalFiles].forEach(item => data.append("file", item));
+    if (values.comments?.trim()) data.set("comments", values.comments.trim());
+    if (values.profile?.trim()) data.set("profile", values.profile.trim());
     if (packageReference) data.set("reference_image", packageReference);
     if (roi) data.set("roi", JSON.stringify(roi));
     if (values.product?.trim()) data.set("product", values.product.trim());
@@ -573,7 +595,7 @@ function Workbench({ role, onReset }) {
     if (values.fast) data.set("fast", "1");
     data.set("llm", deepseekReady && useModel ? "1" : "0");
     if (previousJob.current) data.set("previous_job_id", previousJob.current);
-    runTurn(data, { kind: "user", text: message || copy, attachment: file?.name });
+    runTurn(data, { kind: "user", text: message || copy, attachment: file ? [file, ...additionalFiles].map(f => f.name).join("、") : null });
   }
 
   function followup(referenceIds) {
@@ -631,8 +653,9 @@ function Workbench({ role, onReset }) {
   const reportContent = <>
     {busy && <RunningReport steps={steps} />}
     {review ? <div className="review-results" key={review.id}>
-      {review.reports.publicity && <FinishedReport result={review.reports.publicity}
-        references={references} busy={busy} onFollowup={followup} onAddReference={() => setReferenceOpen(true)} />}
+      {review.reports.publicity && (review.reports.publicity.schema === "beautyproof/seed-review@1"
+        ? <SeedReport result={review.reports.publicity} /> : <FinishedReport result={review.reports.publicity}
+          references={references} busy={busy} onFollowup={followup} onAddReference={() => setReferenceOpen(true)} />)}
       {review.reports.damage && <DamageReport result={review.reports.damage} />}
       {Object.entries(review.errors).map(([key, value]) => <Alert key={key} type="error" showIcon
         title={reviewLabels[key]} description={value} />)}
@@ -720,7 +743,7 @@ function Workbench({ role, onReset }) {
             }} onDrop={event => {
               if (!event.dataTransfer.files.length) return;
               event.preventDefault();
-              if (!busy) attach(event.dataTransfer.files[0]);
+              if (!busy) attachMany(Array.from(event.dataTransfer.files));
             }}>
               <Form.Item name="message" noStyle>
                 <Input.TextArea ref={inputRef} autoSize={{ minRows: 2, maxRows: 6 }} maxLength={12000}
@@ -734,15 +757,15 @@ function Workbench({ role, onReset }) {
                     }
                   }} />
               </Form.Item>
-              {file && <div className="attachment">
-                {preview && <img src={preview} alt="" />}
-                <span title={file.name}>{file.name}</span>
-                <Button type="text" size="small" aria-label="移除附图" icon={<CloseOutlined aria-hidden="true" />} onClick={() => attach(null)} />
-              </div>}
+              {file && <div className="attachment-list">{[file, ...additionalFiles].map((item, index) => <div className="attachment" key={item.name + index}>
+                {index === 0 && preview ? <img src={preview} alt="" /> : <PictureOutlined aria-hidden="true" />}
+                <span title={item.name}>{item.name}</span>
+                <Button type="text" size="small" aria-label={"移除附图 " + (index+1)} icon={<CloseOutlined aria-hidden="true" />} onClick={() => removeAttachment(index)} />
+              </div>)}</div>}
               <div className="composer-actions">
                 <div className="composer-tools">
-                  <Upload accept=".png,.jpg,.jpeg" showUploadList={false} beforeUpload={picked => {
-                    attach(picked);
+                  <Upload accept=".png,.jpg,.jpeg" multiple={role === "consumer"} showUploadList={false} beforeUpload={(picked, batch) => {
+                    if (picked === batch[0]) attachMany(batch);
                     return Upload.LIST_IGNORE;
                   }}>
                     <Button type="text" icon={<PaperClipOutlined aria-hidden="true" />}>附图</Button>
@@ -761,6 +784,10 @@ function Workbench({ role, onReset }) {
 
                 {role === "reviewer" && file && <DamageRegion key={preview} preview={preview} roi={roi} onChange={setRoi} busy={busy} />}
                 <Form.Item name="copy" label="宣传正文"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
+                {role === "consumer" && <>
+                  <Form.Item name="comments" label="评论区文字" extra="可粘贴评论；截图中的评论会与正文分开分析。"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
+                  <Form.Item name="profile" label="你的肤质、肤色与耐受情况"><Input.TextArea rows={2} maxLength={12000} placeholder="如混合偏油、敏感耐受情况、想改善的实际问题" /></Form.Item>
+                </>}
                 <div className="option-fields">
                   <Form.Item name="product" label="宣传产品"><Input list="known-products" placeholder="完整产品名" /></Form.Item>
                   <Form.Item name="market" label="产品市场"><Input placeholder="如中国大陆" /></Form.Item>

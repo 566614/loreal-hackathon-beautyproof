@@ -41,11 +41,11 @@ class TurnModel:
     def __init__(self, enabled):
         self.remaining = 5 if enabled and os.environ.get("DEEPSEEK_API_KEY") else 0
 
-    def request(self, prompt, system=None):
+    def request(self, prompt, system=None, *, timeout=10):
         if not self.remaining:
             return None
         self.remaining -= 1
-        return llm_explainer.deepseek_json(prompt, system, timeout=10)
+        return llm_explainer.deepseek_json(prompt, system, timeout=timeout)
 
 
 def identify_intent(message, copy, image, options, previous, model):
@@ -90,6 +90,8 @@ def identify_intent(message, copy, image, options, previous, model):
         return PUBLICITY, None
     if not message and image and options.get("publicity_only"):
         return PUBLICITY, None
+    if not message and image and options.get("default_damage"):
+        return DAMAGE, None
     if not message:
         return "clarify", None
 
@@ -146,6 +148,12 @@ def image_agent(report, model):
 
 def publicity_agent(path, copy, options, directory, model, progress, model_lock):
     """Run local image tools, source-anchored copy extraction and reference review."""
+    if options.get("publicity_only"):
+        import seed_review
+        paths = ([path] if path else []) + options.get("additional_images", [])
+        names = ([options["image_name"]] if path else []) + options.get("additional_names", [])
+        request = (lambda prompt, system: model.request(prompt, system, timeout=45)) if model.remaining else None
+        return seed_review.analyze(paths, names, copy, options.get("comments"), options.get("profile"), request, progress)
     with model_lock if path else nullcontext():
         report = pipeline.analyze(
             path, text=copy, product=options.get("product"), market=options.get("market"),
@@ -181,6 +189,9 @@ def report_evidence(reports, question):
     evidence, damage_evidence = [], []
     publicity = reports.get(PUBLICITY)
     damage = reports.get(DAMAGE)
+    if publicity and publicity.get("schema") == "beautyproof/seed-review@1":
+        import seed_review
+        return seed_review.followup(publicity, question)
     if DAMAGE_TERMS.search(question) and not PUBLICITY_TERMS.search(question):
         publicity = None
     if PUBLICITY_TERMS.search(question) and not DAMAGE_TERMS.search(question):
@@ -246,6 +257,8 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         with path.open("rb") as stream:
             for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                 digest.update(chunk)
+        for extra in options.get("additional_images", []):
+            digest.update(hashlib.sha256(extra.read_bytes()).digest())
         asset_hash = digest.hexdigest()
     # A replacement image starts a fresh evidence context. A pending text turn can receive its first image.
     if asset_hash and previous.get("asset") != asset_hash and not (
@@ -258,6 +271,11 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
     model = TurnModel(options["llm"])
     progress("router", 0, 0, "running")
     route, copy = identify_intent(message, copy, bool(path), options, previous, model)
+    seed = previous.get("reports", {}).get(PUBLICITY, {}).get("schema") == "beautyproof/seed-review@1"
+    if seed and message and not NEW_REVIEW.search(message):
+        route = "answer"
+    elif options.get("publicity_only") and route == "clarify" and (path or copy or options.get("comments")):
+        route = PUBLICITY
     progress("router", 0, 0, "done")
     publicity_only = options.get("publicity_only", False)
     context = {**previous, "asset": asset_hash or previous.get("asset"), "publicity_only": publicity_only}
@@ -265,7 +283,7 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         return {"type": "clarify", "message": "消费者入口支持美妆宣传核验。请发送产品宣传文案或图片。"}, context
     if route == "answer":
         evidence = report_evidence(previous["reports"], message)
-        return {"type": "answer", "message": "这份报告记录了以下依据。" if evidence else
+        return {"type": "answer", "message": "结合这次材料，可以这样看：" if evidence else
                 "当前报告没有可引用的对应依据。请补充材料，或说明要查看哪项审核。",
                 "evidence": evidence}, context
 
@@ -275,7 +293,7 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
                     "你想核验宣传内容、审核退款破损，还是两项都查？")
     elif route in (DAMAGE, BOTH) and not path:
         question = "请附上商品破损图片。收到后我会" + ("分别完成两项审核。" if route == BOTH else "检查整图及你框选的区域。")
-    elif not path and not copy:
+    elif not path and not copy and not options.get("comments"):
         question = "请粘贴要核验的宣传正文，或附上一张宣传图片。"
     if question:
         context.update(pending=route if route in ROUTES else None, copy=copy or context.get("copy"))
@@ -307,6 +325,8 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         summary = "已完成" + "与".join(LABELS[key] for key in reports) + "。" + (
             "另一项审核未完成，原因已列在报告中。" if errors else "可以继续询问报告中的依据。"
         )
+        if options.get("publicity_only") and PUBLICITY in reports:
+            summary = reports[PUBLICITY]["summary"]
     context.pop("evidence_session", None)
     if PUBLICITY in reports and not publicity_only:
         report = reports[PUBLICITY]
