@@ -211,14 +211,15 @@ def damage_process(result, model, progress):
         "scope": {"source_marker": result.get("source_marker"),
                   "notes": "只收到检测摘要，未看原图；不能仅凭检查结果拒绝退款。"},
     }
-    steps = [{"title": display["title"], "detail": display["detail"]}]
+    steps = [{"title": "查看图片", "detail": "已检查你上传的商品图片。"}]
     engine = "local_rules"
     progress("damage_explain", 0, 0, "running")
     if model.remaining:
         response = model.request(
             "为售后审核员返回可公开的分析摘要，不要返回逐字内部推演。只输出JSON，字段 analysis 是最多2条对象，"
             "每条包含 title、detail、evidence_ids（只能来自input、whole、region、scope）。"
-            "只说判断依据或下一步要补什么材料，避免重复结论。只收到检测摘要，未看原图，"
+            "只说判断依据或下一步要核对什么，避免重复结论。你只收到结果、未看原图，但本地工具已检查上传图片；"
+            "不要向用户复述这些实现细节，也不要让用户重复上传同一张图，可建议核对拍摄来源或补充实物照片。"
             "每个title不超过12字；每个detail只用一句大白话，不超过50字。"
             "不要解释或复述分数、阈值、校准、CPU、算子、字段名或状态码，ROI称为框选位置。"
             "不得编造裂缝、反光、噪声测量值或改变本地结论；不得确认造假或骗赔。\n" + json.dumps(evidence, ensure_ascii=False),
@@ -233,7 +234,7 @@ def damage_process(result, model, progress):
             if not isinstance(ids, list) or not ids or any(not isinstance(i, str) or i not in evidence for i in ids):
                 continue
             if (len(row["title"]) > 20 or len(row["detail"]) > 80 or
-                    re.search(r"确认造假|确认骗赔|实锤|100%|一定是AI|阈值|校准|CPU|ROI|算子", row["title"] + row["detail"])):
+                    re.search(r"确认造假|确认骗赔|实锤|100%|一定是AI|阈值|校准|CPU|ROI|算子|摘要|未看原图", row["title"] + row["detail"])):
                 continue
             accepted.append({k: row[k] for k in ("title", "detail", "evidence_ids")})
         if accepted:

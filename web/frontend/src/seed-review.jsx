@@ -35,7 +35,9 @@ export default function SeedReport({ result }) {
   const [activeId, setActiveId] = useState(result.findings[0]?.id);
   const [evidenceId, setEvidenceId] = useState(null);
   const detailRef = useRef(null);
-  const visible = result.findings.filter(f => category === "all" || f.category === category);
+  const visible = result.findings.filter((f, index) => category === "all"
+    ? result.findings.findIndex(other => other.category === f.category) === index
+    : f.category === category);
   const active = visible.find(f => f.id === activeId) || visible[0];
   const anchors = active ? active.evidence_ids.map(id => result.evidence.find(e => e.id === id)).filter(Boolean) : [];
   const evidence = anchors.find(e => e.id === evidenceId) || anchors[0];
