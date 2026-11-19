@@ -33,7 +33,6 @@ IMAGE_CHECKS = ("hash", "c2pa", "ocr", "ai_label", "aigc", "trufor")
 STATUS_NAMES = {
     "completed": "已检查", "insufficient_evidence": "证据不足", "model_unavailable": "模型不可用",
 }
-DAMAGE_STATUS = {"similar": "发现相似生成线索", "weak": "未见明显相似生成线索", "insufficient": "证据不足"}
 LOGGER = logging.getLogger(__name__)
 
 
@@ -174,6 +173,23 @@ def publicity_agent(path, copy, options, directory, model, progress, model_lock)
     return report
 
 
+def damage_display(item):
+    """Map a detector margin to a bounded display index, never a probability."""
+    score, threshold = item.get("score"), item.get("threshold")
+    if item.get("status") == "insufficient" or score is None or threshold is None:
+        return {"score": None, "tone": "neutral", "title": "暂时无法判断",
+                "detail": "请补充清晰原图，或稍后重试。"}
+    scale = abs(threshold) or 1
+    distance = (score - threshold) / scale
+    margin = scale * .2
+    tone, title, detail = (
+        ("high", "更像 AI 生成", "这张图与已知 AI 图片的特征比较接近。") if score > threshold + margin else
+        ("low", "不太像 AI 生成", "这次检查没有发现明显的 AI 痕迹。") if score < threshold - margin else
+        ("borderline", "暂时难判断", "这张图暂时难判断，建议补充原图。"))
+    return {"score": round(max(0, min(100, 50 + 50 * distance))),
+            "tone": tone, "title": title, "detail": detail}
+
+
 def damage_agent(path, roi):
     from doubao_damage import analyze_image
     from PIL import Image, ImageOps
@@ -187,47 +203,43 @@ def damage_agent(path, roi):
 def damage_process(result, model, progress):
     """Return public evidence summaries; the local detection verdict remains authoritative."""
     whole = result.get("whole", {})
+    display = damage_display(whole)
     evidence = {
         "input": {"size": result.get("image_size"), "roi": result.get("roi")},
-        "whole": {key: whole.get(key) for key in ("status", "score", "threshold", "reason")},
-        "region": result.get("region"),
-        "scope": {"model": result.get("model"), "source_marker": result.get("source_marker"),
-                  "notes": "分数不是造假概率；选区未独立校准；缺少真实物理破损验证；不能仅此认定骗赔。"},
+        "whole": display,
+        "region": damage_display(result["region"]) if result.get("region") else None,
+        "scope": {"source_marker": result.get("source_marker"),
+                  "notes": "只收到检测摘要，未看原图；不能仅凭检查结果拒绝退款。"},
     }
-    steps = [{"title": "读取破损送审材料", "detail": "记录图片尺寸与可选框选位置，图片在本地完成检测。"},
-             {"title": "运行本地 CPU 检测", "detail": whole.get("reason") or "本次缺少可用的本地检测结果。"}]
+    steps = [{"title": display["title"], "detail": display["detail"]}]
     engine = "local_rules"
     progress("damage_explain", 0, 0, "running")
     if model.remaining:
         response = model.request(
-            "为售后审核员返回可公开的证据分析摘要，不要返回逐字内部推演。只输出JSON，字段 analysis 是最多3条对象，"
+            "为售后审核员返回可公开的分析摘要，不要返回逐字内部推演。只输出JSON，字段 analysis 是最多2条对象，"
             "每条包含 title、detail、evidence_ids（只能来自input、whole、region、scope）。"
-            "解释检测分与阈值、证据局限、需要人工补什么材料。只收到检测摘要，未看原图，"
-            "title和detail面向售后人员，用自然中文；不要出现input、whole、scope、status、similar、not_found等字段名或状态码，ROI称为框选区域。"
+            "只说判断依据或下一步要补什么材料，避免重复结论。只收到检测摘要，未看原图，"
+            "每个title不超过12字；每个detail只用一句大白话，不超过50字。"
+            "不要解释或复述分数、阈值、校准、CPU、算子、字段名或状态码，ROI称为框选位置。"
             "不得编造裂缝、反光、噪声测量值或改变本地结论；不得确认造假或骗赔。\n" + json.dumps(evidence, ensure_ascii=False),
             "你是BeautyProof售后审核解释助手。依据已提供的检测结果，输出简洁、可核对的证据说明。", timeout=30,
         ) or {}
         rows = response.get("analysis")
         accepted = []
-        for row in rows[:3] if isinstance(rows, list) else []:
+        for row in rows[:2] if isinstance(rows, list) else []:
             if not isinstance(row, dict) or not all(isinstance(row.get(k), str) and row[k].strip() for k in ("title", "detail")):
                 continue
             ids = row.get("evidence_ids")
             if not isinstance(ids, list) or not ids or any(not isinstance(i, str) or i not in evidence for i in ids):
                 continue
-            if re.search(r"确认造假|确认骗赔|实锤|100%|一定是AI", row["detail"]):
+            if (len(row["title"]) > 20 or len(row["detail"]) > 80 or
+                    re.search(r"确认造假|确认骗赔|实锤|100%|一定是AI|阈值|校准|CPU|ROI|算子", row["title"] + row["detail"])):
                 continue
             accepted.append({k: row[k] for k in ("title", "detail", "evidence_ids")})
         if accepted:
             steps.extend(accepted)
             engine = "deepseek"
-    if engine != "deepseek":
-        steps.append({"title": "比较检测分与复核阈值", "detail": (
-            f"检测分 {whole['score']:.3f}，阈值 {whole['threshold']:.3f}。"
-            "按本地模型结果决定是否追加核验；该值不是生成概率。"
-            if whole.get("score") is not None and whole.get("threshold") is not None else "当前证据不足，需补充清晰原图或可用检测结果。")})
-    steps.append({"title": "保留人工复核", "detail": "核对原始图片、订单与售后凭证；"
-                  "评分和边缘预览不单独证明真实破损、AI生成或骗赔。"})
+    steps.append({"title": "还需确认", "detail": "请结合原图和实物判断，不要仅凭分数拒绝退款。"})
     progress("damage_explain", 0, 0, "done")
     return {"kind": "evidence_summary", "engine": engine, "steps": steps,
             "model": os.environ.get("BP_DEEPSEEK_MODEL", "deepseek-flash") if engine == "deepseek" else None}
@@ -269,9 +281,9 @@ def report_evidence(reports, question):
         for key in keys:
             item = damage.get(key)
             if item:
-                score = f' · 检测分 {item["score"]:.3f}' if item.get("score") is not None else ""
-                damage_evidence.append({"label": ("整图" if key == "whole" else "选区") + score,
-                                        "detail": DAMAGE_STATUS[item["status"]] + "。" + item["reason"]})
+                display = damage_display(item)
+                damage_evidence.append({"label": ("整图：" if key == "whole" else "框选位置：") + display["title"],
+                                        "detail": display["detail"]})
     if publicity and damage:
         return evidence[:2] + damage_evidence[:2]
     return (evidence + damage_evidence)[:4]
@@ -363,6 +375,9 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         progress("damage", 0, 0, "running")
         try:
             reports[DAMAGE] = damage_agent(path, options.get("roi"))
+            for area in ("whole", "region"):
+                if reports[DAMAGE].get(area):
+                    reports[DAMAGE][area]["display"] = damage_display(reports[DAMAGE][area])
             reports[DAMAGE]["analysis_process"] = damage_process(reports[DAMAGE], model, progress)
         except ValueError as exc:
             errors[DAMAGE] = str(exc)
@@ -379,6 +394,9 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         )
         if options.get("publicity_only") and PUBLICITY in reports:
             summary = reports[PUBLICITY]["summary"]
+        elif set(reports) == {DAMAGE}:
+            display = reports[DAMAGE]["whole"]["display"]
+            summary = display["title"] + "。"
     context.pop("evidence_session", None)
     if PUBLICITY in reports and not publicity_only:
         report = reports[PUBLICITY]

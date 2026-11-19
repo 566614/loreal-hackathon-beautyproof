@@ -4,13 +4,11 @@
 .seed-summary h3 { margin: 0; font-size: 29px; line-height: 1.45; font-weight: 800; text-wrap: balance; }
 .seed-confidence { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; color: var(--accent-ink); }
 .seed-confidence strong { font-size: 42px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.seed-confidence strong span { font-size: 22px; margin-left: 2px; }
+.seed-confidence strong span { font-size: 15px; margin-left: 3px; }
 .seed-confidence > span, .seed-confidence small { font-size: 11px; }
 .seed-summary .seed-product { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
-.seed-summary .seed-confidence-note { color: var(--muted); font-size: 12px; margin-bottom: 15px; }
 .seed-directory-title { margin: 3px 24px 13px; font-size: 17px; font-weight: 700; }
 .seed-summary p { margin: 0 0 16px; font-size: 15px; line-height: 1.85; }
-.seed-source-strip { display: flex; flex-wrap: wrap; gap: 7px 16px; color: var(--muted); font-size: 12px; }
 .seed-filters { display: flex; flex-wrap: wrap; gap: 5px; padding: 15px 24px; border-block: 1px solid var(--line); }
 .seed-filters button, .seed-anchor-tabs button { background: transparent; border: 1px solid transparent; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: var(--muted); font: inherit; font-size: 13px; }
 .seed-filters button[aria-pressed=true], .seed-anchor-tabs button[aria-pressed=true] { background: var(--rose); color: var(--accent-ink); border-color: var(--line-strong); }
@@ -27,12 +25,13 @@
 .seed-detail > p { line-height: 1.9; font-size: 14px; }
 .seed-anchor-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px; }
 .seed-source-quote { margin: 12px 0 16px; padding: 14px 16px; background: var(--ground); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; line-height: 1.85; font-size: 14px; }
+.seed-original { margin: 12px 0 16px; font-size: 13px; }
+.seed-original summary { cursor: pointer; color: var(--accent-ink); }
 .seed-viewer { margin: 0; }
 .seed-viewer-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; background: var(--ground); gap: 10px; font-size: 12px; color: var(--muted); }
 .seed-image-frame { background: #eee7df; max-height: 420px; overflow: auto; border: 1px solid var(--line); }
 .seed-image-frame svg { display: block; width: 100%; height: auto; max-height: 415px; }
 .seed-image-full svg { max-height: none; }
-.seed-viewer figcaption { font-size: 12px; margin-top: 7px; color: var(--muted); }
 .seed-action { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; color: var(--accent-ink); }
 .seed-action > .anticon { margin-top: 5px; }
 .seed-action p { margin: 0; line-height: 1.8; font-size: 14px; }

@@ -7,5 +7,4 @@
 .analysis-process li::marker { color: var(--accent-ink); font-variant-numeric: tabular-nums; }
 .analysis-process strong { display: block; color: var(--ink); font-weight: 600; }
 .analysis-process li p { margin: 3px 0 0; }
-.analysis-process-note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
 .message-content > .analysis-process { margin: 16px 0; max-width: 640px; }

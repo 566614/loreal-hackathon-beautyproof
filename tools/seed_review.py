@@ -122,12 +122,12 @@ def case_findings(evidence):
 
 def basic_findings(evidence):
     rules = [
-        ("promotion", "推广话术值得核对", r"专利|闭眼入|必入|回春神器|品牌合作|赞助|广告",
-         "技术名词或推荐语可以构成推广线索，单个词不足以证明商业关系。", "核对合作披露和实际使用记录。"),
-        ("efficacy", "功效数字需要产品级出处", r"\d+(?:\.\d+)?\s*(?:倍|%|纳米|颗)|胶原|法令纹|拉皮|医美",
-         "指标、成分与主观体验需要分开；当前材料未提供对应产品试验。", "向品牌补充方法、人群、周期和对照。"),
-        ("comments", "评论中的导流线索", r"加微|微信|私信|进群|求链接|点主页|购物链接",
-         "这里出现了交易或联络引导用语，需要结合上下文区分询问与作者引导。", "核对发言者与目标链接，不凭关键词认定刷评。"),
+        ("promotion", "有推广的味道", r"专利|闭眼入|必入|回春神器|品牌合作|赞助|广告",
+         "推荐用语比较像广告，但仅凭这些词还不能确认合作。", "看看有没有标注品牌合作。"),
+        ("efficacy", "效果数字还缺依据", r"\d+(?:\.\d+)?\s*(?:倍|%|纳米|颗)|胶原|法令纹|拉皮|医美",
+         "文中提到效果和数字，却没有给出对应的产品试验。", "向品牌要具体试验结果。"),
+        ("comments", "评论里提到了购买", r"加微|微信|私信|进群|求链接|点主页|购物链接",
+         "评论出现了购买或联系用语，需要确认是谁在引导。", "不要仅凭一句话认定水军。"),
     ]
     out = []
     for category, title, pattern, detail, action in rules:
@@ -136,9 +136,9 @@ def basic_findings(evidence):
             out.append({"id": category, "category": category, "level": "warning", "title": title,
                         "analysis": detail, "action": action, "evidence_ids": ids[:5], "reference_ids": []})
     if evidence:
-        out.append({"id": "fit", "category": "suitability", "level": "neutral", "title": "适配结论取决于个人条件",
-                    "analysis": "肤质、耐受、肤色与实际使用条件需要分别核对，症状和宣传词本身不足以推荐产品。",
-                    "action": "补充个人条件与完整配方，不把经验性品类资料当成产品试验。",
+        out.append({"id": "fit", "category": "suitability", "level": "neutral", "title": "适不适合你还不确定",
+                    "analysis": "只看推荐文案，还不能判断它是否适合你的皮肤。",
+                    "action": "补充肤质和过敏情况后再判断。",
                     "evidence_ids": [evidence[0]["id"]], "reference_ids": []})
     return out
 
@@ -156,6 +156,8 @@ def valid_findings(rows, evidence, references):
         if not isinstance(anchors, list) or not anchors or any(not isinstance(i, str) or i not in ids for i in anchors):
             continue
         if not all(isinstance(row.get(k), str) and row[k].strip() for k in ("title", "analysis", "action")):
+            continue
+        if len(row["title"]) > 24 or len(row["analysis"]) > 90 or len(row["action"]) > 40:
             continue
         if re.search(r"确认水军|实锤水军|必然收钱|保证适合|100%实拍|确认AI伪造", row["analysis"]):
             continue
@@ -183,6 +185,7 @@ def analyze(paths, names, copy, comments, profile, request_json, progress):
             "task": "分辨主观体验、商业推广、夸大参数、肤质肤色适配、图文矛盾、评论附和与引流；同时保留可信的有限线索。",
             "contract": {"category": sorted(CATEGORIES), "level": ["warning", "neutral", "positive"],
                          "required_fields": ["title", "analysis", "action", "evidence_ids", "reference_ids"],
+                         "writing": "写给普通用户：title不超过16字；analysis只写一句话、不超过60字；action只写一句话、不超过24字；不用适配、协同性、产品级、证据缺口、阈值、校准等术语；每条只解释一件事，不把多个问题塞进一句话。",
                          "conclusion_confidence": "0到1的数字，表示你对本次综合判断的主观把握；未经统计校准，不是图片AI概率或产品功效有效率。截图信息有限时不要给绝对的1，也不要只因送审方标签就机械给满分。"},
             "limits": ["精确参数不单独证明广告，问题不是功效证据，评论一致性不证明水军。",
                        "编辑规则与社区语料不是产品功效证明；不采用其价格、时长、SPF经验值作硬阈值。",
@@ -204,25 +207,19 @@ def analyze(paths, names, copy, comments, profile, request_json, progress):
                 confidence = value
     progress("seed_reasoning", 0, 0, "done")
     counts = Counter(e["source"] for e in evidence)
-    summary = ("这套素材的商业推广特征明显。优先核对密集参数、紧致功效和评论导流；主观肤感可参考，"
-               "但不能替代产品试验或直接说明适合你。" if matched else
-               "已按正文、图片文字、评论和图片来源整理线索。请结合原句与资料，优先查看缺少依据的表述。")
+    summary = ("宣传卖点很多，实际效果还需要品牌提供依据。" if matched else
+               "先看哪些说法有依据，再决定要不要相信。")
     if not evidence:
-        summary = "暂未获得可读取的文字线索。请粘贴正文、评论，或提供更清晰的截图继续核验。"
-    conclusion = ("商业推广特征明显" if matched else "存在商业推广线索" if any(f["category"] == "promotion" for f in findings)
-                  else "关键功效表述仍需核对" if any(f["category"] == "efficacy" for f in findings)
-                  else "现有材料不足以确认可信")
+        summary = "请粘贴正文、评论，或上传更清晰的截图。"
+    conclusion = ("这篇内容是广告" if matched else "可能含有推广" if any(f["category"] == "promotion" for f in findings)
+                  else "效果说法还需确认" if any(f["category"] == "efficacy" for f in findings)
+                  else "还需要更多信息")
     process = {"kind": "evidence_summary", "engine": engine,
                "model": os.environ.get("BP_DEEPSEEK_MODEL", "deepseek-flash") if engine == "deepseek" else None,
                "steps": [
-                   {"title": "整理材料与来源", "detail": f"本次读取 {len(assets)} 张图、{counts['body']} 段正文、"
-                    f"{counts['image_text']} 段图片文字和 {counts['comment']} 条评论线索。不同来源分开保留。"},
-                   {"title": "检索知识参考", "detail": f"匹配 {len(references)} 条规则或社区参考。它们用于分析推广模式，"
-                    "不替代具体产品的试验或账号真实性证明。"},
+                   {"title": "查看材料", "detail": "已整理你提供的内容。"},
                    *[{"title": f["title"], "detail": f["analysis"], "evidence_ids": f["evidence_ids"]}
                      for f in findings if f["category"] in ("promotion", "efficacy", "comments")][:3],
-                   {"title": "保留判断边界", "detail": "分别说明主观体验、功效证据与图片来源；"
-                    "评论协同性不足以确认水军，带字截图也不能确认原始实拍。"}
                ]}
     return {"schema": SCHEMA, "title": reviewed_case().get("title") if matched else "种草图文核验",
             "summary": summary, "product": reviewed_case().get("product") if matched else None,
@@ -232,8 +229,8 @@ def analyze(paths, names, copy, comments, profile, request_json, progress):
             "analysis_process": process,
             "scope": {"product_efficacy_verified": False, "image_origin_verified": False,
                       "comment_accounts_verified": False},
-            "next_steps": ["先看你的肤质、耐受与实际需求是否有对应信息。", "功效参数等待品牌提供产品级试验。",
-                           "评论与原图来源需要更多独立资料；本次截图只展示可见内容。"]}
+            "next_steps": ["先看它是否适合你的肤质。", "向品牌了解实际试验结果。",
+                           "不要只凭截图认定水军或AI造假。"]}
 
 
 def followup(report, question):
@@ -244,4 +241,4 @@ def followup(report, question):
     selected = [f for f in report["findings"] if not category or f["category"] == category]
     by_id = {e["id"]: e for e in report["evidence"]}
     return [{"label": f["title"], "quote": "；".join(by_id[i]["text"] for i in f["evidence_ids"][:2]),
-             "detail": f["analysis"] + " " + f["action"]} for f in selected[:4]]
+             "detail": f["analysis"]} for f in selected[:3]]

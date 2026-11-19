@@ -122,7 +122,7 @@ def test_deepseek_refinement_requires_real_evidence_and_reference_ids(tmp_path, 
     assert result["conclusion"]["confidence"] == .87
     assert result["conclusion"]["confidence_kind"] == "agent_estimate"
     assert result["analysis_process"]["engine"] == "deepseek"
-    assert len(result["analysis_process"]["steps"]) >= 3
+    assert any(step["detail"] == "正文写明品牌合作。" for step in result["analysis_process"]["steps"])
     assert len(result["findings"]) == 1
     assert calls[0]["personal_conditions"] == "油皮"
     assert all(r["kind"] != "efficacy_study" for r in calls[0]["references"])
@@ -137,13 +137,34 @@ def test_damage_explanation_keeps_detector_result_and_uses_known_evidence_only()
         remaining = 1
         def request(self, prompt, system, timeout):
             assert "未看原图" in prompt
+            assert "threshold" not in json.loads(prompt.split("\n", 1)[1])["whole"]
             return {"analysis": [
-                {"title": "比较阈值", "detail": "本地分数达到复核阈值，追加来源核查。", "evidence_ids": ["whole"]},
+                {"title": "还不能直接拒赔", "detail": "请先核对原图和实物。", "evidence_ids": ["whole"]},
                 {"title": "虚构观察", "detail": "裂缝呈现明显错误。", "evidence_ids": ["unknown-pixels"]},
             ], "reasoning_content": "not-for-display"}
     process = review_agents.damage_process(result, Model(), lambda *a: None)
     assert result == original
     assert process["engine"] == "deepseek"
-    assert any(step["title"] == "比较阈值" for step in process["steps"])
+    assert any(step["title"] == "还不能直接拒赔" for step in process["steps"])
     assert not any(step["title"] == "虚构观察" for step in process["steps"])
     assert "reasoning_content" not in json.dumps(process)
+
+
+@pytest.mark.parametrize("score,threshold,status,expected,tone", [
+    (.17761831900187505, .14419752831350816, "similar", 62, "high"),
+    (.05, .14, "weak", 18, "low"),
+    (.14, .14, "similar", 50, "borderline"),
+    (.14 + .14 * .2, .14, "similar", 60, "borderline"),
+    (.14 - .14 * .2, .14, "weak", 40, "borderline"),
+    (-2, .14, "weak", 0, "low"),
+    (2, .14, "similar", 100, "high"),
+    (.5, None, "insufficient", None, "neutral"),
+    (None, None, "insufficient", None, "neutral"),
+])
+def test_damage_display_bounds_score_and_keeps_uncertain_results_unscored(score, threshold, status, expected, tone):
+    item = {"score": score, "threshold": threshold, "status": status}
+    original = item.copy()
+    display = review_agents.damage_display(item)
+    assert display["score"] == expected
+    assert display["tone"] == tone
+    assert item == original

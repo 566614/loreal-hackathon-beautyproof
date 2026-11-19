@@ -3,8 +3,8 @@ import { Button, Tag } from "antd";
 import { ArrowRightOutlined, CheckCircleOutlined, FileSearchOutlined, PictureOutlined } from "@ant-design/icons";
 import "./seed-review.css";
 
-const categories = { all: "全部线索", promotion: "推广", efficacy: "功效参数", suitability: "适配",
-  comments: "评论导流", logic: "逻辑", image: "图片", credible: "可参考" };
+const categories = { all: "全部线索", promotion: "广告", efficacy: "效果", suitability: "适合谁",
+  comments: "评论", logic: "说法", image: "图片", credible: "可参考" };
 const levels = { warning: ["待核对", "warning"], positive: ["有限可信", "success"], neutral: ["观察", "default"] };
 const sourceNames = { body: "正文", image_text: "图中文字", comment: "评论", image: "画面观察" };
 
@@ -19,7 +19,7 @@ function EvidenceView({ asset, evidence }) {
   const view = full || !box ? `0 0 ${w} ${h}` : `${Math.max(0, x-px)} ${Math.max(0, y-py)} ${Math.min(w, bw+px*2)} ${Math.min(h, bh+py*2)}`;
   return <figure className="seed-viewer">
     <div className="seed-viewer-toolbar"><span><PictureOutlined /> {asset.kind || "送审图片"}</span>
-      <Button size="small" onClick={() => setFull(v => !v)}>{full ? "聚焦证据" : "查看整张"}</Button></div>
+      <Button size="small" onClick={() => setFull(v => !v)}>{full ? "查看这处" : "查看整张"}</Button></div>
     <div className={"seed-image-frame" + (full ? " seed-image-full" : "")}>
       <svg viewBox={view} role="img" aria-label={evidence ? "原图证据位置：" + evidence.text : asset.name}>
         <image href={asset.preview} width={w} height={h} />
@@ -27,7 +27,6 @@ function EvidenceView({ asset, evidence }) {
           strokeWidth="2" vectorEffect="non-scaling-stroke" />}
       </svg>
     </div>
-    <figcaption>框选对应当前引用，表示文字或画面位置。</figcaption>
   </figure>;
 }
 
@@ -41,23 +40,16 @@ export default function SeedReport({ result }) {
   const anchors = active ? active.evidence_ids.map(id => result.evidence.find(e => e.id === id)).filter(Boolean) : [];
   const evidence = anchors.find(e => e.id === evidenceId) || anchors[0];
   const asset = result.assets.find(a => a.id === evidence?.asset_id);
-  const counts = result.source_counts;
   const confidence = result.conclusion?.confidence;
   return <article className="review-document seed-document report-surface">
-    <header className="report-titlebar"><div><FileSearchOutlined aria-hidden="true" /><h2>种草核验</h2></div>
-      <Tag color="warning">{result.findings.some(f => f.category === "promotion") ? "留意推广与证据缺口" : "按线索核对"}</Tag></header>
+    <header className="report-titlebar"><div><FileSearchOutlined aria-hidden="true" /><h2>种草核验</h2></div></header>
     <section className="seed-summary">
-      <div className="seed-conclusion-row"><h3>{result.conclusion?.title || "商业推广与功效依据需核对"}</h3>
+      <div className="seed-conclusion-row"><h3>{result.conclusion?.title || "还需要更多信息"}</h3>
         {typeof confidence === "number" && <div className="seed-confidence">
-          <strong>{Math.round(confidence * 100)}<span>%</span></strong><span>判断置信度</span><small>Agent 估计</small>
+          <strong>{Math.round(confidence * 100)}<span>/100</span></strong><span>判断把握</span><small>仅供参考</small>
         </div>}
       </div>
       <p className="seed-product">{result.product || result.title}</p><p>{result.summary}</p>
-      {typeof confidence === "number" && <p className="seed-confidence-note">置信度表示 Agent 对本次材料的判断把握，未经业务样本校准。</p>}
-      <div className="seed-source-strip">
-        <span>{result.assets.length} 张图片</span><span>{counts.body || 0} 段正文</span>
-        <span>{counts.image_text || 0} 段图片文字</span><span>{counts.comment || 0} 条可见评论线索</span>
-      </div>
     </section>
     <h3 className="seed-directory-title">线索目录</h3>
     <nav className="seed-filters" aria-label="分析线索分类">
@@ -82,16 +74,17 @@ export default function SeedReport({ result }) {
         {anchors.map((e, index) => <button type="button" key={e.id} aria-pressed={evidence?.id === e.id}
           onClick={() => setEvidenceId(e.id)}>{sourceNames[e.source]} {index+1}</button>)}
       </div>
-      {evidence && <blockquote className="seed-source-quote">{evidence.text}</blockquote>}
+      {evidence && <details className="seed-original"><summary>查看原文</summary>
+        <blockquote className="seed-source-quote">{evidence.text}</blockquote></details>}
       <EvidenceView key={evidence?.id || active.id} asset={asset} evidence={evidence} />
       <div className="seed-action"><ArrowRightOutlined /><p>{active.action}</p></div>
     </section>}
     {!result.findings.length && <p className="seed-empty">请补充清晰文字或正文、评论，继续核验。</p>}
-    <section className="seed-next"><h3><CheckCircleOutlined /> 你可以怎么判断</h3>
-      <ul>{result.next_steps.map(step => <li key={step}>{step}</li>)}</ul>
+    <section className="seed-next"><h3><CheckCircleOutlined /> 购买前先确认</h3>
+      <ul>{result.next_steps.slice(0, 1).map(step => <li key={step}>{step}</li>)}</ul>
     </section>
-    <details className="seed-references"><summary>查看知识库参考与使用边界</summary>
-      <p>推广规则与社区语料用于提示线索。具体产品功效，等待品牌提供适用的试验资料。</p>
+    <details className="seed-references"><summary>查看参考资料</summary>
+      <p>产品效果还需要品牌提供试验依据。</p>
       {result.references.map(ref => <section key={ref.id}><strong>{ref.locator}</strong>
         <small>{ref.source} · {ref.kind === "community_example" ? "其他笔记的用语参考" : "编辑参考"}</small>
         <p>{ref.excerpt.slice(0, 450)}</p></section>)}

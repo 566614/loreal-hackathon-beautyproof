@@ -323,11 +323,10 @@ body { background: var(--ground); color: var(--ink); font-family: var(--display)
 .damage-score-high { --score-color: var(--detection-high); }
 .damage-score-borderline { --score-color: var(--detection-borderline); }
 .damage-score-low { --score-color: var(--detection-low); }
-.damage-score-value, .damage-score-band { color: var(--score-color); }
+.damage-score-value { color: var(--score-color); }
 .damage-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .damage-score strong { font-size: 34px; line-height: 1.2; font-weight: 750; font-variant-numeric: tabular-nums; }
-.damage-score-band { font-size: 12px; font-weight: 600; }
-.damage-score-threshold { margin-left: auto; font-size: 12px; color: var(--muted); }
+.damage-score-value small { margin-left: 3px; font-size: 14px; font-weight: 500; }
 .damage-conclusion .damage-score-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .damage-directory { margin-bottom: 14px; }
 .damage-directory h3 { margin: 0 0 12px; font-size: 17px; font-weight: 700; }

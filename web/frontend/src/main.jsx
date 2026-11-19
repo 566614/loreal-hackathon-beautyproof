@@ -24,9 +24,9 @@ const toolLabels = {
   text: "文案检查", crossmodal: "图文对照", claim_model: "DeepSeek 文案模型", semantic_review: "语义复核",
   router: "识别审核需求", publicity: "宣传核验", damage: "退款破损审核", image_agent: "图像证据复核",
   evidence_followup: "补证后核验",
-  seed_extract: "分离正文、图片文字和评论", seed_ocr: "读取图片文字",
-  seed_knowledge: "检索推广与社区参考", seed_reasoning: "综合逻辑、适配与可信线索",
-  damage_explain: "DeepSeek 整理检测依据与复核建议",
+  seed_extract: "整理图片和文字", seed_ocr: "读取图片文字",
+  seed_knowledge: "查找参考资料", seed_reasoning: "分析哪些内容可信",
+  damage_explain: "整理判断依据",
 };
 const risks = {
   high_risk: ["高风险", "error"], suspicious: ["待复核", "warning"],
@@ -71,7 +71,7 @@ function AuditStatus({ value }) {
 function EmptyReport() {
   return <div className="empty-report">
     <FileSearchOutlined aria-hidden="true" />
-    <p>送审后，可在这里查看结论和对应证据。</p>
+    <p>发送后，在这里查看结果。</p>
   </div>;
 }
 
@@ -823,15 +823,15 @@ function Workbench({ role, onReset }) {
                 </div>
                 <Form.Item name="referenceExcerpt" label="待核验摘录"><Input.TextArea rows={3} /></Form.Item>
                 <Form.Item name="fast" valuePropName="checked" noStyle>
-                  <Checkbox>快速预览（跳过生成倾向和局部异常模型）</Checkbox>
+                  <Checkbox>快速预览（只做基础检查）</Checkbox>
                 </Form.Item>
               </div>
             </Drawer>
             <div className="model-preference">
               {deepseekReady ? <>
                 <Checkbox checked={useModel} onChange={event => setUseModel(event.target.checked)}>DeepSeek 辅助</Checkbox>
-                <p>{useModel ? "必要的消息、图片文字、资料摘录和检查摘要可发送至 DeepSeek。图片始终在本地处理。" : "当前使用本地规则和检测工具。"}</p>
-              </> : <p>当前使用本地规则和检测工具 · 结果供人工复核</p>}
+                <p>{useModel ? "文字交由 DeepSeek 分析，图片留在本机。" : "仅在本机检查。"}</p>
+              </> : <p>仅在本机检查，结果供参考。</p>}
             </div>
           </Form>
         </section>

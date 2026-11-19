@@ -4,12 +4,11 @@ import "./analysis-process.css";
 
 export default function AnalysisProcess({ process }) {
   if (!process?.steps?.length) return null;
-  return <details className="analysis-process" open>
+  return <details className="analysis-process">
     <summary><span><NodeIndexOutlined aria-hidden="true" /> 分析过程</span>
-      <small>{process.engine === "deepseek" ? "DeepSeek · 证据分析摘要" : "证据整理与本地分析"}</small></summary>
+      <small>{process.engine === "deepseek" ? "DeepSeek 分析" : "本地分析"}</small></summary>
     <ol>{process.steps.map((step, index) => <li key={index}>
       <strong>{step.title}</strong><p>{step.detail}</p>
     </li>)}</ol>
-    <p className="analysis-process-note">可在审核报告的线索目录中查看对应证据。</p>
   </details>;
 }

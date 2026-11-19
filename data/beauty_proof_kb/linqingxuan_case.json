@@ -39,15 +39,15 @@
     }
   ],
   "findings": [
-    {"id":"ad-language","category":"promotion","level":"warning","title":"个人体验外壳下，卖点组织高度广告化","evidence_ids":["opening","beads","pdrn","lift","penetration"],"analysis":"从熬夜焦虑切入，连续铺开颗数、成分、专利、紧致和促渗透，几乎只有正向结论。送审方已确认本例为广告；这种组合可作为推广识别参考。单个参数或专业词本身不能证明作者收钱。","action":"将其作为商业推广阅读，核对合作披露及参数原始出处。"},
-    {"id":"numbers","category":"efficacy","level":"warning","title":"8800颗、807纳米、5.39倍缺少可核对定义","evidence_ids":["beads","penetration"],"analysis":"颗数、粒径与促渗倍数属于不同指标。文中没有说明测量方法、比较基线、样本和误差，不能直接换算成消费者能获得的提亮或紧致效果。","action":"向品牌索取与该产品版本对应的试验及指标定义。"},
-    {"id":"collagen","category":"efficacy","level":"warning","title":"从肤感推到了胶原、轮廓和法令纹变化","evidence_ids":["lift"],"analysis":"“有种感觉”属于个人描述；胶原回补、轮廓收紧和法令纹改善则需要成品级试验。成分名、专利名和主观紧绷感不能独立证明这些变化。","action":"把个人感受与待品牌验证的功效结论分开。"},
-    {"id":"fit","category":"suitability","level":"warning","title":"没有足够的肤质与耐受信息供你照着买","evidence_ids":["opening","penetration","pdrn"],"analysis":"提供了熬夜、25+和秋冬场景，却没交代干油皮、敏感耐受、使用周期、用量或不适情况，也没有肤色适配对照。不能仅凭“暗沉、松垮”就推荐同一套水乳。","action":"先补充你的肤质、耐受和诉求；完整成分与品牌适用资料未给出前，不作确定适配结论。"},
-    {"id":"comment-pattern","category":"comments","level":"warning","title":"评论围绕正文卖点附和，但不足以认定水军","evidence_ids":["comment1","comment2","comment3","comment4","comment5","comment6","comment7"],"analysis":"多条评论围绕熬夜、吸收、去黄和变嫩，与正文卖点高度对应；体验细节较少。有问有答也可能是自然互动，仅靠这张截屏无法识别真实账号关系或刷评行为。","action":"优先查看有使用周期、肤质、不足与持续追评的反馈；核查更多时间和账号样本后再判断协同性。"},
-    {"id":"traffic","category":"comments","level":"warning","title":"作者评论继续强化卖点并引向商品搜索","evidence_ids":["traffic"],"analysis":"作者补充“温和又高效”，并附同款商品搜索词，是可见的搜索导流线索。当前截图没有加微信、进群或私信购买的证据。","action":"区分商品搜索引导与站外导流，勿据此推断未展示的交易。"},
-    {"id":"folded","category":"comments","level":"neutral","title":"折叠、删除提示不等于刷评证据","evidence_ids":["folded","deleted"],"analysis":"截图能确认平台折叠提示和一条已删除内容；无法确认被删内容、删除者或原因，也不能据此认定作者删除差评。","action":"把它作为评论内容不完整的限制。"},
-    {"id":"subjective","category":"credible","level":"positive","title":"可以保留主观肤感，避免把它扩大成普遍功效","evidence_ids":["feel","comment2","comment4"],"analysis":"不粘、服帖、好吸收是可能存在的个人体验，文本本身没有足够依据否定它们；这些体验仍不能证明适合所有人或能逆转熬夜影响。","action":"把肤感作为参考，结合自己的条件，而非当作功效承诺。"},
-    {"id":"consistency","category":"logic","level":"neutral","title":"正文和配图在重复卖点，未发现明确数值冲突","evidence_ids":["beads","pdrn","lift"],"analysis":"两份材料中的颗数、成分及紧致叙事能够对应。这说明内容一致，不代表它们是独立的效果证据；本样例无需为了提示风险而捏造矛盾。","action":"继续核查来源和试验，勿把重复表述当成交叉证实。"},
-    {"id":"image-origin","category":"image","level":"neutral","title":"配图展示了手持商品，实拍来源尚未证实","evidence_ids":["package"],"analysis":"瓶身、手持构图和叠加宣传文字可在画面中核对。当前没有原始拍摄文件或经校准的截图检测结论，无法确认AI生成、局部修图或完全未经处理。","action":"图片可用于识别商品和对应宣称；鉴别拍摄来源需要原图及独立检测。"}
+    {"id":"ad-language","category":"promotion","level":"warning","title":"文案更像广告","evidence_ids":["opening","beads","pdrn","lift","penetration"],"analysis":"从熬夜焦虑一路介绍产品卖点，几乎没有提到缺点。","action":"按广告阅读，别当成购买保证。"},
+    {"id":"numbers","category":"efficacy","level":"warning","title":"这些数字不等于实际效果","evidence_ids":["beads","penetration"],"analysis":"8800颗、807纳米和5.39倍没有给出试验出处，不能直接说明有多好用。","action":"向品牌了解这些数字的依据。"},
+    {"id":"collagen","category":"efficacy","level":"warning","title":"淡纹紧致还缺依据","evidence_ids":["lift"],"analysis":"感觉皮肤变紧，不能证明胶原补回来了或法令纹变淡了。","action":"看对应产品的试验结果。"},
+    {"id":"fit","category":"suitability","level":"warning","title":"适不适合你还不确定","evidence_ids":["opening","penetration","pdrn"],"analysis":"只说熬夜、25+和秋冬，没交代干油皮和敏感肌是否适用。","action":"先看自己的肤质和过敏情况。"},
+    {"id":"comment-pattern","category":"comments","level":"warning","title":"评论在重复卖点","evidence_ids":["comment1","comment2","comment3","comment4","comment5","comment6","comment7"],"analysis":"评论多在重复吸收、去黄等卖点，但这还不足以认定水军。","action":"多看带使用时间和缺点的反馈。"},
+    {"id":"traffic","category":"comments","level":"warning","title":"作者在引导搜索商品","evidence_ids":["traffic"],"analysis":"作者评论里附了商品搜索词，在引导读者寻找这款产品。","action":"分清购买引导和使用经验。"},
+    {"id":"folded","category":"comments","level":"neutral","title":"删评不一定是删差评","evidence_ids":["folded","deleted"],"analysis":"截图没有说明谁删了什么，无法判断是不是作者删除差评。","action":"不要只凭删除提示下结论。"},
+    {"id":"subjective","category":"credible","level":"positive","title":"不粘、服帖可以参考","evidence_ids":["feel","comment2","comment4"],"analysis":"不粘、服帖可能是真实使用感受，但不代表人人都适合。","action":"把它当体验参考，别当效果保证。"},
+    {"id":"consistency","category":"logic","level":"neutral","title":"图文一致不等于效果证实","evidence_ids":["beads","pdrn","lift"],"analysis":"正文和配图说法一致，但重复卖点不能证明效果。","action":"还需要品牌提供试验依据。"},
+    {"id":"image-origin","category":"image","level":"neutral","title":"仅凭配图还不能判断真假","evidence_ids":["package"],"analysis":"图里有手持商品，但没有原图，还不能确认是否实拍。","action":"提供原图后再检查。"}
   ]
 }

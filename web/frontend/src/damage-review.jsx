@@ -3,37 +3,20 @@ import { ArrowRightOutlined, FileSearchOutlined } from "@ant-design/icons";
 import React, { useRef, useState } from "react";
 
 const SOURCE_LABELS = {
-  declared_ai: "文件元数据声明为 AI 生成，来源仍可复核。",
-  unverified_marker: "发现来源标识，等待核验。",
-  not_found: "文件中未读到 AI 来源标识。",
-};
-
-const STATUS_LABELS = {
-  similar: "发现相似生成线索", weak: "未见明显相似生成线索", insufficient: "证据不足",
+  declared_ai: "图片带有 AI 生成标记。",
+  unverified_marker: "图片带有来源标记，尚未确认。",
 };
 
 function Assessment({ title, data, prominent = false }) {
-  let band = null;
-  if (data.status !== "insufficient" && data.score != null && data.threshold != null) {
-    const margin = Math.abs(data.threshold) * 0.2;
-    band = data.score > data.threshold + margin ? { tone: "high", label: "生成相似线索较强" } :
-      data.score < data.threshold - margin ? { tone: "low", label: "生成相似线索较弱" } :
-      { tone: "borderline", label: "接近复核阈值" };
-  }
+  const { score, tone, title: conclusion, detail } = data.display;
   return <article className={"claim damage-assessment" + (prominent ? " damage-conclusion" : "") +
-    (band ? " damage-score-" + band.tone : "")}>
-    <h3>{prominent ? STATUS_LABELS[data.status] : title}</h3>
-    {prominent ? <p className="damage-score">检测分 <strong className="damage-score-value">{data.score == null ? "—" : data.score.toFixed(3)}</strong>
-      {band && <small className="damage-score-band">{band.label}</small>}
-      {data.threshold != null && <span className="damage-score-threshold">复核阈值 {data.threshold.toFixed(3)}</span>}</p> :
-    <p><strong>{STATUS_LABELS[data.status]}</strong>{data.score != null && <> · 检测分 <strong className="damage-score-value">{data.score.toFixed(3)}</strong></>}
-      {band && <> · <span className="damage-score-band">{band.label}</span></>}
-      {data.threshold != null && " · 复核阈值 " + data.threshold.toFixed(3)}</p>}
-    <p>{data.reason}</p>
-    {prominent && <p className="damage-score-note">分数越高，生成相似线索越强；检测分尚未校准为生成概率。</p>}
-    {data.cues?.length > 0 && <ul className="detail-list">{data.cues.map(cue =>
-      <li key={cue.label}>{cue.label} · {cue.direction === "raises" ? "推高评分" : "拉低评分"}</li>
-    )}</ul>}
+    " damage-score-" + tone}>
+    <h3>{prominent ? conclusion : title}</h3>
+    {!prominent && <p><strong>{conclusion}</strong></p>}
+    {score != null && <p className="damage-score">像 AI 的程度
+      <strong className="damage-score-value">{score}<small>/100</small></strong></p>}
+    <p>{detail}</p>
+    {prominent && score != null && <p className="damage-score-note">分越高，越像 AI。</p>}
   </article>;
 }
 
@@ -105,30 +88,26 @@ export function DamageReport({ result }) {
     <div className="result-stack">
       {whole && <div ref={wholeRef}><Assessment title="整图" data={whole} prominent /></div>}
       <nav className="damage-directory" aria-label="破损线索目录"><h3>线索目录</h3>
-        <button type="button" onClick={() => locate(wholeRef)}>整图检测依据 <ArrowRightOutlined /></button>
-        {region && <button type="button" onClick={() => locate(regionRef)}>框选区域线索 <ArrowRightOutlined /></button>}
-        {preview && <button type="button" onClick={() => locate(imageRef)}>送审原图与来源 <ArrowRightOutlined /></button>}
-        <button type="button" onClick={() => locate(nextRef)}>人工复核建议 <ArrowRightOutlined /></button>
+        <button type="button" onClick={() => locate(wholeRef)}>为什么这样判断 <ArrowRightOutlined /></button>
+        {region && <button type="button" onClick={() => locate(regionRef)}>你框选的位置 <ArrowRightOutlined /></button>}
+        {preview && <button type="button" onClick={() => locate(imageRef)}>查看原图 <ArrowRightOutlined /></button>}
+        <button type="button" onClick={() => locate(nextRef)}>下一步怎么做 <ArrowRightOutlined /></button>
       </nav>
-      {region && <div ref={regionRef}><Assessment title="选区" data={region} /></div>}
+      {region && <div ref={regionRef}><Assessment title="你框选的位置" data={region} /></div>}
       <div ref={nextRef} className="report-next damage-anchor"><ArrowRightOutlined aria-hidden="true" />
-        <p><b>下一步</b><span>结合原始图片和售后凭证人工复核。</span></p></div>
+        <p><b>下一步</b><span>请结合原图和实物确认。</span></p></div>
       {preview && <figure ref={imageRef} className="damage-edge damage-anchor">
         <div className="damage-photo">
           <img src={preview} alt="退款破损送审图片" />
-          {overlay && roi && <img className="damage-edge-overlay" alt="选区候选边缘"
+          {overlay && roi && <img className="damage-edge-overlay" alt="框选位置的轮廓"
             src={"data:image/png;base64," + overlay} style={{
               left: (roi[0] * 100) + "%", top: (roi[1] * 100) + "%",
               width: ((roi[2] - roi[0]) * 100) + "%", height: ((roi[3] - roi[1]) * 100) + "%",
             }} />}
         </div>
-        {overlay && roi && <figcaption>橙线是选区候选边缘，可能包含接缝、文字或反光。</figcaption>}
+        {overlay && roi && <figcaption>橙线只是轮廓，不代表这里有造假。</figcaption>}
       </figure>}
       {SOURCE_LABELS[result.source_marker] && <p className="muted">{SOURCE_LABELS[result.source_marker]}</p>}
-      <details className="evidence-detail">
-        <summary>检查记录</summary>
-        <p className="muted">{result.model ? result.model + " · CPU" : "本地 CPU 检查未加载破损模型。"}</p>
-      </details>
     </div>
   </article>;
 }
