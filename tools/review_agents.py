@@ -203,6 +203,7 @@ def damage_process(result, model, progress):
             "为售后审核员返回可公开的证据分析摘要，不要返回逐字内部推演。只输出JSON，字段 analysis 是最多3条对象，"
             "每条包含 title、detail、evidence_ids（只能来自input、whole、region、scope）。"
             "解释检测分与阈值、证据局限、需要人工补什么材料。只收到检测摘要，未看原图，"
+            "title和detail面向售后人员，用自然中文；不要出现input、whole、scope、status、similar、not_found等字段名或状态码，ROI称为框选区域。"
             "不得编造裂缝、反光、噪声测量值或改变本地结论；不得确认造假或骗赔。\n" + json.dumps(evidence, ensure_ascii=False),
             "你是BeautyProof售后审核解释助手。依据已提供的检测结果，输出简洁、可核对的证据说明。", timeout=30,
         ) or {}
