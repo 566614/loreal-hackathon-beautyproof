@@ -159,6 +159,8 @@ def valid_findings(rows, evidence, references):
             continue
         if len(row["title"]) > 24 or len(row["analysis"]) > 90 or len(row["action"]) > 40:
             continue
+        if re.search(r"适配|协同性|产品级|证据缺口|阈值|校准|置信度|Agent|CPU", row["title"] + row["analysis"] + row["action"]):
+            continue
         if re.search(r"确认水军|实锤水军|必然收钱|保证适合|100%实拍|确认AI伪造", row["analysis"]):
             continue
         cited = row.get("reference_ids", [])
@@ -201,6 +203,9 @@ def analyze(paths, names, copy, comments, profile, request_json, progress):
         refined = valid_findings(answer.get("findings"), evidence, references)
         if refined:
             findings = refined
+            if matched:
+                covered = {f["category"] for f in findings}
+                findings.extend(f for f in case_findings(evidence) if f["category"] not in covered)
             engine = "deepseek"
             value = answer.get("conclusion_confidence")
             if type(value) in (int, float) and 0 <= value <= 1:

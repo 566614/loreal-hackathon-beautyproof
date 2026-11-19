@@ -430,14 +430,14 @@ const workspaceCopy = {
     placeholder: "附上笔记、配图和评论，或粘贴正文…",
     prompts: [
       { title: "分析这组种草素材", detail: "一起看正文、配图和评论", icon: FileSearchOutlined,
-        text: "请核验这组小红书种草素材：找出推广、功效参数、肤质适配和评论导流线索，并告诉我哪些内容可以参考。" },
-      { title: "看看是否适合我", detail: "按肤质与耐受核对推荐", icon: PictureOutlined,
+        text: "请看看这组小红书内容是不是广告、效果说法是否可信，以及适不适合我。" },
+      { title: "看看是否适合我", detail: "结合肤质和过敏情况判断", icon: PictureOutlined,
         text: "请核验这篇种草是否提供了足够的肤质、肤色和使用条件，而不是有同样问题就推荐同一款。" },
     ],
   },
   reviewer: {
     roleName: "企业审核人员", title: "破损图片审核助手", greeting: "核对这次退货的图片线索。",
-    lead: "上传商品破损原图，由本地 CPU 模型检查生成线索，辅助售后复核。",
+    lead: "上传商品破损原图，看看像不像 AI 生成。",
     placeholder: "附上破损图片，说明需要复核的位置…",
     prompts: [
       { title: "审核退款破损", detail: "核对整图和可疑区域", icon: PictureOutlined,
@@ -727,7 +727,7 @@ function Workbench({ role, onReset }) {
                   {!!entry.evidence?.length && <ul className="reply-evidence">
                     {entry.evidence.map((item, i) => <li key={i}>
                       <strong>{item.label}</strong>
-                      {item.quote && <blockquote>{item.quote}</blockquote>}
+                      {item.quote && <details><summary>查看原文</summary><blockquote>{item.quote}</blockquote></details>}
                       {item.detail && <p>{item.detail}</p>}
                     </li>)}
                   </ul>}
@@ -791,7 +791,7 @@ function Workbench({ role, onReset }) {
                 <Form.Item name="copy" label="宣传正文"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
                 {role === "consumer" && <>
                   <Form.Item name="comments" label="评论区文字" extra="可粘贴评论；截图中的评论会与正文分开分析。"><Input.TextArea rows={3} maxLength={12000} /></Form.Item>
-                  <Form.Item name="profile" label="你的肤质、肤色与耐受情况"><Input.TextArea rows={2} maxLength={12000} placeholder="如混合偏油、敏感耐受情况、想改善的实际问题" /></Form.Item>
+                  <Form.Item name="profile" label="你的肤质、肤色与过敏情况"><Input.TextArea rows={2} maxLength={12000} placeholder="如混合偏油、容易过敏、想改善暗沉" /></Form.Item>
                 </>}
                 <div className="option-fields">
                   <Form.Item name="product" label="宣传产品"><Input list="known-products" placeholder="完整产品名" /></Form.Item>

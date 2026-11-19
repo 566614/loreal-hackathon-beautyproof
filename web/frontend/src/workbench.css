@@ -134,6 +134,7 @@ body { background: var(--ground); color: var(--ink); font-family: var(--display)
 .reply-evidence { padding: 0; margin: 10px 0 0; list-style: none; }
 .reply-evidence li { padding-top: 7px; margin-bottom: 8px; border-top: 1px solid var(--line); font-size: 13px; }
 .reply-evidence blockquote { margin: 5px 0; font-weight: 650; }
+.reply-evidence summary { cursor: pointer; color: var(--accent-ink); margin-top: 5px; }
 
 .desk-form.ant-form {
   flex: none; width: min(100% - 52px, 720px); margin: 0 auto; padding-bottom: 12px;

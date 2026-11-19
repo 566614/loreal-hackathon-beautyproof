@@ -116,6 +116,8 @@ def test_deepseek_refinement_requires_real_evidence_and_reference_ids(tmp_path, 
              "evidence_ids": ["unknown"], "reference_ids": []},
             {"category": "efficacy", "title": "虚构报告", "analysis": "已证实", "action": "购买",
              "evidence_ids": ["body-0"], "reference_ids": ["fake-study"]},
+            {"category": "suitability", "title": "肤质适配", "analysis": "要做产品级校准。", "action": "确认适配。",
+             "evidence_ids": ["body-0"], "reference_ids": []},
         ]}
     result = seed_review.analyze([path], [path.name], "本篇为品牌合作", "", "油皮", request, lambda *a: None)
     assert result["engine"] == "deepseek"
