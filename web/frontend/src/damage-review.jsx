@@ -8,6 +8,9 @@ const SOURCE_LABELS = {
 };
 
 function Assessment({ title, data, prominent = false }) {
+  if (!data.display) return <article className="claim" role="alert">
+    <h3>这次结果暂时无法显示</h3><p>请重新审核这张图片。</p>
+  </article>;
   const { score, tone, title: conclusion, detail } = data.display;
   return <article className={"claim damage-assessment" + (prominent ? " damage-conclusion" : "") +
     " damage-score-" + tone}>
