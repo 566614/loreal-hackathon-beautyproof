@@ -1,5 +1,22 @@
 # 退款破损审核
 
+## 暂停与续跑断点（2026-11-19）
+
+用户因电脑电量不足请求保存并暂停。当前计算进程已停止，发布权重仍为 8,569 字节版本。新增的单层 SAFE/NPR 频率滤波学生未改善额外 15 张的漏检，未替换发布模型。正在尝试只保留教师的一个小残差块；该实验尚未完成。
+
+断点为本机 `outputs/runs/doubao-damage-new-20261118/small-residual-block/SAFE-progress.npz`，已核对可读取，保存了 307 个原文件和 105 个程序编辑变体的特征；NPR 残差块尚未开始。浅层两套完整缓存及此前全部模型、逐图结果与研究脚本也已保存在 `outputs/runs/`。
+
+下一次在 `D:/heckson/loreal-hackathon-beautyproof` 下先运行以下提取命令，脚本会跳过已完成项；提取成功后再运行分类比较。保持原图片、现有划分和发布权重不变，未经核验不要覆盖当前模型。
+
+```powershell
+$env:OPENBLAS_NUM_THREADS='1'
+& ./.submission_work/bp-next/venv-cpu/Scripts/python.exe -u -B outputs/runs/doubao-damage-target/small_filterbank_cache.py 1
+# 上一条提取成功完成后：
+& ./.submission_work/bp-next/venv-cpu/Scripts/python.exe -u -B outputs/runs/doubao-damage-target/filterbank_student_search.py small-residual-block
+```
+
+## 当前发布模型
+
 在 BeautyProof 选择「企业审核人员」入口，发送「审核退款破损」并附上 JPG 或 PNG 原文件。结果包含整图检测分、复核阈值与来源标识。框选可查看候选边缘；当前模型未单独校准选区分类，选区结果显示证据不足。橙色覆盖图可能包含印刷线、接缝与反光，边缘预览不参与模型评分。
 
 本地默认从 `models/doubao_damage/quality-local-model.npz` 读取 8,569 字节的 CPU 权重。模型汇总统一尺寸整图和 5 个原始像素局部区域的通道、噪声及重采样响应，取均值、标准差与分位数，得到 624 个统计特征，再用线性判定。检测分与同一模型的复核阈值比较，分数不是概率。无需运行教师模型。
