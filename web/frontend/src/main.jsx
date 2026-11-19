@@ -16,6 +16,7 @@ import "./workbench.css";
 import { DamageRegion, DamageReport } from "./damage-review.jsx";
 import Portal from "./portal.jsx";
 import SeedReport from "./seed-review.jsx";
+import AnalysisProcess from "./analysis-process.jsx";
 
 const toolLabels = {
   hash: "文件指纹", c2pa: "来源凭证", ela: "压缩痕迹", spectral: "频域取证",
@@ -628,6 +629,8 @@ function Workbench({ role, onReset }) {
           const result = turn.result;
           previousJob.current = jobId;
           setMessages(previous => [...previous, { kind: "agent", text: result.message, evidence: result.evidence,
+            processes: Object.entries(result.reports || {}).filter(([, report]) => report.analysis_process)
+              .map(([route, report]) => ({ route, process: report.analysis_process })),
             reviewId: result.type === "review" ? jobId : null }]);
           if (result.type === "review") {
             setReview({ ...result, id: jobId });
@@ -719,6 +722,7 @@ function Workbench({ role, onReset }) {
                 <div className="message-content">
                   <h2>{entry.kind === "user" ? "你" : workspace.title}</h2>
                   {entry.text && <p>{entry.text}</p>}
+                  {entry.processes?.map(({ route, process }) => <AnalysisProcess key={route} process={process} />)}
                   {entry.attachment && <div className="message-file"><PaperClipOutlined aria-hidden="true" /> {entry.attachment}</div>}
                   {!!entry.evidence?.length && <ul className="reply-evidence">
                     {entry.evidence.map((item, i) => <li key={i}>

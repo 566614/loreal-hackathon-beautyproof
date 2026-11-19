@@ -109,7 +109,7 @@ def test_deepseek_refinement_requires_real_evidence_and_reference_ids(tmp_path, 
     calls = []
     def request(prompt, system):
         calls.append(json.loads(prompt.split("\n", 1)[1]))
-        return {"findings": [
+        return {"conclusion_confidence": .87, "findings": [
             {"category": "promotion", "title": "原文中的广告披露", "analysis": "正文写明品牌合作。",
              "action": "按商业推广阅读。", "evidence_ids": ["body-0"], "reference_ids": []},
             {"category": "comments", "title": "虚构评论", "analysis": "水军", "action": "删除",
@@ -119,6 +119,8 @@ def test_deepseek_refinement_requires_real_evidence_and_reference_ids(tmp_path, 
         ]}
     result = seed_review.analyze([path], [path.name], "本篇为品牌合作", "", "油皮", request, lambda *a: None)
     assert result["engine"] == "deepseek"
+    assert result["conclusion"]["confidence"] == .87
+    assert result["conclusion"]["confidence_kind"] == "agent_estimate"
     assert result["analysis_process"]["engine"] == "deepseek"
     assert len(result["analysis_process"]["steps"]) >= 3
     assert len(result["findings"]) == 1

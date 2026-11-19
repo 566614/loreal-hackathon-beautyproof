@@ -1,7 +1,6 @@
 import { Button, Space } from "antd";
 import { ArrowRightOutlined, FileSearchOutlined } from "@ant-design/icons";
 import React, { useRef, useState } from "react";
-import AnalysisProcess from "./analysis-process.jsx";
 
 const SOURCE_LABELS = {
   declared_ai: "文件元数据声明为 AI 生成，来源仍可复核。",
@@ -13,12 +12,15 @@ const STATUS_LABELS = {
   similar: "发现相似生成线索", weak: "未见明显相似生成线索", insufficient: "证据不足",
 };
 
-function Assessment({ title, data }) {
-  return <article className="claim">
-    <h3>{title}</h3>
+function Assessment({ title, data, prominent = false }) {
+  return <article className={"claim" + (prominent ? " damage-conclusion" : "")}>
+    <h3>{prominent ? STATUS_LABELS[data.status] : title}</h3>
+    {prominent ? <p className="damage-score">检测分 <strong>{data.score == null ? "—" : data.score.toFixed(3)}</strong>
+      {data.threshold != null && <span>复核阈值 {data.threshold.toFixed(3)}</span>}</p> :
     <p><strong>{STATUS_LABELS[data.status]}</strong>{data.score != null && " · 检测分 " + data.score.toFixed(3)}
-      {data.threshold != null && " · 复核阈值 " + data.threshold.toFixed(3)}</p>
+      {data.threshold != null && " · 复核阈值 " + data.threshold.toFixed(3)}</p>}
     <p>{data.reason}</p>
+    {prominent && <p className="damage-score-note">检测分用于复核，尚未校准为生成概率。</p>}
     {data.cues?.length > 0 && <ul className="detail-list">{data.cues.map(cue =>
       <li key={cue.label}>{cue.label} · {cue.direction === "raises" ? "推高评分" : "拉低评分"}</li>
     )}</ul>}
@@ -86,15 +88,22 @@ export function DamageRegion({ preview, roi, onChange, busy }) {
 
 export function DamageReport({ result }) {
   const { preview, roi, edge_preview_png: overlay, whole, region } = result;
+  const wholeRef = useRef(null), regionRef = useRef(null), imageRef = useRef(null), nextRef = useRef(null);
+  const locate = ref => ref.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   return <article className="review-document damage-document report-surface">
     <header className="report-titlebar"><div><FileSearchOutlined aria-hidden="true" /><h2>退款破损审核</h2></div></header>
     <div className="result-stack">
-      {whole && <Assessment title="整图" data={whole} />}
-      {region && <Assessment title="选区" data={region} />}
-      <AnalysisProcess process={result.analysis_process} />
-      <div className="report-next"><ArrowRightOutlined aria-hidden="true" />
+      {whole && <div ref={wholeRef}><Assessment title="整图" data={whole} prominent /></div>}
+      <nav className="damage-directory" aria-label="破损线索目录"><h3>线索目录</h3>
+        <button type="button" onClick={() => locate(wholeRef)}>整图检测依据 <ArrowRightOutlined /></button>
+        {region && <button type="button" onClick={() => locate(regionRef)}>框选区域线索 <ArrowRightOutlined /></button>}
+        {preview && <button type="button" onClick={() => locate(imageRef)}>送审原图与来源 <ArrowRightOutlined /></button>}
+        <button type="button" onClick={() => locate(nextRef)}>人工复核建议 <ArrowRightOutlined /></button>
+      </nav>
+      {region && <div ref={regionRef}><Assessment title="选区" data={region} /></div>}
+      <div ref={nextRef} className="report-next damage-anchor"><ArrowRightOutlined aria-hidden="true" />
         <p><b>下一步</b><span>结合原始图片和售后凭证人工复核。</span></p></div>
-      {preview && <figure className="damage-edge">
+      {preview && <figure ref={imageRef} className="damage-edge damage-anchor">
         <div className="damage-photo">
           <img src={preview} alt="退款破损送审图片" />
           {overlay && roi && <img className="damage-edge-overlay" alt="选区候选边缘"

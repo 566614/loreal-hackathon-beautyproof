@@ -1,6 +1,14 @@
 .seed-document { min-width: 0; }
 .seed-summary { padding: 23px 25px 20px; }
-.seed-summary h3 { margin: 0 0 10px; font-size: 21px; line-height: 1.5; font-weight: 650; }
+.seed-conclusion-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 10px; }
+.seed-summary h3 { margin: 0; font-size: 29px; line-height: 1.45; font-weight: 800; text-wrap: balance; }
+.seed-confidence { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; color: var(--accent-ink); }
+.seed-confidence strong { font-size: 42px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.seed-confidence strong span { font-size: 22px; margin-left: 2px; }
+.seed-confidence > span, .seed-confidence small { font-size: 11px; }
+.seed-summary .seed-product { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.seed-summary .seed-confidence-note { color: var(--muted); font-size: 12px; margin-bottom: 15px; }
+.seed-directory-title { margin: 3px 24px 13px; font-size: 17px; font-weight: 700; }
 .seed-summary p { margin: 0 0 16px; font-size: 15px; line-height: 1.85; }
 .seed-source-strip { display: flex; flex-wrap: wrap; gap: 7px 16px; color: var(--muted); font-size: 12px; }
 .seed-filters { display: flex; flex-wrap: wrap; gap: 5px; padding: 15px 24px; border-block: 1px solid var(--line); }
@@ -14,7 +22,7 @@
 .seed-finding strong { font-size: 14px; font-weight: 550; }
 .seed-finding:hover, .seed-finding.is-active { background: var(--rose); }
 .seed-finding.is-active strong { color: var(--accent-ink); }
-.seed-detail { margin: 0 24px 24px; padding-top: 18px; border-top: 1px solid var(--line-strong); }
+.seed-detail { margin: 0 24px 24px; padding-top: 18px; border-top: 1px solid var(--line-strong); scroll-margin-top: 75px; }
 .seed-detail h3 { font-size: 18px; margin: 0 0 12px; line-height: 1.6; }
 .seed-detail > p { line-height: 1.9; font-size: 14px; }
 .seed-anchor-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px; }
@@ -41,6 +49,10 @@
 .attachment-list .attachment { max-width: 100%; }
 @media (max-width: 600px) {
   .seed-summary, .seed-next, .seed-references { padding-inline: 17px; }
+  .seed-summary h3 { font-size: 25px; }
+  .seed-conclusion-row { align-items: flex-start; gap: 12px; }
+  .seed-confidence strong { font-size: 35px; }
+  .seed-directory-title { margin-inline: 17px; }
   .seed-filters { padding-inline: 13px; }
   .seed-findings { padding-inline: 12px; }
   .seed-detail { margin-inline: 17px; }

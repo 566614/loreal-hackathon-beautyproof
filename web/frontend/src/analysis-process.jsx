@@ -10,6 +10,6 @@ export default function AnalysisProcess({ process }) {
     <ol>{process.steps.map((step, index) => <li key={index}>
       <strong>{step.title}</strong><p>{step.detail}</p>
     </li>)}</ol>
-    <p className="analysis-process-note">展示材料、工具结果与判断依据，可与下方证据对应核对。</p>
+    <p className="analysis-process-note">可在审核报告的线索目录中查看对应证据。</p>
   </details>;
 }
