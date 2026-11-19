@@ -10,6 +10,9 @@
   --paper: #fffdfb;
   --rose: #f7e8e7;
   --wine: #241419;
+  --detection-high: #b42318;
+  --detection-borderline: #9a4b00;
+  --detection-low: #217042;
   --latin: Geist, "Segoe UI", sans-serif;
   --display: Geist, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
   --utility: Consolas, "SFMono-Regular", monospace;
@@ -316,9 +319,15 @@ body { background: var(--ground); color: var(--ink); font-family: var(--display)
   .conversation:not(.conversation-active) { justify-content: flex-start; overflow: auto; }
 }
 .damage-conclusion h3 { font-size: 28px; font-weight: 800; line-height: 1.5; margin-bottom: 14px; }
-.damage-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; color: var(--accent-ink); }
+.damage-assessment { --score-color: var(--muted); }
+.damage-score-high { --score-color: var(--detection-high); }
+.damage-score-borderline { --score-color: var(--detection-borderline); }
+.damage-score-low { --score-color: var(--detection-low); }
+.damage-score-value, .damage-score-band { color: var(--score-color); }
+.damage-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .damage-score strong { font-size: 34px; line-height: 1.2; font-weight: 750; font-variant-numeric: tabular-nums; }
-.damage-score > span { margin-left: auto; font-size: 12px; color: var(--muted); }
+.damage-score-band { font-size: 12px; font-weight: 600; }
+.damage-score-threshold { margin-left: auto; font-size: 12px; color: var(--muted); }
 .damage-conclusion .damage-score-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .damage-directory { margin-bottom: 14px; }
 .damage-directory h3 { margin: 0 0 12px; font-size: 17px; font-weight: 700; }

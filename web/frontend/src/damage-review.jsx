@@ -13,14 +13,24 @@ const STATUS_LABELS = {
 };
 
 function Assessment({ title, data, prominent = false }) {
-  return <article className={"claim" + (prominent ? " damage-conclusion" : "")}>
+  let band = null;
+  if (data.status !== "insufficient" && data.score != null && data.threshold != null) {
+    const margin = Math.abs(data.threshold) * 0.2;
+    band = data.score > data.threshold + margin ? { tone: "high", label: "生成相似线索较强" } :
+      data.score < data.threshold - margin ? { tone: "low", label: "生成相似线索较弱" } :
+      { tone: "borderline", label: "接近复核阈值" };
+  }
+  return <article className={"claim damage-assessment" + (prominent ? " damage-conclusion" : "") +
+    (band ? " damage-score-" + band.tone : "")}>
     <h3>{prominent ? STATUS_LABELS[data.status] : title}</h3>
-    {prominent ? <p className="damage-score">检测分 <strong>{data.score == null ? "—" : data.score.toFixed(3)}</strong>
-      {data.threshold != null && <span>复核阈值 {data.threshold.toFixed(3)}</span>}</p> :
-    <p><strong>{STATUS_LABELS[data.status]}</strong>{data.score != null && " · 检测分 " + data.score.toFixed(3)}
+    {prominent ? <p className="damage-score">检测分 <strong className="damage-score-value">{data.score == null ? "—" : data.score.toFixed(3)}</strong>
+      {band && <small className="damage-score-band">{band.label}</small>}
+      {data.threshold != null && <span className="damage-score-threshold">复核阈值 {data.threshold.toFixed(3)}</span>}</p> :
+    <p><strong>{STATUS_LABELS[data.status]}</strong>{data.score != null && <> · 检测分 <strong className="damage-score-value">{data.score.toFixed(3)}</strong></>}
+      {band && <> · <span className="damage-score-band">{band.label}</span></>}
       {data.threshold != null && " · 复核阈值 " + data.threshold.toFixed(3)}</p>}
     <p>{data.reason}</p>
-    {prominent && <p className="damage-score-note">检测分用于复核，尚未校准为生成概率。</p>}
+    {prominent && <p className="damage-score-note">分数越高，生成相似线索越强；检测分尚未校准为生成概率。</p>}
     {data.cues?.length > 0 && <ul className="detail-list">{data.cues.map(cue =>
       <li key={cue.label}>{cue.label} · {cue.direction === "raises" ? "推高评分" : "拉低评分"}</li>
     )}</ul>}
