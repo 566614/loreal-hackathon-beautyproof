@@ -1,0 +1,53 @@
+{
+  "id": "linqingxuan-20261119",
+  "title": "熬夜黄垮脸救星来了，一套养出透亮好皮肤",
+  "product": "林清轩小金珠精华水乳",
+  "label": "user_confirmed_ad",
+  "transcript_provenance": "User-supplied images; manually reviewed transcription and approximate normalized evidence boxes",
+  "assets": [
+    {
+      "sha256": "72db13382d0b9fa3352bdaa5c1d361ec3c1be3b5d47a92e23a95a07184673205",
+      "kind": "笔记与评论截图",
+      "observations": [
+        {"id":"opening","source":"image_text","text":"经常熬夜赶进度、作息不规律，皮肤不仅暗沉发黄，摸着还松松垮垮的没弹性。最近终于被这套林清轩小金珠精华水乳硬控住了！真的是熬夜打工人的回春神器。","box":[0.04,0.074,0.97,0.119]},
+        {"id":"beads","source":"image_text","text":"8800颗油凝珠，水油同补。里面足足有8800颗山茶花油凝珠！靠着专利悬油锁鲜技术，把活性成分牢牢锁住。","box":[0.04,0.121,0.97,0.159]},
+        {"id":"feel","source":"image_text","text":"润而不腻，完全不会油腻，后续上妆也特别服帖。","box":[0.04,0.166,0.97,0.184]},
+        {"id":"pdrn","source":"image_text","text":"它里面加了三文鱼PDRN和瑞士高山雪绒花，不是那种浮于表面的假白，而是实打实地从肌底透出来的光泽感。第二天黄气也被一扫而空。","box":[0.04,0.204,0.97,0.25]},
+        {"id":"lift","source":"image_text","text":"就像给脸蛋做普拉提，真的有种把流失的胶原蛋白补回来的感觉。用下来能明显感觉到面部有一种向内收紧的力量，下颌线变得紧致清晰，连粗大的毛孔和法令纹都被撑淡了。","box":[0.04,0.253,0.97,0.309]},
+        {"id":"penetration","source":"image_text","text":"因为它用了807纳米微分子渗透技术，营养能直接钻进毛孔里。水乳搭配一起用直接放大招，能达到5.39倍的高能促渗透。干燥的秋冬用它保湿力也完全足够。","box":[0.04,0.319,0.97,0.365]},
+        {"id":"traffic","source":"comment","text":"作者：被这套护肤品硬控了！温和又高效。林清轩小金珠精华水乳（搜索词入口）","box":[0.15,0.487,0.9,0.512]},
+        {"id":"folded","source":"comment","text":"以下是被折叠的评论。被折叠评论包含疑似广告、不友好或无意义内容。","box":[0.04,0.522,0.95,0.54]},
+        {"id":"comment1","source":"comment","text":"我也是熬夜选手！用完脸蛋紧紧亮亮的","box":[0.15,0.554,0.96,0.568]},
+        {"id":"comment2","source":"comment","text":"这水乳上脸确实蛮好吸收的，不粘腻","box":[0.15,0.596,0.96,0.609]},
+        {"id":"comment3","source":"comment","text":"这个去黄提亮效果怎么样","box":[0.15,0.637,0.96,0.652]},
+        {"id":"comment4","source":"comment","text":"这个精华液真的太好用了","box":[0.15,0.712,0.96,0.726]},
+        {"id":"comment5","source":"comment","text":"经常熬夜用这个真的可以改善吗？这个上脸好不好吸收啊","box":[0.15,0.753,0.97,0.775]},
+        {"id":"comment6","source":"comment","text":"之前就看别人推荐过这个水乳，这个水乳用了皮肤会变嫩吗我","box":[0.15,0.796,0.97,0.822]},
+        {"id":"comment7","source":"comment","text":"这个精华液能改善熬夜带来的暗沉吗？","box":[0.15,0.848,0.97,0.865]},
+        {"id":"deleted","source":"comment","text":"原评论已删除","box":[0.15,0.893,0.94,0.906]}
+      ]
+    },
+    {
+      "sha256": "7c90bc1d5f9d27417974b10015405e72e940f8e3f6327a0f9be645a727783101",
+      "kind": "商品宣传配图",
+      "observations": [
+        {"id":"beads","source":"image_text","text":"8800颗油凝珠，水油同补。里面足足有8800颗山茶花油凝珠！靠着专利悬油锁鲜技术，把活性成分牢牢锁住。","box":[0.48,0.116,0.95,0.259]},
+        {"id":"pdrn","source":"image_text","text":"三文鱼PDRN和瑞士高山雪绒花。用了一个阵子，最直观的感受就是脸变得干净透亮。不是那种浮于表面的假白，而是实打实地从肌底透出来的光泽感。","box":[0.48,0.294,0.98,0.477]},
+        {"id":"lift","source":"image_text","text":"自研红山茶花干肽搭配专利双面胶技术。真的有种把流失的胶原蛋白补回来的感觉，用下来能明显感觉到面部有一种向内收紧的力量，下颌线变得紧致清晰。","box":[0.48,0.524,0.98,0.669]},
+        {"id":"package","source":"image","text":"手持林清轩山茶花抗皱肽油凝珠精华水，瓶身与右侧宣传文字同框；未提供原始拍摄文件。","box":[0.08,0.208,0.47,0.939]}
+      ]
+    }
+  ],
+  "findings": [
+    {"id":"ad-language","category":"promotion","level":"warning","title":"个人体验外壳下，卖点组织高度广告化","evidence_ids":["opening","beads","pdrn","lift","penetration"],"analysis":"从熬夜焦虑切入，连续铺开颗数、成分、专利、紧致和促渗透，几乎只有正向结论。送审方已确认本例为广告；这种组合可作为推广识别参考。单个参数或专业词本身不能证明作者收钱。","action":"将其作为商业推广阅读，核对合作披露及参数原始出处。"},
+    {"id":"numbers","category":"efficacy","level":"warning","title":"8800颗、807纳米、5.39倍缺少可核对定义","evidence_ids":["beads","penetration"],"analysis":"颗数、粒径与促渗倍数属于不同指标。文中没有说明测量方法、比较基线、样本和误差，不能直接换算成消费者能获得的提亮或紧致效果。","action":"向品牌索取与该产品版本对应的试验及指标定义。"},
+    {"id":"collagen","category":"efficacy","level":"warning","title":"从肤感推到了胶原、轮廓和法令纹变化","evidence_ids":["lift"],"analysis":"“有种感觉”属于个人描述；胶原回补、轮廓收紧和法令纹改善则需要成品级试验。成分名、专利名和主观紧绷感不能独立证明这些变化。","action":"把个人感受与待品牌验证的功效结论分开。"},
+    {"id":"fit","category":"suitability","level":"warning","title":"没有足够的肤质与耐受信息供你照着买","evidence_ids":["opening","penetration","pdrn"],"analysis":"提供了熬夜、25+和秋冬场景，却没交代干油皮、敏感耐受、使用周期、用量或不适情况，也没有肤色适配对照。不能仅凭“暗沉、松垮”就推荐同一套水乳。","action":"先补充你的肤质、耐受和诉求；完整成分与品牌适用资料未给出前，不作确定适配结论。"},
+    {"id":"comment-pattern","category":"comments","level":"warning","title":"评论围绕正文卖点附和，但不足以认定水军","evidence_ids":["comment1","comment2","comment3","comment4","comment5","comment6","comment7"],"analysis":"多条评论围绕熬夜、吸收、去黄和变嫩，与正文卖点高度对应；体验细节较少。有问有答也可能是自然互动，仅靠这张截屏无法识别真实账号关系或刷评行为。","action":"优先查看有使用周期、肤质、不足与持续追评的反馈；核查更多时间和账号样本后再判断协同性。"},
+    {"id":"traffic","category":"comments","level":"warning","title":"作者评论继续强化卖点并引向商品搜索","evidence_ids":["traffic"],"analysis":"作者补充“温和又高效”，并附同款商品搜索词，是可见的搜索导流线索。当前截图没有加微信、进群或私信购买的证据。","action":"区分商品搜索引导与站外导流，勿据此推断未展示的交易。"},
+    {"id":"folded","category":"comments","level":"neutral","title":"折叠、删除提示不等于刷评证据","evidence_ids":["folded","deleted"],"analysis":"截图能确认平台折叠提示和一条已删除内容；无法确认被删内容、删除者或原因，也不能据此认定作者删除差评。","action":"把它作为评论内容不完整的限制。"},
+    {"id":"subjective","category":"credible","level":"positive","title":"可以保留主观肤感，避免把它扩大成普遍功效","evidence_ids":["feel","comment2","comment4"],"analysis":"不粘、服帖、好吸收是可能存在的个人体验，文本本身没有足够依据否定它们；这些体验仍不能证明适合所有人或能逆转熬夜影响。","action":"把肤感作为参考，结合自己的条件，而非当作功效承诺。"},
+    {"id":"consistency","category":"logic","level":"neutral","title":"正文和配图在重复卖点，未发现明确数值冲突","evidence_ids":["beads","pdrn","lift"],"analysis":"两份材料中的颗数、成分及紧致叙事能够对应。这说明内容一致，不代表它们是独立的效果证据；本样例无需为了提示风险而捏造矛盾。","action":"继续核查来源和试验，勿把重复表述当成交叉证实。"},
+    {"id":"image-origin","category":"image","level":"neutral","title":"配图展示了手持商品，实拍来源尚未证实","evidence_ids":["package"],"analysis":"瓶身、手持构图和叠加宣传文字可在画面中核对。当前没有原始拍摄文件或经校准的截图检测结论，无法确认AI生成、局部修图或完全未经处理。","action":"图片可用于识别商品和对应宣称；鉴别拍摄来源需要原图及独立检测。"}
+  ]
+}

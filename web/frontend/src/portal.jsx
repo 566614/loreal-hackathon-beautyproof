@@ -4,8 +4,8 @@ import { ArrowRightOutlined, AuditOutlined, LockOutlined, ScanOutlined, UserOutl
 import "./portal.css";
 
 const entrances = [
-  { id: "consumer", title: "我是消费者", detail: "核对产品宣传与功效依据", icon: UserOutlined },
-  { id: "reviewer", title: "我是企业审核人员", detail: "审核宣传合规与退款破损线索", icon: AuditOutlined },
+  { id: "consumer", title: "我是消费者", detail: "核验种草正文、配图与评论", icon: UserOutlined },
+  { id: "reviewer", title: "我是企业审核人员", detail: "检查退货破损图片的生成线索", icon: AuditOutlined },
 ];
 
 export default function Portal() {

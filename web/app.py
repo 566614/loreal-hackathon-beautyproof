@@ -257,9 +257,14 @@ def agent_turn():
     product = request.form.get("product", "").strip() or None
     market = request.form.get("market", "").strip() or None
     upload = request.files.get("file")
-    if not message and not copy and not (upload and upload.filename) and not evidence_followup:
+    attachments = [f for f in request.files.getlist("file") if f.filename]
+    comments = request.form.get("comments", "").strip()
+    profile = request.form.get("profile", "").strip()
+    if len(attachments) > 6 or (len(attachments) > 1 and not publicity_only):
+        return jsonify({"error": "种草核验最多提交 6 张图，破损审核每次提交 1 张。"}), 400
+    if not message and not copy and not comments and not (upload and upload.filename) and not evidence_followup:
         return jsonify({"error": "请填写审核需求或附上图片。"}), 400
-    if len(message) > 12000 or (copy and len(copy) > 12000):
+    if max(len(message), len(copy or ""), len(comments), len(profile)) > 12000:
         return jsonify({"error": "消息和宣传正文各最多 12000 字。"}), 400
     try:
         references = normalize_references(json.loads(request.form.get("references", "null")))
@@ -287,7 +292,7 @@ def agent_turn():
             return jsonify({"error": "上一回合未等待功效试验补证，请重新送审。"}), 409
         if not ids or references:
             return jsonify({"error": "补证请选择已核验资料，用户摘录请先核对并录入资料库。"}), 400
-        if (upload and upload.filename) or request.files.get("reference_image") or roi is not None:
+        if attachments or request.files.get("reference_image") or roi is not None:
             return jsonify({"error": "补证沿用上一回合图片，修改图片或选区请重新送审。"}), 400
         for field, supplied in (("copy", copy), ("product", product), ("market", market)):
             if field in request.form and supplied != session[field]:
@@ -302,12 +307,17 @@ def agent_turn():
     try:
         directory = Path(workspace.name)
         path = _agent_image(upload, directory, "submission")
+        additional_images = [_agent_image(f, directory, f"submission-{i+1}") for i, f in enumerate(attachments[1:])]
         reference_image = _agent_image(request.files.get("reference_image"), directory, "reference")
         if (reference_image or roi) and not path:
             return jsonify({"error": "请同时附上要审核的图片。"}), 400
         options = {
             "evidence_followup": evidence_followup,
             "publicity_only": publicity_only,
+            "default_damage": role == "reviewer",
+            "comments": comments, "profile": profile,
+            "additional_images": additional_images,
+            "additional_names": [Path(f.filename).name for f in attachments[1:]],
             "llm": request.form.get("llm") != "0", "fast": request.form.get("fast") == "1",
             "product": product, "market": market,
             "references": references, "verified_references": [catalog[i] for i in dict.fromkeys(ids)],

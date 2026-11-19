@@ -1,0 +1,48 @@
+.seed-document { min-width: 0; }
+.seed-summary { padding: 23px 25px 20px; }
+.seed-summary h3 { margin: 0 0 10px; font-size: 21px; line-height: 1.5; font-weight: 650; }
+.seed-summary p { margin: 0 0 16px; font-size: 15px; line-height: 1.85; }
+.seed-source-strip { display: flex; flex-wrap: wrap; gap: 7px 16px; color: var(--muted); font-size: 12px; }
+.seed-filters { display: flex; flex-wrap: wrap; gap: 5px; padding: 15px 24px; border-block: 1px solid var(--line); }
+.seed-filters button, .seed-anchor-tabs button { background: transparent; border: 1px solid transparent; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: var(--muted); font: inherit; font-size: 13px; }
+.seed-filters button[aria-pressed=true], .seed-anchor-tabs button[aria-pressed=true] { background: var(--rose); color: var(--accent-ink); border-color: var(--line-strong); }
+.seed-filters button:hover, .seed-anchor-tabs button:hover { color: var(--accent-ink); background: var(--ground); }
+.seed-filters button:focus-visible, .seed-finding:focus-visible, .seed-anchor-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.seed-findings { padding: 8px 24px 15px; }
+.seed-finding { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 8px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); background: transparent; cursor: pointer; font: inherit; line-height: 1.7; }
+.seed-finding span:first-child { min-width: 0; }
+.seed-finding strong { font-size: 14px; font-weight: 550; }
+.seed-finding:hover, .seed-finding.is-active { background: var(--rose); }
+.seed-finding.is-active strong { color: var(--accent-ink); }
+.seed-detail { margin: 0 24px 24px; padding-top: 18px; border-top: 1px solid var(--line-strong); }
+.seed-detail h3 { font-size: 18px; margin: 0 0 12px; line-height: 1.6; }
+.seed-detail > p { line-height: 1.9; font-size: 14px; }
+.seed-anchor-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px; }
+.seed-source-quote { margin: 12px 0 16px; padding: 14px 16px; background: var(--ground); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; line-height: 1.85; font-size: 14px; }
+.seed-viewer { margin: 0; }
+.seed-viewer-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; background: var(--ground); gap: 10px; font-size: 12px; color: var(--muted); }
+.seed-image-frame { background: #eee7df; max-height: 420px; overflow: auto; border: 1px solid var(--line); }
+.seed-image-frame svg { display: block; width: 100%; height: auto; max-height: 415px; }
+.seed-image-full svg { max-height: none; }
+.seed-viewer figcaption { font-size: 12px; margin-top: 7px; color: var(--muted); }
+.seed-action { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; color: var(--accent-ink); }
+.seed-action > .anticon { margin-top: 5px; }
+.seed-action p { margin: 0; line-height: 1.8; font-size: 14px; }
+.seed-next { border-top: 1px solid var(--line); padding: 22px 24px; }
+.seed-next h3 { font-size: 16px; margin: 0 0 12px; }
+.seed-next ul { margin: 0; padding-left: 21px; line-height: 1.9; font-size: 14px; }
+.seed-references { padding: 18px 24px; border-top: 1px solid var(--line); font-size: 13px; }
+.seed-references summary { cursor: pointer; color: var(--accent-ink); }
+.seed-references section { padding-block: 14px; border-top: 1px solid var(--line); }
+.seed-references small { display: block; margin-top: 6px; color: var(--muted); }
+.seed-references p { line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
+.seed-empty, .seed-quote-only { padding: 20px 24px; line-height: 1.8; }
+.attachment-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.attachment-list .attachment { max-width: 100%; }
+@media (max-width: 600px) {
+  .seed-summary, .seed-next, .seed-references { padding-inline: 17px; }
+  .seed-filters { padding-inline: 13px; }
+  .seed-findings { padding-inline: 12px; }
+  .seed-detail { margin-inline: 17px; }
+  .seed-finding > span:first-child { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; }
+}
