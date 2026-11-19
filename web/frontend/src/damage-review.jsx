@@ -1,6 +1,7 @@
 import { Button, Space } from "antd";
 import { ArrowRightOutlined, FileSearchOutlined } from "@ant-design/icons";
 import React, { useRef, useState } from "react";
+import AnalysisProcess from "./analysis-process.jsx";
 
 const SOURCE_LABELS = {
   declared_ai: "文件元数据声明为 AI 生成，来源仍可复核。",
@@ -90,6 +91,7 @@ export function DamageReport({ result }) {
     <div className="result-stack">
       {whole && <Assessment title="整图" data={whole} />}
       {region && <Assessment title="选区" data={region} />}
+      <AnalysisProcess process={result.analysis_process} />
       <div className="report-next"><ArrowRightOutlined aria-hidden="true" />
         <p><b>下一步</b><span>结合原始图片和售后凭证人工复核。</span></p></div>
       {preview && <figure className="damage-edge">

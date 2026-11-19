@@ -203,10 +203,23 @@ def analyze(paths, names, copy, comments, profile, request_json, progress):
                "已按正文、图片文字、评论和图片来源整理线索。请结合原句与资料，优先查看缺少依据的表述。")
     if not evidence:
         summary = "暂未获得可读取的文字线索。请粘贴正文、评论，或提供更清晰的截图继续核验。"
+    process = {"kind": "evidence_summary", "engine": engine,
+               "model": os.environ.get("BP_DEEPSEEK_MODEL", "deepseek-flash") if engine == "deepseek" else None,
+               "steps": [
+                   {"title": "整理材料与来源", "detail": f"本次读取 {len(assets)} 张图、{counts['body']} 段正文、"
+                    f"{counts['image_text']} 段图片文字和 {counts['comment']} 条评论线索。不同来源分开保留。"},
+                   {"title": "检索知识参考", "detail": f"匹配 {len(references)} 条规则或社区参考。它们用于分析推广模式，"
+                    "不替代具体产品的试验或账号真实性证明。"},
+                   *[{"title": f["title"], "detail": f["analysis"], "evidence_ids": f["evidence_ids"]}
+                     for f in findings if f["category"] in ("promotion", "efficacy", "comments")][:3],
+                   {"title": "保留判断边界", "detail": "分别说明主观体验、功效证据与图片来源；"
+                    "评论协同性不足以确认水军，带字截图也不能确认原始实拍。"}
+               ]}
     return {"schema": SCHEMA, "title": reviewed_case().get("title") if matched else "种草图文核验",
             "summary": summary, "product": reviewed_case().get("product") if matched else None,
             "assets": assets, "evidence": evidence, "findings": findings, "references": references,
             "source_counts": dict(counts), "profile": profile, "engine": engine,
+            "analysis_process": process,
             "scope": {"product_efficacy_verified": False, "image_origin_verified": False,
                       "comment_accounts_verified": False},
             "next_steps": ["先看你的肤质、耐受与实际需求是否有对应信息。", "功效参数等待品牌提供产品级试验。",

@@ -184,6 +184,54 @@ def damage_agent(path, roi):
     return result
 
 
+def damage_process(result, model, progress):
+    """Return public evidence summaries; the local detection verdict remains authoritative."""
+    whole = result.get("whole", {})
+    evidence = {
+        "input": {"size": result.get("image_size"), "roi": result.get("roi")},
+        "whole": {key: whole.get(key) for key in ("status", "score", "threshold", "reason")},
+        "region": result.get("region"),
+        "scope": {"model": result.get("model"), "source_marker": result.get("source_marker"),
+                  "notes": "分数不是造假概率；选区未独立校准；缺少真实物理破损验证；不能仅此认定骗赔。"},
+    }
+    steps = [{"title": "读取破损送审材料", "detail": "记录图片尺寸与可选框选位置，图片在本地完成检测。"},
+             {"title": "运行本地 CPU 检测", "detail": whole.get("reason") or "本次缺少可用的本地检测结果。"}]
+    engine = "local_rules"
+    progress("damage_explain", 0, 0, "running")
+    if model.remaining:
+        response = model.request(
+            "为售后审核员返回可公开的证据分析摘要，不要返回逐字内部推演。只输出JSON，字段 analysis 是最多3条对象，"
+            "每条包含 title、detail、evidence_ids（只能来自input、whole、region、scope）。"
+            "解释检测分与阈值、证据局限、需要人工补什么材料。只收到检测摘要，未看原图，"
+            "不得编造裂缝、反光、噪声测量值或改变本地结论；不得确认造假或骗赔。\n" + json.dumps(evidence, ensure_ascii=False),
+            "你是BeautyProof售后审核解释助手。依据已提供的检测结果，输出简洁、可核对的证据说明。", timeout=30,
+        ) or {}
+        rows = response.get("analysis")
+        accepted = []
+        for row in rows[:3] if isinstance(rows, list) else []:
+            if not isinstance(row, dict) or not all(isinstance(row.get(k), str) and row[k].strip() for k in ("title", "detail")):
+                continue
+            ids = row.get("evidence_ids")
+            if not isinstance(ids, list) or not ids or any(not isinstance(i, str) or i not in evidence for i in ids):
+                continue
+            if re.search(r"确认造假|确认骗赔|实锤|100%|一定是AI", row["detail"]):
+                continue
+            accepted.append({k: row[k] for k in ("title", "detail", "evidence_ids")})
+        if accepted:
+            steps.extend(accepted)
+            engine = "deepseek"
+    if engine != "deepseek":
+        steps.append({"title": "比较检测分与复核阈值", "detail": (
+            f"检测分 {whole['score']:.3f}，阈值 {whole['threshold']:.3f}。"
+            "按本地模型结果决定是否追加核验；该值不是生成概率。"
+            if whole.get("score") is not None and whole.get("threshold") is not None else "当前证据不足，需补充清晰原图或可用检测结果。")})
+    steps.append({"title": "保留人工复核", "detail": "核对原始图片、订单与售后凭证；"
+                  "评分和边缘预览不单独证明真实破损、AI生成或骗赔。"})
+    progress("damage_explain", 0, 0, "done")
+    return {"kind": "evidence_summary", "engine": engine, "steps": steps,
+            "model": os.environ.get("BP_DEEPSEEK_MODEL", "deepseek-flash") if engine == "deepseek" else None}
+
+
 def report_evidence(reports, question):
     """Quote observations from the selected report instead of generating new facts."""
     evidence, damage_evidence = [], []
@@ -314,6 +362,7 @@ def run_turn(message, copy, path, directory, options, previous, model_lock, prog
         progress("damage", 0, 0, "running")
         try:
             reports[DAMAGE] = damage_agent(path, options.get("roi"))
+            reports[DAMAGE]["analysis_process"] = damage_process(reports[DAMAGE], model, progress)
         except ValueError as exc:
             errors[DAMAGE] = str(exc)
         except Exception:

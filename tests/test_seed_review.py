@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "tools")]
 from web import app as web
 import seed_review
+import review_agents
 
 
 def png(color):
@@ -118,7 +119,29 @@ def test_deepseek_refinement_requires_real_evidence_and_reference_ids(tmp_path, 
         ]}
     result = seed_review.analyze([path], [path.name], "本篇为品牌合作", "", "油皮", request, lambda *a: None)
     assert result["engine"] == "deepseek"
+    assert result["analysis_process"]["engine"] == "deepseek"
+    assert len(result["analysis_process"]["steps"]) >= 3
     assert len(result["findings"]) == 1
     assert calls[0]["personal_conditions"] == "油皮"
     assert all(r["kind"] != "efficacy_study" for r in calls[0]["references"])
     assert "image" not in calls[0]
+
+
+def test_damage_explanation_keeps_detector_result_and_uses_known_evidence_only():
+    result = {"whole": {"status": "similar", "score": .2, "threshold": .14, "reason": "达到复核阈值。"},
+              "image_size": [1000, 800], "roi": None, "region": None, "model": "test-local"}
+    original = copy.deepcopy(result)
+    class Model:
+        remaining = 1
+        def request(self, prompt, system, timeout):
+            assert "未看原图" in prompt
+            return {"analysis": [
+                {"title": "比较阈值", "detail": "本地分数达到复核阈值，追加来源核查。", "evidence_ids": ["whole"]},
+                {"title": "虚构观察", "detail": "裂缝呈现明显错误。", "evidence_ids": ["unknown-pixels"]},
+            ], "reasoning_content": "not-for-display"}
+    process = review_agents.damage_process(result, Model(), lambda *a: None)
+    assert result == original
+    assert process["engine"] == "deepseek"
+    assert any(step["title"] == "比较阈值" for step in process["steps"])
+    assert not any(step["title"] == "虚构观察" for step in process["steps"])
+    assert "reasoning_content" not in json.dumps(process)
