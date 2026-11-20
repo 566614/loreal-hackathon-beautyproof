@@ -3,42 +3,36 @@
     "name": "BeautyProof RAG Knowledge Base",
     "description": "新人守护师 - 美妆笔记真实性鉴别知识库",
     "competition": "欧莱雅美妆科技大赛 赛题二",
-    "version": "1.0.0",
-    "created_at": "2026-11-19"
+    "version": "2.0.0",
+    "updated_at": "2026-11-20"
   },
   "datasets": [
     {
       "file": "rag_corpus.jsonl",
       "type": "notes",
-      "source": "xiaohongshu search",
-      "count": 60,
-      "size_kb": 106.3,
-      "fields": ["note_id", "type", "title", "desc", "nickname", "liked_count", "collected_count", "comment_count", "share_count", "tag_list", "note_url", "source_keyword"]
+      "count": 244
     },
     {
       "file": "rag_corpus_comments.jsonl",
       "type": "comments",
-      "source": "xiaohongshu notes comments",
-      "count": 695,
-      "size_kb": 269.8,
-      "fields": ["comment_id", "note_id", "content", "nickname", "like_count", "sub_comment_count", "create_time"]
+      "count": 2942
     }
   ],
-  "rule_docs": [
-    {
-      "file": "ad_detection_rules.md",
-      "description": "广告鉴别规则 - 官方标识/话术/博主画像/评论区信号/功效红线/鉴别流程"
-    },
-    {
-      "file": "beauty_categories.md",
-      "description": "美妆品类知识 - 各品类功效合理边界、成分知识、价格参考"
-    }
-  ],
-  "keywords_covered": [
-    "美妆推荐", "化妆品测评", "口红推荐", "口红测评",
-    "国货彩妆", "国货之光", "平价好物", "学生党好物",
-    "花知晓", "完美底妆", "新手化妆教程", "送礼好物"
-  ],
-  "total_size_kb": 386.4,
-  "capture_tool": "NanmiCoder/MediaCrawler (67k+ stars)"
+  "source": {
+    "tool": "NanmiCoder/MediaCrawler (67k+ stars)",
+    "keywords_groups": 20,
+    "categories": [
+      "口红",
+      "唇釉",
+      "底妆",
+      "眼妆",
+      "护肤",
+      "香水",
+      "国货品牌",
+      "国际大牌",
+      "社区真实信号",
+      "细分场景",
+      "季节节日"
+    ]
+  }
 }
