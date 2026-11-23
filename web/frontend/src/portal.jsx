@@ -1,11 +1,12 @@
 import React from "react";
 import { Card } from "antd";
-import { ArrowRightOutlined, AuditOutlined, LockOutlined, ScanOutlined, UserOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, AuditOutlined, LockOutlined, NodeIndexOutlined, ScanOutlined, UserOutlined } from "@ant-design/icons";
 import "./portal.css";
 
 const entrances = [
   { id: "consumer", title: "我是消费者", detail: "核验种草正文、配图与评论", icon: UserOutlined },
   { id: "reviewer", title: "我是企业审核人员", detail: "检查退货破损图片的生成线索", icon: AuditOutlined },
+  { id: "lab", title: "本地模型演示", detail: "查看卷积处理与图像特征", icon: NodeIndexOutlined },
 ];
 
 export default function Portal() {

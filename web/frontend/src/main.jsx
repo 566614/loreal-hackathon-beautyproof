@@ -17,6 +17,7 @@ import { DamageRegion, DamageReport } from "./damage-review.jsx";
 import Portal from "./portal.jsx";
 import SeedReport from "./seed-review.jsx";
 import AnalysisProcess from "./analysis-process.jsx";
+import ModelLab from "./model-lab.jsx";
 
 const toolLabels = {
   hash: "文件指纹", c2pa: "来源凭证", ela: "压缩痕迹", spectral: "频域取证",
@@ -890,7 +891,7 @@ function ChatWorkspace({ role = "reviewer" }) {
 
 function locationRole() {
   const role = window.location.hash.slice(1);
-  return role === "consumer" || role === "reviewer" ? role : null;
+  return role === "consumer" || role === "reviewer" || role === "lab" ? role : null;
 }
 
 function App() {
@@ -901,9 +902,10 @@ function App() {
     return () => window.removeEventListener("hashchange", updateRole);
   }, []);
   useEffect(() => {
-    document.title = role ? workspaceCopy[role].title + " · BeautyProof" : "BeautyProof · 美妆证据审核";
+    document.title = role === "lab" ? "本地模型演示 · BeautyProof"
+      : role ? workspaceCopy[role].title + " · BeautyProof" : "BeautyProof · 美妆证据审核";
   }, [role]);
-  return role ? <ChatWorkspace key={role} role={role} /> : <Portal />;
+  return role === "lab" ? <ModelLab /> : role ? <ChatWorkspace key={role} role={role} /> : <Portal />;
 }
 
 createRoot(document.getElementById("workbench")).render(

@@ -1,0 +1,81 @@
+{
+  "schema": "beautyproof/abstain_band_eval@1",
+  "policy_change": {
+    "old": "aigc_score >= 0.9 → high_risk",
+    "new": "aigc_score >= 0.99 → high_risk; [0.9, 0.99) → suspicious（人工复核）",
+    "model_unchanged": "beautyproof_aigen_v4（零重训，纯决策政策单变量）"
+  },
+  "sets": {
+    "realworld_heldout": {
+      "kind": "real",
+      "n": 10,
+      "old_high_risk": 1,
+      "new_high_risk": 0,
+      "new_gray_suspicious": 1,
+      "old_caught": 1,
+      "new_caught": 1,
+      "gray_band_scores": [
+        0.9792
+      ]
+    },
+    "filter_selfie_heldout": {
+      "kind": "real",
+      "n": 10,
+      "old_high_risk": 2,
+      "new_high_risk": 0,
+      "new_gray_suspicious": 2,
+      "old_caught": 2,
+      "new_caught": 2,
+      "gray_band_scores": [
+        0.9154,
+        0.9842
+      ]
+    },
+    "ai_cross_native": {
+      "kind": "ai",
+      "n": 12,
+      "old_high_risk": 8,
+      "new_high_risk": 8,
+      "new_gray_suspicious": 0,
+      "old_caught": 8,
+      "new_caught": 8,
+      "gray_band_scores": []
+    },
+    "controlled_ai": {
+      "kind": "ai",
+      "n": 20,
+      "old_high_risk": 19,
+      "new_high_risk": 19,
+      "new_gray_suspicious": 0,
+      "old_caught": 19,
+      "new_caught": 19,
+      "gray_band_scores": []
+    },
+    "controlled_clean": {
+      "kind": "real",
+      "n": 2,
+      "old_high_risk": 0,
+      "new_high_risk": 0,
+      "new_gray_suspicious": 0,
+      "old_caught": 0,
+      "new_caught": 0,
+      "gray_band_scores": []
+    }
+  },
+  "totals": {
+    "real_old_auto_takedown_fp": 3,
+    "real_new_auto_takedown_fp": 0,
+    "real_new_review_flags": 3,
+    "real_old_caught": 3,
+    "real_new_caught": 3,
+    "ai_old_caught": 27,
+    "ai_new_caught": 27
+  },
+  "checks": {
+    "real_auto_takedown_fp_eliminated": true,
+    "real_review_flags_added": true,
+    "ai_caught_unchanged": true,
+    "all_pass": true
+  },
+  "decision": "ADOPT_BAND：灰带把真实图误伤从「自动下架」降级为「人工复核」，且 AI 捕获无一丢失 —— 决策政策生效"
+}

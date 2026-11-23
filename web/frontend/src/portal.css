@@ -71,7 +71,7 @@
 .portal-content h1 span { display: block; }
 .portal-content h1 span + span { color: #f3c5b9; }
 .portal-lead { margin: 29px 0 38px; color: var(--portal-muted); font-size: 17px; line-height: 1.8; }
-.portal-roles { display: grid; grid-template-columns: 1fr 1.13fr; max-width: 596px; gap: 12px; }
+.portal-roles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 900px; gap: 12px; }
 .portal-roles:focus { outline: 2px solid var(--portal-accent); outline-offset: 6px; border-radius: 12px; }
 .portal-entry {
   display: block;
